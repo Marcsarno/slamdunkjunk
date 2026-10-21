@@ -1,0 +1,11 @@
+PASS  hunter down      legs: L | - | R | -   arms fwd: R | - | L | -
+PASS  hunter up        legs: L | - | R | -   arms fwd: R | - | L | -
+PASS  hunter left      legs: L | - | R | -   arms fwd: R | - | L | -
+PASS  hunter right     legs: L | - | R | -   arms fwd: R | - | L | -
+PASS  whitetail_doe    legs: BR+FL fwd | BL+FR lifted | BL+FR fwd | BR+FL lifted
+PASS  whitetail_buck   legs: BR+FL fwd | BL+FR lifted | BL+FR fwd | BR+FL lifted
+PASS  red_fox          legs: BR+FL fwd | BL+FR lifted | BL+FR fwd | BR+FL lifted
+PASS  black_bear       legs: BR+FL fwd | BL+FR lifted | BL+FR fwd | BR+FL lifted
+PASS  ghost_buck       legs: BR+FL fwd | BL+FR lifted | BL+FR fwd | BR+FL lifted
+PASS  wild_turkey      legs: L | - | R | -
+All walk cycles alternate correctly.

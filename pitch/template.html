@@ -1,0 +1,704 @@
+<title>Hollow Ridge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a field guide. One reading column, sprite plates break out wide; topo-map contours in the masthead. */
+:root {
+  --bg: #e4e0cc;
+  --surface: #f1eedf;
+  --ink: #23271d;
+  --muted: #5c604d;
+  --line: #c6bf9f;
+  --blaze: #e2600f;
+  --blaze-ink: #a9440a;
+  --spruce: #2f4a3a;
+  --chip: #d9d3b8;
+  --pass: #2f7a45;
+  --rare: #7a4fb0;
+  --legend: #b08a12;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* in-game UI colors: fixed, they sit on the game art in both themes */
+  --g-panel: #f6ecd6;
+  --g-ink: #2a1c16;
+  --g-edge: #6b4a30;
+  --g-hp: #5fae4a;
+  --g-spook: #e0662a;
+  --g-comp: #4f8ac9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151913; --surface: #1d231a; --ink: #ebe6d2; --muted: #a3a58e; --line: #343b2d;
+    --blaze: #ff7a24; --blaze-ink: #ff9447; --spruce: #9cc8a6; --chip: #2a3125;
+    --pass: #6fcf8a; --rare: #b892ec; --legend: #e6c04a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151913; --surface: #1d231a; --ink: #ebe6d2; --muted: #a3a58e; --line: #343b2d;
+  --blaze: #ff7a24; --blaze-ink: #ff9447; --spruce: #9cc8a6; --chip: #2a3125;
+  --pass: #6fcf8a; --rare: #b892ec; --legend: #e6c04a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+.col { max-width: 680px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h2 { font: 700 clamp(26px, 4vw, 34px)/1.1 var(--display); letter-spacing: .01em; }
+h3 { font: 700 18px/1.25 var(--body); font-stretch: 85%; }
+p { margin: 0; }
+.eyebrow {
+  font: 600 12px/1 var(--body); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--blaze-ink);
+}
+section { padding-block: 56px 8px; display: grid; gap: 20px; }
+section > header { display: grid; gap: 10px; }
+.lede { font-size: 18px; color: var(--ink); }
+.muted { color: var(--muted); }
+canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; max-width: 100%; }
+
+/* ---------- masthead ---------- */
+.mast { padding-block: 40px 8px; display: grid; gap: 24px; position: relative; }
+.mast::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 260px; z-index: -1; opacity: .5;
+  background:
+    repeating-radial-gradient(ellipse 60% 40% at 78% 30%, transparent 0 13px, var(--line) 13px 14px),
+    repeating-radial-gradient(ellipse 40% 55% at 10% 90%, transparent 0 15px, var(--line) 15px 16px);
+  mask-image: linear-gradient(to bottom, #000 30%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent);
+}
+.title { font: 700 clamp(48px, 10vw, 104px)/.9 var(--display); letter-spacing: .02em; }
+.title span { color: var(--blaze); }
+.tag { font-size: clamp(17px, 2.2vw, 21px); max-width: 640px; }
+.stage { border: 3px solid var(--g-ink); border-radius: 4px; overflow: hidden; background: #2a1c16; }
+.stage canvas { width: 100%; height: auto; }
+.cap { font-size: 13px; color: var(--muted); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: 600 12px/1 var(--body); letter-spacing: .06em; text-transform: uppercase;
+  background: var(--chip); color: var(--ink); padding: 7px 10px; border-radius: 3px;
+}
+
+/* ---------- loop ---------- */
+.loop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+.loop li { list-style: none; padding: 16px 14px; border-right: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+.loop li:last-child { border-right: 0; }
+.loop b { font: 700 15px/1.2 var(--display); color: var(--blaze-ink); }
+.loop span { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.loop ol { display: contents; }
+@media (max-width: 760px) {
+  .loop { grid-template-columns: 1fr; }
+  .loop li { border-right: 0; border-bottom: 1px solid var(--line); }
+  .loop li:last-child { border-bottom: 0; }
+}
+
+/* ---------- hunter plate ---------- */
+.plate { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 20px; display: grid; gap: 18px; }
+.dirs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 640px) { .dirs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dir { display: grid; gap: 8px; justify-items: center; }
+.dir .big { width: 96px; height: 144px; background: #b9b08a; border-radius: 3px; }
+.dir .label { font: 600 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.strip { display: grid; grid-template-columns: repeat(4, auto); gap: 6px; justify-content: center; }
+.strip figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
+.strip canvas { width: 32px; height: 48px; background: #3a4236; border-radius: 2px; }
+.strip figcaption { font: 500 10px/1 var(--mono); color: var(--muted); }
+.legcheck { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 28px; align-items: start; }
+.legcheck pre { grid-column: 1 / -1; }
+@media (max-width: 760px) { .legcheck { grid-template-columns: 1fr; } }
+pre.report {
+  margin: 0; font: 400 12px/1.6 var(--mono); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 3px; padding: 12px 14px; overflow-x: auto; color: var(--ink);
+}
+pre.report .ok { color: var(--pass); font-weight: 600; }
+.key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+
+/* ---------- battle mock ---------- */
+.battle { display: grid; gap: 0; max-width: 720px; border: 3px solid var(--g-ink); border-radius: 4px; overflow: hidden; container-type: inline-size; background: var(--g-panel); }
+.arena { position: relative; }
+.arena canvas { width: 100%; height: auto; }
+.hud {
+  position: absolute; background: var(--g-panel); color: var(--g-ink); border: .5cqw solid var(--g-edge);
+  border-radius: 1.2cqw; padding: 1.2cqw 2cqw; font: 500 2.6cqw/1.15 var(--display); display: grid; gap: .8cqw;
+  box-shadow: .6cqw .6cqw 0 rgba(42,28,22,.35);
+}
+.hud .nm { display: flex; justify-content: space-between; gap: 2cqw; font-weight: 700; font-size: 3cqw; }
+.hud .row { display: grid; grid-template-columns: 9cqw 1fr; align-items: center; gap: 1cqw; font-size: 2.1cqw; }
+.bar { height: 1.6cqw; background: #4a3b30; border-radius: 1cqw; padding: .3cqw; }
+.bar i { display: block; height: 100%; border-radius: 1cqw; transition: width .4s; }
+.hud.foe { left: 3%; top: 5%; width: 44%; }
+.hud.me { right: 3%; top: 56%; width: 46%; }
+.textbox {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 0; border-top: .6cqw solid var(--g-edge);
+  color: var(--g-ink); font: 500 clamp(13px, 2.7cqw, 19px)/1.35 var(--display);
+}
+.textbox .say { padding: 2.4cqw 3cqw; min-height: 21cqw; }
+.moves { display: grid; grid-template-columns: 1fr 1fr; border-left: .6cqw solid var(--g-edge); }
+.moves button {
+  font: 500 clamp(12px, 2.4cqw, 17px)/1.15 var(--display); color: var(--g-ink); background: transparent; border: 0;
+  border-bottom: 1px dashed #c9b48e; border-right: 1px dashed #c9b48e; text-align: left; padding: 1.6cqw 2.2cqw; cursor: pointer; display: grid; gap: .4cqw;
+}
+.moves button small { font-size: .78em; color: #7b5d40; }
+.moves button:hover, .moves button[aria-pressed="true"] { background: #f0d9ad; }
+.moves button:focus-visible { outline: 3px solid var(--g-spook); outline-offset: -3px; }
+.foes { display: flex; flex-wrap: wrap; gap: 6px; }
+.foes button {
+  font: 600 13px/1 var(--body); padding: 9px 12px; border-radius: 3px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.foes button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.foes button:focus-visible { outline: 2px solid var(--blaze); outline-offset: 2px; }
+
+/* ---------- tables & lists ---------- */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+td b { font-weight: 700; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+.stats { display: grid; gap: 10px; }
+.stats div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.stats div:last-child { border-bottom: 0; }
+.stats dt { font: 700 14px/1.4 var(--display); color: var(--blaze-ink); }
+.stats dd { margin: 0; font-size: 15px; }
+
+.skills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .skills { grid-template-columns: 1fr; } }
+.tree { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 16px; display: grid; gap: 12px; align-content: start; }
+.tree h3 { color: var(--spruce); }
+.tree ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.tree li { display: grid; gap: 2px; font-size: 14px; }
+.tree li b { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.tree li b em { font: 500 12px/1.4 var(--mono); font-style: normal; color: var(--muted); }
+
+/* ---------- bestiary ---------- */
+.beasts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.beast { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+.beast .pic { background: #b9b08a; display: grid; place-items: center; padding: 14px; min-height: 150px; }
+.beast .body { padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; }
+.beast .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.beast h3 { font: 700 20px/1.1 var(--display); }
+.rar { font: 600 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; padding: 5px 7px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+.rar.Common { color: var(--muted); }
+.rar.Uncommon { color: var(--spruce); }
+.rar.Rare { color: var(--rare); }
+.rar.Legendary { color: var(--legend); }
+.meta { font-size: 13px; color: var(--muted); }
+.beast ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.beast li b { font-weight: 700; }
+.beast .drops { font-size: 13px; border-top: 1px solid var(--line); padding-top: 10px; }
+.more { font-size: 15px; }
+
+/* ---------- town ---------- */
+.town { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+.town div { padding: 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+.town div:nth-child(3n) { border-right: 0; }
+.town div:nth-last-child(-n+3) { border-bottom: 0; }
+.town b { font: 700 16px/1.2 var(--display); }
+.town span { font-size: 14px; color: var(--muted); }
+@media (max-width: 760px) {
+  .town { grid-template-columns: 1fr; }
+  .town div, .town div:nth-child(3n), .town div:nth-last-child(-n+3) { border-right: 0; border-bottom: 1px solid var(--line); }
+  .town div:last-child { border-bottom: 0; }
+}
+
+/* ---------- engine ---------- */
+.verdict { border-left: 4px solid var(--blaze); padding: 4px 0 4px 18px; display: grid; gap: 8px; }
+.verdict h3 { font: 700 24px/1.15 var(--display); }
+code { font: 400 .9em var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 3px; }
+pre.code { margin: 0; font: 400 12.5px/1.5 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; overflow-x: auto; }
+ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+ol.steps li::marker { font: 700 15px var(--display); color: var(--blaze-ink); }
+.asks { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+footer { padding-block: 56px 72px; font-size: 13px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="eyebrow">Game pitch &amp; concept art</div>
+  <h1 class="title">HOLLOW <span>RIDGE</span></h1>
+  <p class="tag">A top-down pixel-art hunting RPG. Walk the autumn woods, read sign and wind, and when you close on an animal the screen snaps into a turn-based encounter: your skills against its instincts.</p>
+  <div class="stage"><canvas id="ow" class="px" width="320" height="208" aria-label="Animated overworld: the hunter walks a dirt trail past the Trading Post while a buck, turkey, fox and rabbit move through autumn woods"></canvas></div>
+  <p class="cap">Every pixel above is drawn by code: Maple Hollow, the starter zone. Trading Post at the trailhead, ladder stand by the pond, brush patches where game hides (white flecks mean something is rustling).</p>
+  <div class="facts">
+    <span class="chip">2D sprite RPG</span><span class="chip">Fall season</span><span class="chip">Solo hunter, no companion</span><span class="chip">Browser &amp; phone first</span><span class="chip">Engine: Phaser 3</span>
+  </div>
+</header>
+
+<section>
+  <header>
+    <div class="eyebrow">The core loop</div>
+    <h2>Scout, stalk, encounter, harvest, sell</h2>
+  </header>
+  <ol class="loop">
+    <li><b>1 · Scout</b><span>Pick a zone, time of day and weather. Dawn and dusk move more game; the rut brings out big bucks.</span></li>
+    <li><b>2 · Stalk</b><span>Animals roam the map in plain view. Sneak (slower, quieter) and keep the wind in your face. How you approach sets the encounter's starting range and Spook.</span></li>
+    <li><b>3 · Encounter</b><span>Pokémon-style battle screen. Calls, scents, aim and patience against the animal's senses and moves.</span></li>
+    <li><b>4 · Harvest</b><span>A clean shot earns an A grade. Sloppy hunts lower the grade and the payout. Each one fills your Field Journal.</span></li>
+    <li><b>5 · Sell &amp; upgrade</b><span>Back in Pinecrest: sell meat, pelts and antlers, mount trophies, buy gear and new skills.</span></li>
+  </ol>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">The hunter</div>
+    <h2>Walk cycle, all four directions</h2>
+    <p class="col muted">Modeled on your photo: short brown hair, stubble, camo jacket, blaze-orange vest, scoped rifle slung on the back. 16×24 pixels, four frames per direction.</p>
+  </header>
+  <div class="plate">
+    <div class="dirs" id="dirs"></div>
+    <div class="legcheck">
+      <div style="display:grid;gap:10px">
+        <h3>Leg check: built to alternate, then tested</h3>
+        <p style="font-size:15px">Limbs are separate parts placed from a pose table, so “left leg forward” is data, not luck. Then a test reads the finished pixels. It finds each boot or hoof and confirms the order is <b>left forward, pass, right forward, pass</b>, with arms swinging opposite. If any frame repeats a leg, the build fails.</p>
+        <p style="font-size:15px">The test already caught two real bugs while I drew these. A deer's planted hind hooves floated a pixel off the ground during the body bob. And a thick upper leg was being read as a step. Both are fixed.</p>
+      </div>
+      <div style="display:grid;gap:10px;justify-items:center">
+        <div class="key"><span><i style="background:#ff3d9a"></i>left leg</span><span><i style="background:#25c4e8"></i>right leg</span><span><i style="background:#ffa3cf"></i>left arm</span><span><i style="background:#9be6f7"></i>right arm</span></div>
+        <div class="strip" id="legstrip"></div>
+      </div>
+      <pre class="report" id="report">/*LEGCHECK*/</pre>
+    </div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Encounters</div>
+    <h2>The battle screen</h2>
+    <p class="col muted">You never bring a creature to fight for you. It is you against the animal. Pick an animal, then tap an ability to read what it does.</p>
+  </header>
+  <div class="foes" id="foes" role="group" aria-label="Choose an animal"></div>
+  <div class="battle">
+    <div class="arena">
+      <canvas id="bt" class="px" width="240" height="160" aria-label="Battle screen with the hunter's back in the foreground and an animal on the far platform"></canvas>
+      <div class="hud foe">
+        <div class="nm"><span id="foeName">WHITETAIL BUCK</span><span id="foeTag">8 PT</span></div>
+        <div class="row"><span>VITAL</span><div class="bar"><i id="foeHp" style="width:100%;background:var(--g-hp)"></i></div></div>
+        <div class="row"><span>SPOOK</span><div class="bar"><i id="foeSpook" style="width:35%;background:var(--g-spook)"></i></div></div>
+      </div>
+      <div class="hud me">
+        <div class="nm"><span>HUNTER</span><span id="range">MID RANGE</span></div>
+        <div class="row"><span>STAMINA</span><div class="bar"><i style="width:92%;background:var(--g-hp)"></i></div></div>
+        <div class="row"><span>NERVE</span><div class="bar"><i id="nerve" style="width:70%;background:var(--g-comp)"></i></div></div>
+      </div>
+    </div>
+    <div class="textbox">
+      <div class="say" id="say" aria-live="polite">A WHITETAIL BUCK steps out of the oaks. The wind is in your face.</div>
+      <div class="moves" id="moves"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">How encounters work</div>
+    <h2>Range, Spook and Nerve instead of HP races</h2>
+    <p class="col">The animal doesn't have to beat you to win. It wins by getting away. That makes every turn a choice between closing in, calming it, and taking the shot.</p>
+  </header>
+  <div class="two">
+    <dl class="stats">
+      <div><dt>Vitality</dt><dd>The animal's health. Hits to the vitals do far more than body hits.</dd></div>
+      <div><dt>Spook</dt><dd>0–100. Missed shots, movement, a wrong call or your scent push it up. At 100 the animal bolts and the encounter ends.</dd></div>
+      <div><dt>Range</dt><dd>Long, Mid or Close. Closer shots land more often, but getting close raises Spook, and some animals hit back up close.</dd></div>
+      <div><dt>Stamina</dt><dd>Your health. Only dangerous game (bear, boar, a rutting buck, moose) can drain it. At zero you limp back to town and lose the hunt.</dd></div>
+      <div><dt>Nerve</dt><dd>Your steadiness. It scales every shot's accuracy. Bluff charges and big antlers shake it. That's buck fever, as a stat.</dd></div>
+    </dl>
+    <div style="display:grid;gap:14px;align-content:start">
+      <h3>Harvest grade replaces “weaken, then catch”</h3>
+      <p style="font-size:15px">In Pokémon you wear a creature down before throwing the ball. Here, precision pays. One clean vital shot earns an <b>A</b> (×1.5 sale price, best pelt, best mount). A messy hunt drops to <b>C</b> (×0.6). Using too much gun on small game ruins the meat.</p>
+      <pre class="code">hit %  = weapon[range] × (0.6 + 0.4 × nerve/100) − evasion
+damage = power × (vital ? 2.0 : 1.0) × hide_modifier
+grade  = A: 1 shot, vital · B: ≤2 hits · C: anything messier</pre>
+      <p class="cap">Starting numbers. The balance simulator tunes them (see the plan below).</p>
+    </div>
+  </div>
+  <h3 style="margin-top:8px">Weapons are your “types”</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Weapon</th><th>Long</th><th>Mid</th><th>Close</th><th>Power</th><th>Spook on miss</th><th>Matchup</th></tr></thead>
+      <tbody>
+        <tr><td><b>.308 Rifle</b></td><td class="n">85%</td><td class="n">90%</td><td class="n">80%</td><td class="n">40</td><td class="n">+35</td><td>Big game. Overkill on light hides: meat grade −1</td></tr>
+        <tr><td><b>12-gauge</b></td><td class="n">—</td><td class="n">70%</td><td class="n">95%</td><td class="n">30</td><td class="n">+30</td><td>Birds and small game. ×0.5 vs heavy hides</td></tr>
+        <tr><td><b>Compound bow</b></td><td class="n">—</td><td class="n">80%</td><td class="n">95%</td><td class="n">32</td><td class="n">+10</td><td>Nearly silent. A miss rarely spooks. ×0.8 vs heavy</td></tr>
+        <tr><td><b>Muzzleloader</b></td><td class="n">70%</td><td class="n">85%</td><td class="n">85%</td><td class="n">60</td><td class="n">+40</td><td>One huge shot, then a full turn to reload</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">Hides come in Light (rabbit, birds), Medium (deer, fox, turkey, coyote) and Heavy (bear, elk, boar, moose). You carry two weapons; switching costs a turn.</p>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Hunter abilities</div>
+    <h2>Three skill trees, four slots</h2>
+    <p class="col">You bring four abilities into the woods, like a Pokémon's four moves. Each has limited uses per outing, refilled at your truck or in town. Skill points come from harvests.</p>
+  </header>
+  <div class="skills">
+    <div class="tree"><h3>Stalker · stealth</h3><ul>
+      <li><b>Freeze <em>4 uses</em></b>Hold still. Spook −20. 25% chance the animal wanders a range farther.</li>
+      <li><b>Cover Scent <em>2 uses</em></b>All Spook gains are halved for 3 turns.</li>
+      <li><b>Wind Check <em>3 uses</em></b>Locks you downwind for 4 turns. Shuts off “keen nose” passives.</li>
+      <li><b>Belly Crawl <em>3 uses</em></b>Close one range with only +5 Spook. You can't shoot this turn.</li>
+    </ul></div>
+    <div class="tree"><h3>Marksman · shooting</h3><ul>
+      <li><b>Steady Aim <em>3 uses</em></b>Nerve +25 and +15% accuracy on your next shot.</li>
+      <li><b>Hold Breath <em>2 uses</em></b>Spend 15 Stamina. If your next shot lands, it's a vital hit.</li>
+      <li><b>Quick Shot <em>∞</em></b>Always goes first, at −20% accuracy. The answer to a charge.</li>
+      <li><b>Rangefinder <em>2 uses</em></b>Reveals the animal's moves and Vitality. Your next shot ignores range penalties.</li>
+    </ul></div>
+    <div class="tree"><h3>Woodsman · calls &amp; craft</h3><ul>
+      <li><b>Call <em>3 uses</em></b>Grunt tube, box call, predator call or elk bugle. The right call pulls the animal a range closer. The wrong one is +20 Spook.</li>
+      <li><b>Rattle Antlers <em>1 use</em></b>Rut only. Pulls a buck two ranges closer and raises its temper. It may charge.</li>
+      <li><b>Decoy <em>2 uses</em></b>The animal's next move targets the decoy. Spook −10.</li>
+      <li><b>Bear Spray <em>1 use</em></b>Cancels a charge and stuns for a turn.</li>
+      <li><b>Blood Trail <em>passive</em></b>If a wounded animal bolts, you can follow its trail on the map instead of losing it.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Field Journal</div>
+    <h2>The animals</h2>
+    <p class="col">Your Pokédex is a hunter's journal. It tracks seen, encountered and harvested, plus a trophy book for your best antler scores. Every buck rolls its own rack, so chasing a bigger one never ends.</p>
+  </header>
+  <div class="beasts" id="beasts"></div>
+  <p class="more"><b>Also planned:</b> Gray Squirrel, Mourning Dove, Mallard (common) · Canada Goose, Ring-necked Pheasant, Raccoon, Snowshoe Hare, Coyote, whose Pack Howl calls a second coyote into a double encounter (uncommon) · Wild Boar, Bull Elk (rare) · Moose (very rare) · Old Scratch, a giant bear that haunts Cedar Bottoms (legendary).</p>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">The world</div>
+    <h2>Seven areas around one town</h2>
+  </header>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Area</th><th>Feel</th><th>Game</th><th>Opens</th></tr></thead>
+      <tbody>
+        <tr><td><b>Pinecrest</b></td><td>Town hub, trailhead</td><td>None. Shops, your cabin, the Game Warden</td><td>Start</td></tr>
+        <tr><td><b>Maple Hollow</b></td><td>Red and gold hardwoods, pond, old logging road</td><td>Cottontail, squirrel, dove, doe, turkey · <i>buck</i></td><td>Start</td></tr>
+        <tr><td><b>Cattail Marsh</b></td><td>Reeds, duck blinds, flooded timber</td><td>Mallard, goose, pheasant, raccoon</td><td>Shotgun</td></tr>
+        <tr><td><b>Oak Ridge</b></td><td>Acorn flats, rocky ledges, ridge-top wind</td><td>Turkey, fox, buck · <i>black bear</i></td><td>First buck tag</td></tr>
+        <tr><td><b>Aspen Highlands</b></td><td>Yellow aspen, open parks, long sightlines</td><td>Coyote, snowshoe hare · <i>bull elk</i></td><td>Rifle upgrade</td></tr>
+        <tr><td><b>Cedar Bottoms</b></td><td>Dark swamp, fog, boardwalks</td><td>Boar, raccoon, bear · <i>Old Scratch</i></td><td>Bear tag</td></tr>
+        <tr><td><b>Frostline</b></td><td>Late season, first snow</td><td>Hare, moose · <i>the Ghost of Hollow Ridge</i></td><td>Late season</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">Target size: each area about 80×60 tiles, roughly six screens across. Rarity rolls on each area's spawn table, adjusted by time of day, weather and season phase (early bow, rifle season, rut, late season).</p>
+  <h3 style="margin-top:8px">Pinecrest, the town hub</h3>
+  <div class="town">
+    <div><b>Trading Post</b><span>Sells meat, pelts, antlers and feathers. Prices shift with demand.</span></div>
+    <div><b>Butcher</b><span>Pay to process meat into jerky and sausage. Worth more, and some cures buff Stamina.</span></div>
+    <div><b>Taxidermist</b><span>Mount your best trophies for the cabin wall. The Field Journal comes to life.</span></div>
+    <div><b>Outfitter</b><span>Weapons, optics, calls, scents, decoys, ammo, boots that sneak quieter.</span></div>
+    <div><b>Game Warden</b><span>Issues tags that limit each species per season. Hands out quests and legendary rumors.</span></div>
+    <div><b>Diner</b><span>Hot meal restores Stamina and Nerve. Locals trade tips on where big game is moving.</span></div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Engine</div>
+    <h2>My pick: Phaser 3 + TypeScript</h2>
+  </header>
+  <div class="verdict col">
+    <h3>I can build it, run it and check it myself</h3>
+    <p>Phaser is a mature 2D engine for the web. Everything is code and plain files, nothing locked inside an editor GUI, so I can write every system, run the game in a headless browser here, screenshot it and fix what I see. You get a link that plays on your phone after every milestone. Later it can ship to Steam (Electron or Tauri) or the app stores (Capacitor). Vampire Survivors began life as a Phaser game.</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Engine</th><th>Good at</th><th>Catch for us</th></tr></thead>
+      <tbody>
+        <tr><td><b>Phaser 3</b> (pick)</td><td>Sprite animation, tilemaps (Tiled editor), cameras, input, sound. Runs anywhere a browser does.</td><td>No visual editor. That doesn't matter, since I'm writing the code.</td></tr>
+        <tr><td><b>Godot 4</b></td><td>Excellent free 2D engine with an editor you could open yourself. Native console and desktop exports.</td><td>Scenes live in an editor I can't see, so I can verify less. Best if you want to edit levels by hand.</td></tr>
+        <tr><td><b>Unity</b></td><td>Huge ecosystem.</td><td>Heavy for a pixel-art RPG, editor-centric, slow builds.</td></tr>
+        <tr><td><b>GameMaker</b></td><td>Classic for pixel RPGs (Undertale).</td><td>Closed editor and project format. Hard for me to drive.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Art without an image generator</div>
+    <h2>Sprites are code, and that's an advantage</h2>
+    <p class="col">You're right that I don't generate images. Every sprite on this page comes from a small Python toolkit I wrote today. It draws at true pixel resolution, so nothing is blurry or off-grid, and it exports PNG spritesheets that Phaser loads like any other art.</p>
+  </header>
+  <div class="two">
+    <ol class="steps">
+      <li><b>Hand-placed pixels for faces and clothing.</b> The hunter's head and torso are typed out as pixel grids, one character per pixel.</li>
+      <li><b>Shapes for animals and trees.</b> Bodies, necks and canopies are drawn from ellipses and polygons in palette colors, then outlined. The same definition renders at 1× for the map and 2× for battle.</li>
+      <li><b>Posed limbs.</b> Legs and arms come from a pose table per frame, which makes alternating steps a guarantee.</li>
+      <li><b>One autumn palette.</b> Every sprite pulls from about 70 shared colors, so the world hangs together.</li>
+      <li><b>Automated checks.</b> The leg check runs on every build. A bad frame never ships.</li>
+    </ol>
+    <pre class="code">DOWN = [
+    "....HHHHHHHH....",   H hair
+    "...HHHHHHHHHH...",
+    "...hSSSSSSSSh...",   S skin
+    "...SSESSSSESS...",   E eyes
+    "....BSSssSSB....",   B stubble
+    "....VVkCCgVV....",   V blaze vest
+    "....VVCgCkVV....",   C k g camo
+]</pre>
+  </div>
+  <p class="col">If you ever want hand-painted art, a pro asset pack or a commissioned artist can replace any sheet with no code changes. The game only sees PNGs.</p>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Keeping it balanced</div>
+    <h2>A simulator plays thousands of hunts</h2>
+  </header>
+  <div class="col" style="display:grid;gap:12px">
+    <p>Battle rules will live in plain TypeScript, separate from graphics, so a headless simulator can run thousands of encounters for every animal against scripted play styles: rusher, patient stalker, call-heavy. Every balance change gets checked against targets like these:</p>
+    <ul class="asks">
+      <li>A starting hunter wins about 85% of common encounters, 60–65% of uncommon and 35–40% of rare ones, rising with gear and skills.</li>
+      <li>A typical encounter lasts 4–7 turns. No turn-one wins against rare game.</li>
+      <li>No single ability shows up in more than 60% of winning loadouts. If one does, it gets tuned down.</li>
+      <li>Patience and aggression both work, but on different animals.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Plan</div>
+    <h2>Milestones</h2>
+  </header>
+  <ol class="steps col">
+    <li><b>Vertical slice.</b> Pinecrest and Maple Hollow, movement and collisions, four animals, the full encounter loop, selling, saving. Playable link.</li>
+    <li><b>Systems.</b> Skill trees, four weapons, tags and seasons, Field Journal, trophy scoring, the balance simulator.</li>
+    <li><b>World.</b> All seven areas, about 18 species, both legendaries, day/night and weather.</li>
+    <li><b>Polish.</b> Chiptune music and sound effects, menus, controller and touch controls, title screen.</li>
+  </ol>
+</section>
+
+<section>
+  <header>
+    <div class="eyebrow">Your call</div>
+    <h2>Before I start building</h2>
+  </header>
+  <ul class="asks col">
+    <li><b>Name.</b> “Hollow Ridge” is a working title. Keep it or give me yours.</li>
+    <li><b>Look.</b> Is the blaze vest right, or full camo like your photo?</li>
+    <li><b>Tone.</b> I've kept it bloodless. A harvest shows a tag and a grade, not gore. That keeps it family-friendly.</li>
+    <li><b>Platform.</b> Browser and phone first, desktop later. OK?</li>
+  </ul>
+</section>
+
+<footer>Concept art and leg-check output generated from <code>art/</code> in the slamdunkjunk repo.</footer>
+</div>
+
+<script>
+const SPRITES = /*SPRITES*/{};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const imgs = {};
+function load(name) {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { imgs[name] = im; res(im); };
+    im.src = SPRITES[name];
+  });
+}
+const anims = [];   // functions called with the current frame index
+
+function sheetCanvas(name, opts = {}) {
+  const im = imgs[name];
+  const fw = im.width / 4, fh = im.height;
+  const c = document.createElement('canvas');
+  c.width = opts.w || fw; c.height = opts.h || fh;
+  c.className = 'px';
+  const ctx = c.getContext('2d');
+  const draw = f => {
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.drawImage(im, f * fw, 0, fw, fh, Math.round((c.width - fw) / 2), c.height - fh, fw, fh);
+  };
+  draw(opts.frame ?? 0);
+  if (opts.fixed === undefined) anims.push(draw);
+  return { c, fw, fh };
+}
+
+const BEASTS = [
+  { id: 'cottontail', name: 'Cottontail', rar: 'Common', hide: 'Light hide', where: 'Maple Hollow, Frostline',
+    moves: [['Zigzag', 'Evasion +30% for 2 turns.'], ['Freeze', "Can't be targeted at Long range this turn."], ['Bolt Hole', 'Below 30% Vitality it dives into a burrow and escapes.']],
+    drops: 'Meat $8 · Pelt $6. Bring the shotgun: a rifle ruins the meat.' },
+  { id: 'wild_turkey', name: 'Wild Turkey', rar: 'Uncommon', hide: 'Light hide', where: 'Maple Hollow, Oak Ridge',
+    moves: [['Putt Alarm', 'Spook +25.'], ['Eagle Eye', 'Passive. Any ability where you move adds +10 Spook.'], ['Fly Up', 'Roosts: Range +1, and only a shotgun or rifle can reach it next turn.']],
+    drops: 'Meat $40 · Beard and fan trophy. Weakness: a box call can pull a gobbler two ranges closer.' },
+  { id: 'whitetail_doe', name: 'Whitetail Doe', rar: 'Common', hide: 'Medium hide', where: 'Maple Hollow, Oak Ridge',
+    moves: [['Snort', 'Spook +20.'], ['Flag Tail', 'Evasion +20% for 2 turns.'], ['Bound', 'Range +1.']],
+    drops: 'Meat $90 · Hide $25. Needs a doe tag.' },
+  { id: 'red_fox', name: 'Red Fox', rar: 'Uncommon', hide: 'Medium hide', where: 'Oak Ridge, Maple Hollow edges',
+    moves: [['Vanish into Brush', 'Evasion +40% for one turn.'], ['Double Back', 'Shuffles the range at random.'], ['Wary', 'Passive. Each call works on it only once.']],
+    drops: 'Pelt $70, or $105 at A grade.' },
+  { id: 'whitetail_buck', name: 'Whitetail Buck', rar: 'Rare', hide: 'Medium hide', where: 'Oak Ridge, Maple Hollow',
+    moves: [['Keen Nose', "Passive. Spook +8 each turn unless you're downwind."], ['Snort-Wheeze', 'Spook +30. If Spook is already 70+, it bolts.'], ['Rut Charge', 'During the rut, when angered: 20 Stamina damage and Nerve −20.']],
+    drops: 'Meat $110 · Antlers $2 per scored inch · Mount. Every rack is rolled, so no two bucks match.' },
+  { id: 'black_bear', name: 'Black Bear', rar: 'Rare', hide: 'Heavy hide', where: 'Oak Ridge, Cedar Bottoms',
+    moves: [['Bluff Charge', 'Nerve −30 and Range −1. No damage, all fear.'], ['Maul', '25 Stamina damage at Close range.'], ['Thick Hide', 'Passive. −25% damage from anything but rifle or muzzleloader.'], ['Enrage', "Below 40% Vitality it won't flee. Attacks +50%."]],
+    drops: 'Meat $150 · Hide $300 · Skull trophy. Needs a bear tag.' },
+  { id: 'ghost_buck', name: 'The Ghost of Hollow Ridge', rar: 'Legendary', hide: 'Albino buck', where: 'Frostline, at dawn, in fog',
+    moves: [['Vanish', 'At 60 Spook it disappears into another area. The chase spans the map.'], ['Morning Mist', 'Both sides −20% accuracy.'], ['Old Instincts', 'Immune to calls and scents.']],
+    drops: 'Not for sale. Mount only: the centerpiece of your cabin. Appears after 10 buck harvests.' },
+];
+
+const FOES = {
+  whitetail_buck: { name: 'WHITETAIL BUCK', tag: '8 PT', spook: 35, range: 'MID RANGE',
+    intro: 'A WHITETAIL BUCK steps out of the oaks. The wind is in your face.' },
+  black_bear: { name: 'BLACK BEAR', tag: '310 LB', spook: 15, range: 'MID RANGE',
+    intro: "A BLACK BEAR rises from the berry patch. It hasn't seen you yet." },
+  wild_turkey: { name: 'WILD TURKEY', tag: 'GOBBLER', spook: 45, range: 'LONG RANGE',
+    intro: 'A GOBBLER struts at the field edge, fanned out and drumming.' },
+  red_fox: { name: 'RED FOX', tag: 'PRIME', spook: 50, range: 'MID RANGE',
+    intro: 'A RED FOX pauses mid-trot, nose working the breeze.' },
+  ghost_buck: { name: '??? BUCK', tag: 'LEGEND', spook: 55, range: 'LONG RANGE',
+    intro: 'Fog lifts off the snow. Something pale is watching you.' },
+};
+const MOVES = [
+  ['Steady Aim', '3/3', 'You settle your breathing. NERVE +25, and your next shot is 15% more accurate.', { nerve: 95 }],
+  ['Grunt Call', '3/3', 'A soft grunt. The buck turns toward you and closes to CLOSE RANGE. SPOOK +5.', { range: 'CLOSE RANGE', spook: +5 }],
+  ['Freeze', '4/4', 'You hold dead still. SPOOK −20. Careful: it may wander out of range.', { spook: -20 }],
+  ['Fire .308', '4 RDS', 'Vital hit! 80 damage. One clean shot means an A-grade harvest, worth ×1.5 at the Trading Post.', { hp: 0 }],
+];
+let foe = 'whitetail_buck';
+let state = {};
+
+function renderFoe() {
+  const f = FOES[foe];
+  state = { spook: f.spook, hp: 100, nerve: 70, range: f.range };
+  document.getElementById('foeName').textContent = f.name;
+  document.getElementById('foeTag').textContent = f.tag;
+  document.getElementById('say').textContent = f.intro;
+  paintHud();
+  document.querySelectorAll('#foes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === foe));
+  document.querySelectorAll('#moves button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+}
+function paintHud() {
+  document.getElementById('foeSpook').style.width = state.spook + '%';
+  document.getElementById('foeHp').style.width = state.hp + '%';
+  document.getElementById('nerve').style.width = state.nerve + '%';
+  document.getElementById('range').textContent = state.range;
+}
+
+async function boot() {
+  await Promise.all(Object.keys(SPRITES).map(load));
+
+  // overworld
+  const ow = document.getElementById('ow').getContext('2d');
+  anims.push(f => { ow.clearRect(0, 0, 320, 208); ow.drawImage(imgs.overworld, f * 320, 0, 320, 208, 0, 0, 320, 208); });
+
+  // hunter directions
+  const dirs = document.getElementById('dirs');
+  const legstrip = document.getElementById('legstrip');
+  const steps = ['L fwd', 'pass', 'R fwd', 'pass'];
+  for (const d of ['down', 'left', 'up', 'right']) {
+    const box = document.createElement('div'); box.className = 'dir';
+    const { c } = sheetCanvas('hunter_' + d);
+    c.classList.add('big'); c.setAttribute('aria-label', 'Hunter walking ' + d);
+    const lab = document.createElement('div'); lab.className = 'label'; lab.textContent = 'Facing ' + d;
+    const strip = document.createElement('div'); strip.className = 'strip';
+    for (let i = 0; i < 4; i++) {
+      const fig = document.createElement('figure');
+      const s = sheetCanvas('hunter_' + d, { frame: i, fixed: true }).c;
+      const cap = document.createElement('figcaption'); cap.textContent = steps[i];
+      fig.append(s, cap); strip.append(fig);
+    }
+    box.append(c, lab, strip); dirs.append(box);
+  }
+  for (const d of ['down', 'left']) {
+    for (let i = 0; i < 4; i++) {
+      const fig = document.createElement('figure');
+      const s = sheetCanvas('legcheck_hunter_' + d, { frame: i, fixed: true }).c;
+      s.style.width = '48px'; s.style.height = '72px';
+      const cap = document.createElement('figcaption'); cap.textContent = steps[i];
+      fig.append(s, cap); legstrip.append(fig);
+    }
+  }
+
+  // bestiary
+  const beasts = document.getElementById('beasts');
+  for (const b of BEASTS) {
+    const card = document.createElement('article'); card.className = 'beast';
+    const pic = document.createElement('div'); pic.className = 'pic';
+    const { c, fw, fh } = sheetCanvas(b.id);
+    const scale = Math.max(3, Math.min(6, Math.floor(130 / fh), Math.floor(230 / fw)));
+    c.style.width = fw * scale + 'px'; c.style.height = fh * scale + 'px';
+    c.setAttribute('aria-label', b.name + ' walk cycle');
+    pic.append(c);
+    const body = document.createElement('div'); body.className = 'body';
+    body.innerHTML = `<div class="top"><h3></h3><span class="rar ${b.rar}">${b.rar}</span></div>
+      <div class="meta"></div><ul></ul><div class="drops"></div>`;
+    body.querySelector('h3').textContent = b.name;
+    body.querySelector('.meta').textContent = b.hide + ' · ' + b.where;
+    const ul = body.querySelector('ul');
+    for (const [n, d] of b.moves) { const li = document.createElement('li'); li.innerHTML = '<b></b> '; li.querySelector('b').textContent = n + '.'; li.append(d); ul.append(li); }
+    body.querySelector('.drops').textContent = b.drops;
+    card.append(pic, body); beasts.append(card);
+  }
+
+  // battle
+  const bt = document.getElementById('bt').getContext('2d');
+  anims.push(f => {
+    bt.drawImage(imgs.battle_backdrop, 0, 0);
+    const im = imgs['battle_' + foe]; const fw = im.width / 4;
+    bt.drawImage(im, f * fw, 0, fw, im.height, Math.round(176 - fw / 2), 94 - im.height, fw, im.height);
+    bt.drawImage(imgs.hunter_back, 30, 160 - imgs.hunter_back.height);
+  });
+  const foes = document.getElementById('foes');
+  const labels = { whitetail_buck: 'Whitetail buck', black_bear: 'Black bear', wild_turkey: 'Wild turkey', red_fox: 'Red fox', ghost_buck: 'Legendary' };
+  for (const id of Object.keys(FOES)) {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.id = id; b.textContent = labels[id];
+    b.addEventListener('click', () => { foe = id; renderFoe(); });
+    foes.append(b);
+  }
+  const moves = document.getElementById('moves');
+  MOVES.forEach(([n, uses, text, fx]) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.innerHTML = '<span></span><small></small>';
+    b.querySelector('span').textContent = n.toUpperCase();
+    b.querySelector('small').textContent = uses;
+    b.addEventListener('click', () => {
+      let t = text;
+      if (n === 'Grunt Call' && foe !== 'whitetail_buck') t = "Wrong call for this animal. It doesn't buy it. SPOOK +20.";
+      if (n === 'Grunt Call' && foe === 'ghost_buck') t = 'Old Instincts: the Ghost ignores calls entirely.';
+      document.getElementById('say').textContent = t;
+      if (fx.nerve) state.nerve = fx.nerve;
+      if (fx.range && foe === 'whitetail_buck') state.range = fx.range;
+      if (fx.spook) state.spook = Math.max(0, Math.min(100, state.spook + (n === 'Grunt Call' && foe !== 'whitetail_buck' ? 20 : fx.spook)));
+      if ('hp' in fx) state.hp = fx.hp + 20;
+      paintHud();
+      moves.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    });
+    moves.append(b);
+  });
+  renderFoe();
+
+  // animation clock
+  let frame = 0, last = 0;
+  const tick = t => {
+    if (t - last > 150) { frame = (frame + 1) % 4; last = t; anims.forEach(a => a(frame)); }
+    requestAnimationFrame(tick);
+  };
+  anims.forEach(a => a(0));
+  if (!reduce) requestAnimationFrame(tick);
+}
+boot();
+</script>
