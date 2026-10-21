@@ -2,4 +2,3 @@ __pycache__/
 *.pyc
 game/.godot/
 game/build/
-*.import

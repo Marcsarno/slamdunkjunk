@@ -32,12 +32,11 @@ static func title_font() -> FontFile:
 
 
 static func _load_font(path: String) -> FontFile:
-	var f := FontFile.new()
-	f.data = FileAccess.get_file_as_bytes(path)
-	f.antialiasing = TextServer.FONT_ANTIALIASING_NONE
-	f.hinting = TextServer.HINTING_NONE
-	f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-	f.force_autohinter = false
+	# Fonts are imported resources; the raw .ttf is not in the exported pack.
+	# Text renders at screen resolution (stretch mode canvas_items), so keep
+	# normal smoothing; the pixel art itself still scales with nearest filtering.
+	var f: FontFile = load(path)
+	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
 
@@ -150,6 +149,30 @@ static func touch_button(size: int, glyph: String, pressed := false) -> ImageTex
 						"left": p = Vector2i(i - s / 2, j)
 						"right": p = Vector2i(s / 2 - i, j)
 					img.set_pixel(m + p.x, m + p.y, c)
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+
+## Small arrow pointing where the wind blows (where Chris's scent goes).
+static func arrow(dir: Vector2i) -> ImageTexture:
+	var key := "arrow%s" % dir
+	if _cache.has(key):
+		return _cache[key]
+	var img := Image.create(11, 11, false, Image.FORMAT_RGBA8)
+	var pts := []
+	for i in 9:
+		pts.append(Vector2i(1 + i, 5))          # shaft, pointing right
+	for i in 4:
+		pts.append(Vector2i(9 - i, 5 - i))
+		pts.append(Vector2i(9 - i, 5 + i))
+	for p in pts:
+		var q: Vector2i = p
+		match dir:
+			Vector2i.LEFT: q = Vector2i(10 - p.x, p.y)
+			Vector2i.UP: q = Vector2i(p.y, 10 - p.x)
+			Vector2i.DOWN: q = Vector2i(p.y, p.x)
+		img.set_pixel(q.x, q.y, BLAZE.darkened(0.2))
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
