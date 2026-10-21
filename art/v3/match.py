@@ -121,11 +121,8 @@ def outline(p, col=OUTLINE):
 def compose(frame=0):
     W, H = 480, 270
     scene = ground(W, H)
-    ref = Image.open('ref/chris_sheet_native.png')
-    # right-facing row; cells are 80x108
-    cell = ref.crop((frame * 80, 108 + 18, frame * 80 + 80, 216))
-    chris = Px(cell.width, cell.height)
-    chris.a = np.array(cell)
+    import chris3
+    chris = chris3.walk('right')[frame].p
     t, (tx, tb) = tree()
     t2, _ = tree(9, 'red')
     t3, _ = tree(12, 'gold')
@@ -140,7 +137,7 @@ def compose(frame=0):
     scene.darken(((xx - 300) / 34) ** 2 + ((yy - 226) / 6) ** 2 <= 1, 0.72)
     scene.darken(((xx - 128) / 18) ** 2 + ((yy - 238) / 4) ** 2 <= 1, 0.72)
     scene.blit(b, 300 - b.w // 2, 230 - b.h)
-    scene.blit(chris, 128 - 40, 240 - chris.h + 2)
+    scene.blit(chris, 128 - chris.w // 2, 240 - chris.h + 3)
     return scene
 
 
