@@ -1,0 +1,215 @@
+{
+  "id": "h01_pumpkin_patch",
+  "name": "Pumpkin Patch",
+  "number": 1,
+  "par": 4,
+  "seed": 101,
+  "note": "Course coords in meters: x right, y down-range, z up. Tee at the origin.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      45
+    ],
+    [
+      2,
+      110
+    ],
+    [
+      -6,
+      170
+    ],
+    [
+      -24,
+      222
+    ],
+    [
+      -44,
+      262
+    ],
+    [
+      -52,
+      292
+    ]
+  ],
+  "fairway_start": 38,
+  "fairway_width": [
+    20,
+    26,
+    30,
+    28,
+    26,
+    24,
+    22
+  ],
+  "rough_width": 18,
+  "deep_rough_width": 16,
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      10
+    ]
+  },
+  "green": {
+    "center": [
+      -52,
+      292
+    ],
+    "radius": [
+      13,
+      11
+    ],
+    "rotation": 0.35,
+    "slope": [
+      0.012,
+      -0.018
+    ]
+  },
+  "pin": [
+    -49,
+    295
+  ],
+  "bunkers": [
+    {
+      "center": [
+        6,
+        214
+      ],
+      "radius": [
+        8,
+        4.5
+      ],
+      "rotation": -0.5,
+      "depth": 0.55
+    },
+    {
+      "center": [
+        -36,
+        196
+      ],
+      "radius": [
+        6,
+        3.5
+      ],
+      "rotation": 0.6,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -37,
+        291
+      ],
+      "radius": [
+        5,
+        3.2
+      ],
+      "rotation": 1.3,
+      "depth": 0.6
+    },
+    {
+      "center": [
+        -62,
+        279
+      ],
+      "radius": [
+        6,
+        3
+      ],
+      "rotation": 0.4,
+      "depth": 0.6
+    }
+  ],
+  "water": [
+    {
+      "center": [
+        -27,
+        118
+      ],
+      "radius": [
+        11,
+        26
+      ],
+      "rotation": 0.12,
+      "level": -0.35
+    }
+  ],
+  "elevation": {
+    "tee": 1.6,
+    "green": 4.2,
+    "undulation": 0.7,
+    "bank_slope": 0.1,
+    "mounds": [
+      {
+        "center": [
+          20,
+          150
+        ],
+        "radius": 18,
+        "height": 3.0
+      },
+      {
+        "center": [
+          -12,
+          245
+        ],
+        "radius": 10,
+        "height": 1.2
+      },
+      {
+        "center": [
+          -70,
+          300
+        ],
+        "radius": 20,
+        "height": 4.5
+      }
+    ]
+  },
+  "wind": {
+    "min": 0,
+    "max": 4
+  },
+  "graveyards": [
+    {
+      "center": [
+        -50,
+        206
+      ],
+      "radius": 9,
+      "count": 11,
+      "fence": true
+    },
+    {
+      "center": [
+        22,
+        262
+      ],
+      "radius": 6,
+      "count": 6,
+      "fence": false
+    }
+  ],
+  "lantern_spacing": 26,
+  "trees": {
+    "near": [
+      "maple_orange",
+      "maple_red",
+      "maple_orange",
+      "haunted_tree",
+      "lantern_tree"
+    ],
+    "far": [
+      "pine_blue",
+      "pine_blue",
+      "maple_red"
+    ],
+    "spacing": 8.5
+  }
+}

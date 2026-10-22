@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 game/.godot/
 game/build/
+golf/game/.godot/
+golf/game/build/
+golf/game/assets/holes/*/hole.blend
+golf/game/assets/holes/*/hole.blend1
+golf/game/assets/holes/*/preview.png

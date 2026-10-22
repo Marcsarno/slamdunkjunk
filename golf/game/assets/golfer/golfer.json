@@ -1,0 +1,644 @@
+{
+ "driver": {
+  "view": "face",
+  "body_px": 328,
+  "frames": {
+   "0": {
+    "file": "driver_00.png",
+    "size": [
+     237,
+     342
+    ],
+    "anchor": [
+     96.2,
+     335
+    ],
+    "height": 328,
+    "club_head": [
+     220.1,
+     334.0
+    ]
+   },
+   "1": {
+    "file": "driver_01.png",
+    "size": [
+     252,
+     338
+    ],
+    "anchor": [
+     144.2,
+     331
+    ],
+    "height": 322,
+    "club_head": [
+     226.6,
+     318.0
+    ]
+   },
+   "3": {
+    "file": "driver_03.png",
+    "size": [
+     200,
+     352
+    ],
+    "anchor": [
+     93.1,
+     345
+    ],
+    "height": 324,
+    "club_head": [
+     18.7,
+     345.0
+    ]
+   },
+   "4": {
+    "file": "driver_04.png",
+    "size": [
+     219,
+     359
+    ],
+    "anchor": [
+     109.9,
+     352
+    ],
+    "height": 323,
+    "club_head": [
+     29.3,
+     352.0
+    ]
+   },
+   "5": {
+    "file": "driver_05.png",
+    "size": [
+     215,
+     345
+    ],
+    "anchor": [
+     94.5,
+     338
+    ],
+    "height": 332,
+    "club_head": [
+     198.5,
+     337.0
+    ]
+   },
+   "6": {
+    "file": "driver_06.png",
+    "size": [
+     316,
+     326
+    ],
+    "anchor": [
+     113.7,
+     319
+    ],
+    "height": 311,
+    "club_head": [
+     29.0,
+     318.0
+    ]
+   },
+   "7": {
+    "file": "driver_07.png",
+    "size": [
+     225,
+     322
+    ],
+    "anchor": [
+     131.3,
+     315
+    ],
+    "height": 309,
+    "club_head": [
+     206.5,
+     315.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   1,
+   3,
+   4
+  ],
+  "down": [
+   1,
+   5,
+   6,
+   7
+  ],
+  "contact": 1,
+  "down_ms": [
+   60,
+   110,
+   150,
+   600
+  ]
+ },
+ "iron": {
+  "view": "face",
+  "body_px": 327,
+  "frames": {
+   "0": {
+    "file": "iron_00.png",
+    "size": [
+     199,
+     341
+    ],
+    "anchor": [
+     98.5,
+     334
+    ],
+    "height": 327,
+    "club_head": [
+     182.3,
+     333.0
+    ]
+   },
+   "2": {
+    "file": "iron_02.png",
+    "size": [
+     230,
+     329
+    ],
+    "anchor": [
+     120.0,
+     322
+    ],
+    "height": 313,
+    "club_head": [
+     21.1,
+     313.0
+    ]
+   },
+   "3": {
+    "file": "iron_03.png",
+    "size": [
+     238,
+     344
+    ],
+    "anchor": [
+     128.2,
+     337
+    ],
+    "height": 317,
+    "club_head": [
+     217.6,
+     330.0
+    ]
+   },
+   "4": {
+    "file": "iron_04.png",
+    "size": [
+     201,
+     346
+    ],
+    "anchor": [
+     99.8,
+     339
+    ],
+    "height": 318,
+    "club_head": [
+     21.1,
+     338.0
+    ]
+   },
+   "5": {
+    "file": "iron_05.png",
+    "size": [
+     231,
+     339
+    ],
+    "anchor": [
+     118.0,
+     332
+    ],
+    "height": 314,
+    "club_head": [
+     209.3,
+     328.0
+    ]
+   },
+   "6": {
+    "file": "iron_06.png",
+    "size": [
+     274,
+     327
+    ],
+    "anchor": [
+     155.8,
+     320
+    ],
+    "height": 311,
+    "club_head": [
+     253.3,
+     316.0
+    ]
+   },
+   "8": {
+    "file": "iron_08.png",
+    "size": [
+     214,
+     328
+    ],
+    "anchor": [
+     105.8,
+     321
+    ],
+    "height": 314,
+    "club_head": [
+     181.6,
+     320.0
+    ]
+   },
+   "9": {
+    "file": "iron_09.png",
+    "size": [
+     263,
+     328
+    ],
+    "anchor": [
+     109.3,
+     321
+    ],
+    "height": 314,
+    "club_head": [
+     20.0,
+     320.0
+    ]
+   },
+   "10": {
+    "file": "iron_10.png",
+    "size": [
+     256,
+     327
+    ],
+    "anchor": [
+     102.3,
+     320
+    ],
+    "height": 313,
+    "club_head": [
+     20.2,
+     320.0
+    ]
+   },
+   "11": {
+    "file": "iron_11.png",
+    "size": [
+     164,
+     322
+    ],
+    "anchor": [
+     89.4,
+     315
+    ],
+    "height": 308,
+    "club_head": [
+     144.2,
+     314.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   2,
+   3,
+   4
+  ],
+  "down": [
+   5,
+   6,
+   8,
+   9,
+   10,
+   11
+  ],
+  "contact": 2,
+  "down_ms": [
+   50,
+   50,
+   110,
+   90,
+   120,
+   600
+  ]
+ },
+ "putter": {
+  "view": "face",
+  "body_px": 313,
+  "frames": {
+   "0": {
+    "file": "putter_00.png",
+    "size": [
+     149,
+     328
+    ],
+    "anchor": [
+     72.6,
+     321
+    ],
+    "height": 313,
+    "club_head": [
+     115.5,
+     321.0
+    ]
+   },
+   "2": {
+    "file": "putter_02.png",
+    "size": [
+     159,
+     327
+    ],
+    "anchor": [
+     81.9,
+     320
+    ],
+    "height": 313,
+    "club_head": [
+     14.9,
+     308.0
+    ]
+   },
+   "3": {
+    "file": "putter_03.png",
+    "size": [
+     151,
+     328
+    ],
+    "anchor": [
+     71.2,
+     321
+    ],
+    "height": 314,
+    "club_head": [
+     128.0,
+     316.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   2
+  ],
+  "down": [
+   0,
+   3
+  ],
+  "contact": 0,
+  "down_ms": [
+   80,
+   600
+  ]
+ },
+ "back_driver": {
+  "view": "back",
+  "body_px": 269,
+  "frames": {
+   "0": {
+    "file": "back_driver_00.png",
+    "size": [
+     265,
+     278
+    ],
+    "anchor": [
+     82.7,
+     271
+    ],
+    "height": 269,
+    "club_head": [
+     252.7,
+     276.0
+    ]
+   },
+   "1": {
+    "file": "back_driver_01.png",
+    "size": [
+     220,
+     277
+    ],
+    "anchor": [
+     134.6,
+     271
+    ],
+    "height": 269,
+    "club_head": [
+     198.4,
+     274.0
+    ]
+   },
+   "2": {
+    "file": "back_driver_02.png",
+    "size": [
+     294,
+     276
+    ],
+    "anchor": [
+     80.9,
+     271
+    ],
+    "height": 269,
+    "club_head": [
+     281.6,
+     273.0
+    ]
+   },
+   "3": {
+    "file": "back_driver_03.png",
+    "size": [
+     232,
+     281
+    ],
+    "anchor": [
+     150.9,
+     271
+    ],
+    "height": 270,
+    "club_head": [
+     200.0,
+     274.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   1
+  ],
+  "down": [
+   2,
+   3
+  ],
+  "contact": 0,
+  "down_ms": [
+   120,
+   600
+  ]
+ },
+ "back_iron": {
+  "view": "back",
+  "body_px": 273,
+  "frames": {
+   "0": {
+    "file": "back_iron_00.png",
+    "size": [
+     263,
+     283
+    ],
+    "anchor": [
+     98.7,
+     276
+    ],
+    "height": 273,
+    "club_head": [
+     248.1,
+     275.0
+    ]
+   },
+   "1": {
+    "file": "back_iron_01.png",
+    "size": [
+     211,
+     281
+    ],
+    "anchor": [
+     112.6,
+     275
+    ],
+    "height": 272,
+    "club_head": [
+     191.7,
+     279.0
+    ]
+   },
+   "2": {
+    "file": "back_iron_02.png",
+    "size": [
+     289,
+     281
+    ],
+    "anchor": [
+     99.1,
+     274
+    ],
+    "height": 271,
+    "club_head": [
+     273.8,
+     273.0
+    ]
+   },
+   "3": {
+    "file": "back_iron_03.png",
+    "size": [
+     233,
+     286
+    ],
+    "anchor": [
+     134.7,
+     275
+    ],
+    "height": 271,
+    "club_head": [
+     200.7,
+     280.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   1
+  ],
+  "down": [
+   2,
+   3
+  ],
+  "contact": 0,
+  "down_ms": [
+   120,
+   600
+  ]
+ },
+ "back_putter": {
+  "view": "back",
+  "body_px": 276,
+  "frames": {
+   "0": {
+    "file": "back_putter_00.png",
+    "size": [
+     200,
+     287
+    ],
+    "anchor": [
+     91.8,
+     280
+    ],
+    "height": 276,
+    "club_head": [
+     178.1,
+     280.0
+    ]
+   },
+   "1": {
+    "file": "back_putter_01.png",
+    "size": [
+     207,
+     287
+    ],
+    "anchor": [
+     88.2,
+     280
+    ],
+    "height": 277,
+    "club_head": [
+     187.7,
+     275.0
+    ]
+   },
+   "2": {
+    "file": "back_putter_02.png",
+    "size": [
+     204,
+     285
+    ],
+    "anchor": [
+     93.1,
+     278
+    ],
+    "height": 275,
+    "club_head": [
+     183.3,
+     280.0
+    ]
+   },
+   "3": {
+    "file": "back_putter_03.png",
+    "size": [
+     204,
+     285
+    ],
+    "anchor": [
+     88.3,
+     278
+    ],
+    "height": 275,
+    "club_head": [
+     184.9,
+     274.0
+    ]
+   }
+  },
+  "back": [
+   0,
+   1
+  ],
+  "down": [
+   2,
+   3
+  ],
+  "contact": 0,
+  "down_ms": [
+   120,
+   600
+  ]
+ }
+}
