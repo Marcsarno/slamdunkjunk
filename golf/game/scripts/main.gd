@@ -247,13 +247,20 @@ func _score_name(diff: int) -> String:
 
 
 # ---------------------------------------------------------------- input
+## One finger at a time, read as touches (a mouse arrives as touches too: emulate_touch_from_mouse).
+## Phones give each finger any id, so the first finger down is followed, whatever its index.
+var _finger := -1
+
+
 func _unhandled_input(e: InputEvent) -> void:
-	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
-		if e.pressed:
+	if e is InputEventScreenTouch:
+		if e.pressed and _finger == -1:
+			_finger = e.index
 			_press(e.position)
-		else:
+		elif not e.pressed and e.index == _finger:
+			_finger = -1
 			_release()
-	elif e is InputEventMouseMotion and (e.button_mask & MOUSE_BUTTON_MASK_LEFT):
+	elif e is InputEventScreenDrag and e.index == _finger:
 		_drag(e.position, e.relative)
 
 

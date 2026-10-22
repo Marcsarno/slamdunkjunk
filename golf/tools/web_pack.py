@@ -107,7 +107,10 @@ html = html.replace(marker, checks + shim + '\t\t' + marker)
 html = html.replace("setStatusMode('hidden');\n\t\t}, displayFailureNotice);",
                     "setStatusMode('hidden'); document.getElementById('diag').remove();\n\t\t}, (e) => { window.__diag('Engine failed: ' + (e && e.message || e)); displayFailureNotice(e); });")
 assert "document.getElementById('diag').remove()" in html
-# the host wraps the page in its own document: keep Godot's title, style and body content only
+# local.html: the full document as Godot made it (its own viewport meta), for testing on this machine
+open(os.path.join(out, 'local.html'), 'w', encoding='utf-8').write(html)
+# the host wraps the page in its own document (with its own viewport meta): keep Godot's title, style and
+# body content only
 title = re.search(r'<title>.*?</title>', html, re.S).group(0)
 style = re.search(r'<style>.*?</style>', html, re.S).group(0)
 body = re.search(r'<body>(.*)</body>', html, re.S).group(1)
