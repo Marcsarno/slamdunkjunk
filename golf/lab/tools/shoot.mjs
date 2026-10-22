@@ -1,9 +1,10 @@
 // Drive the Swing Lab headless and save pictures.
 // usage: node tools/shoot.mjs <url> <outdir> [page|sheet|hands|video]
 //   page   a screenshot of the whole lab (desktop and phone width)
-//   sheet  address / top / impact / finish x face-on, down the line, above (Brittany | reference)
+//   sheet  address / top / impact / finish x face-on, down the line, above
 //   hands  the four hand close-ups at the key frames and the worst trail-hand frame, worst first
-//   video  face-on at the key frames: video | Brittany | reference, and the video's outline traced over her
+//   video  at the ten swing positions: video | Brittany face-on and from behind, and the video's outline
+//          traced over her face-on (SKEL=1 draws her skeleton)
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,7 +31,7 @@ const logs = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') logs.push(`${m.type()}: ${m.text()}`); });
 page.on('pageerror', (e) => logs.push('pageerror: ' + e.message));
 await page.goto(url);
-await page.waitForFunction(() => window.lab && window.lab.ready === true, null, { timeout: 180000 }).catch(() => {});
+await page.waitForFunction(() => window.lab && window.lab.ready === true, null, { timeout: 900000 }).catch(() => {});
 const ready = await page.evaluate(() => !!(window.lab && window.lab.ready));
 console.log('ready', ready);
 if (logs.length) console.log(logs.slice(0, 20).join('\n'));
@@ -52,7 +53,7 @@ if (mode === 'sheet' || mode === 'hands') {
   const keys = await page.evaluate(() => window.lab.keys());
   const scan = await page.evaluate(() => { const s = window.lab.scan(); return s && { trail: s.trail.f, leadWrist: s.leadWrist.f, trailWrist: s.trailWrist.f }; });
   console.log('keys', JSON.stringify(keys), 'worst', JSON.stringify(scan));
-  const views = mode === 'sheet' ? ['face', 'dtl', 'above'] : ['hands: support side', 'hands: below', 'hands: above', 'hands: 3/4'];
+  const views = mode === 'sheet' ? ['face', 'dtl', 'above'] : ['hands: front', 'hands: trail side', 'hands: target side', 'hands: her eyes'];
   const frames = mode === 'sheet' ? Object.entries(keys).filter(([k]) => k !== 'finish' || true)
     : [['worst trail hand', scan.trail], ...Object.entries(keys).filter(([k]) => k !== 'finish')];
   for (const [label, f] of frames) {
@@ -70,13 +71,17 @@ if (mode === 'sheet' || mode === 'hands') {
 if (mode === 'video') {
   const keys = await page.evaluate(() => window.lab.keys());
   console.log('keys', JSON.stringify(keys));
+  // SKEL=1: her skeleton drawn over her
+  if (process.env.SKEL) await page.evaluate(() => window.lab.set('skel', true));
+  let i = 0;
   for (const [label, f] of Object.entries(keys)) {
+    const n = String(i++).padStart(2, '0');
     await page.evaluate(() => window.lab.setVideo({ mode: 'beside', scale: 100, dx: 0, dy: 0, nudge: 0 }));
-    await save(`video_${label}_beside.png`, await page.evaluate((f2) => window.lab.shot(f2, 'face', 960, 620), f));
+    for (const view of ['face', 'behind']) await save(`video_${n}_${label}_${view}.png`, await page.evaluate(([f2, v2]) => window.lab.shotAsync(f2, v2, 760, 560), [f, view]));
     const vf = await page.evaluate(() => window.lab.videoFrame());
-    await page.evaluate(() => { window.lab.set('split', false); return window.lab.setVideo({ mode: 'over', line: true, opacity: 100 }); });
-    await save(`video_${label}_over.png`, await page.evaluate((f2) => window.lab.shot(f2, 'face', 420, 620), f));
-    await page.evaluate(() => { window.lab.set('split', true); return window.lab.setVideo({ mode: 'off' }); });
+    await page.evaluate(() => window.lab.setVideo({ mode: 'over', line: true, opacity: 100 }));
+    await save(`video_${n}_${label}_over.png`, await page.evaluate((f2) => window.lab.shotAsync(f2, 'face', 420, 620), f));
+    await page.evaluate(() => window.lab.setVideo({ mode: 'off' }));
     const nums = await page.evaluate(() => window.lab.measure());
     console.log(label, 'clip frame', f, 'video frame', vf, `sole ${nums.soleY.toFixed(1)}cm`, `shaft ${nums.shaftDown.toFixed(0)}° below level`,
       `hands ahead ${nums.handsAhead.toFixed(1)}cm`, `trail fist ${Math.hypot(nums.trailAlong, nums.trailFace, nums.trailToe).toFixed(0)}mm`,

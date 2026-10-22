@@ -27,14 +27,25 @@ cdn.jsdelivr.net). The published copy is a claude.ai artifact.
   the mocap's. The trail hand is pinned on the grip; its elbow swing is searched for a natural trail wrist.
   If the trail arm can't reach, the hands move toward the trail shoulder (96% reach at most). Twist lives
   in the forearms, never the wrists.
+- **Club at the ten positions:** the lead hand's correction is keyed at all ten and eased between them:
+  square at address and impact, level and along the target line at P2 / P6 (head away) and P8 (at the
+  target), level at the target at the top, up on the club's plane at P3 / P5 / P9 leaning as the video
+  shows, down her back at the finish.
+- **Hands placed together** (switch, off by default; the solve takes ~20 s): the club's grip may move off
+  the mocap's hand path so both arms hold it with natural wrists, clear of her body and each other.
+  Fewer arm-against-arm frames and no hand pops, but the lead wrist leaves its range more often; her trail
+  arm still meets her chest in about a third of the frames either way (the mocap's hand path is not hers).
 - **Collision:** her torso, chest, pelvis and thigh skin (skinned on the CPU each frame) against arm and
   hand capsules sized from her own arm vertices along their length; arm against arm. Red points mark skin
   inside an arm.
 - **Video reference:** your swing videos, only to check her 3D animation against (never game art). Each
   club has its video in `assets/video/<club>/` exactly as you made it (`ref.mp4`, plus a VP9 `ref.webm`
   for browsers without H.264) and a few numbers (`video.json`: keys, where her feet are, her height at
-  address). No frames are exported. The lab seeks the video to the frame matching the clip (synced at
-  address, top, impact and finish) and shows the view that matches the camera: face-on, or from behind her
+  address). No frames are exported. The lab seeks the video to the frame matching the clip (synced at the
+  ten swing positions: address, P2 club level back, P3 lead arm level, top, P5 lead arm level down, P6 club
+  level down, impact, P8 club level through, P9 hands up level with the shoulders, finish; read off the
+  video by eye one frame at a time, and found on her own arms in the clip by the same angles) and shows
+  the view that matches the camera: face-on, or from behind her
   where the video shows both sides. Beside her, or traced over her (the outline is drawn on the fly from
   the video's plain background).
 - **Views:** face-on, from behind, down the line, from the target, above, four close upper-body views, and four hand

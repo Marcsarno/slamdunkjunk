@@ -1,7 +1,8 @@
 """Add a swing video to the Swing Lab as a reference (to check her 3D animation against; never game art).
 
 usage: python3 -I video_ref.py <video> <out dir, e.g. golf/lab/assets/video/driver>
-       --keys address,top,impact,finish [--views face|face,behind] [--note text]
+       --keys address,top,impact,finish | address,p2,p3,top,p5,p6,impact,p8,p9,finish
+       [--views face|face,behind] [--note text] [--json-only]
 
 The video itself is the reference: it is copied (remuxed to .mp4, frames untouched) to <out>/ref.mp4, with
 a VP9 copy (ref.webm) for browsers without H.264, and the lab seeks it to the frame that matches the clip. No frames are exported. video.json holds what the
@@ -12,10 +13,14 @@ lab needs to stand each view beside her (or trace its outline over her) at her s
                 feet_x, sole_y   the middle of her shoes and the sole line at address (pinned to her feet)
                 height_px        her height at address, hair to sole (scaled to her own height at address)
   bg            the background colour (the lab's outline separates her from it)
-  keys          address / top / impact / finish, in video frames, picked by eye from the motion
+  keys          the swing positions in video frames, picked by eye one frame at a time (face-on): address,
+                P2 club level going back, P3 lead arm level, top, P5 lead arm level coming down, P6 club
+                level coming down, impact, P8 club level through, P9 trail arm level, finish (a putt: the
+                four main ones)
+--json-only rewrites video.json alone (the copies are already there).
 Made so far:
-  driver  Seedance two-angle driver video: --keys 0,90,120,186 --views face,behind
-  iron    Seedance two-angle iron video:   --keys 0,96,128.5,190 --views face,behind
+  driver  Seedance two-angle driver video: --keys 0,39,57,90,111.5,115.5,120,123,126.5,186 --views face,behind
+  iron    Seedance two-angle iron video:   --keys 0,43,60,96,117,122,128.5,136.5,143,190 --views face,behind
   putter  face-on putt video:              --keys 94,118,131,144
 """
 import argparse
@@ -33,6 +38,7 @@ ap.add_argument('video'); ap.add_argument('out')
 ap.add_argument('--keys', required=True)
 ap.add_argument('--views', default='face')
 ap.add_argument('--note', default='')
+ap.add_argument('--json-only', action='store_true')
 args = ap.parse_args()
 os.makedirs(args.out, exist_ok=True)
 
@@ -42,7 +48,10 @@ probe = json.loads(subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 
 n, d = probe['r_frame_rate'].split('/')
 fps = round(float(n) / float(d), 3)
 W, H = int(probe['width']), int(probe['height'])
-keys = dict(zip(['address', 'top', 'impact', 'finish'], (float(x) for x in args.keys.split(','))))
+vals = [float(x) for x in args.keys.split(',')]
+names10 = ['address', 'p2', 'p3', 'top', 'p5', 'p6', 'impact', 'p8', 'p9', 'finish']
+keys = dict(zip(names10 if len(vals) == 10 else ['address', 'top', 'impact', 'finish'], vals))
+assert len(vals) in (4, 10) and vals == sorted(vals), 'keys: 4 or 10 frames, in swing order'
 
 # the address frame, to measure where she stands (read only, nothing written)
 with tempfile.TemporaryDirectory() as tmp:
@@ -75,11 +84,12 @@ for i, name in enumerate(names):
     views[name] = {'x0': x0, 'x1': x1, 'feet_x': float(feet), 'sole_y': sole, 'height_px': int(sole - ys.min()),
                    'touches_top': bool(ys.min() <= 1)}
 
-out_mp4 = os.path.join(args.out, 'ref.mp4')
-subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c', 'copy', '-movflags', '+faststart', out_mp4], check=True)
-# a VP9 copy for browsers without H.264 (open-source Chromium); the lab plays the .mp4 where it can
-subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c:v', 'libvpx-vp9', '-crf', '20', '-b:v', '0',
-                '-row-mt', '1', '-g', '12', os.path.join(args.out, 'ref.webm')], check=True)
+if not args.json_only:
+    out_mp4 = os.path.join(args.out, 'ref.mp4')
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c', 'copy', '-movflags', '+faststart', out_mp4], check=True)
+    # a VP9 copy for browsers without H.264 (open-source Chromium); the lab plays the .mp4 where it can
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c:v', 'libvpx-vp9', '-crf', '20', '-b:v', '0',
+                    '-row-mt', '1', '-g', '12', os.path.join(args.out, 'ref.webm')], check=True)
 meta = {'fps': fps, 'size': [W, H], 'frames': int(probe.get('nb_frames', 0) or 0), 'keys': keys, 'views': views,
         'bg': [round(float(x)) for x in bg], 'note': args.note}
 json.dump(meta, open(os.path.join(args.out, 'video.json'), 'w'), indent=1)
