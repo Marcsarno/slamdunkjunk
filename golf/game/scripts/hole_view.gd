@@ -367,34 +367,72 @@ func _pin() -> void:
 	pole.material_override = white
 	pole.position = p + Vector3(0, 1.15, 0)
 	add_child(pole)
+	# a pennant like the one on the title art: orange-red, a gentle wave, pointing with the breeze
 	var flag := MeshInstance3D.new()
-	var fq := QuadMesh.new()
-	fq.size = Vector2(0.75, 0.5)
-	flag.mesh = fq
-	var fm := StandardMaterial3D.new()
-	fm.albedo_color = Color(1.0, 0.35, 0.1)
-	fm.emission_enabled = true
-	fm.emission = Color(1.0, 0.3, 0.05)
-	fm.emission_energy_multiplier = 1.5
-	fm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var cols := 8
+	for i in cols:
+		var u0 := float(i) / cols
+		var u1 := float(i + 1) / cols
+		# a triangle 0.8 m long, 0.5 m tall at the pole, tapering to a point
+		var a0 := Vector3(u0 * 0.8, 0.25 * (1.0 - u0), 0)
+		var b0 := Vector3(u0 * 0.8, -0.25 * (1.0 - u0), 0)
+		var a1 := Vector3(u1 * 0.8, 0.25 * (1.0 - u1), 0)
+		var b1 := Vector3(u1 * 0.8, -0.25 * (1.0 - u1), 0)
+		for v in [a0, b0, a1, a1, b0, b1]:
+			st.set_uv(Vector2(v.x / 0.8, 0.5 - v.y * 2.0))
+			st.add_vertex(v)
+	st.generate_normals()
+	flag.mesh = st.commit()
+	var fsh := Shader.new()
+	fsh.code = """
+shader_type spatial;
+render_mode cull_disabled;
+uniform vec3 color : source_color = vec3(0.95, 0.32, 0.16);
+void vertex() {
+	// the cloth ripples more toward the free end
+	float u = UV.x;
+	VERTEX.z += sin(u * 7.0 - TIME * 4.2) * 0.09 * u;
+	VERTEX.y += sin(u * 5.0 - TIME * 3.1) * 0.02 * u;
+}
+void fragment() {
+	ALBEDO = color * (0.85 + 0.15 * UV.x);
+	EMISSION = color * 0.35;
+	ROUGHNESS = 0.8;
+}
+"""
+	var fm := ShaderMaterial.new()
+	fm.shader = fsh
 	flag.material_override = fm
-	flag.position = p + Vector3(0.38, 2.05, 0)
+	flag.position = p + Vector3(0.02, 2.02, 0)
 	add_child(flag)
+	# a slim beam to find the pin from far away: bright at the foot, gone by the top, and fading out
+	# as you get close (on the green it would only stand in the way)
 	var beam := MeshInstance3D.new()
 	var bm := CylinderMesh.new()
-	bm.top_radius = 0.6
-	bm.bottom_radius = 0.25
+	bm.top_radius = 0.35
+	bm.bottom_radius = 0.12
 	bm.height = 40.0
 	bm.cap_top = false
 	bm.cap_bottom = false
 	beam.mesh = bm
-	var bmat := StandardMaterial3D.new()
-	bmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	bmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	bmat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	bmat.albedo_color = Color(0.5, 1.0, 0.75, 0.08)
-	bmat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	bmat.disable_fog = true
+	var bsh := Shader.new()
+	bsh.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, fog_disabled;
+varying float h;
+void vertex() {
+	h = VERTEX.y / 40.0 + 0.5;
+}
+void fragment() {
+	float near = smoothstep(14.0, 45.0, length(CAMERA_POSITION_WORLD - NODE_POSITION_WORLD));
+	float a = 0.16 * pow(1.0 - h, 1.6) * near;
+	ALBEDO = vec3(0.55, 1.0, 0.78) * a;
+}
+"""
+	var bmat := ShaderMaterial.new()
+	bmat.shader = bsh
 	beam.material_override = bmat
 	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	beam.position = p + Vector3(0, 20.0, 0)

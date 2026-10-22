@@ -20,7 +20,8 @@ var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
 var card := PanelContainer.new()
-var card_text := Label.new()
+var card_title: Label
+var card_text: Label
 var next := Button.new()
 var _msg_time := 0.0
 var fade := ColorRect.new()
@@ -110,10 +111,17 @@ func _ready() -> void:
 	power.size = Vector2(400, 120)
 	root.add_child(_label(power, 44, ORANGE))
 
-	message.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	# just above the horizon, clear of the moon (which sits a fifth to a third of the way down)
+	message.anchor_left = 0.5
+	message.anchor_right = 0.5
+	message.anchor_top = 0.37
+	message.anchor_bottom = 0.37
+	message.offset_left = -330
+	message.offset_right = 330
+	message.offset_top = -70
+	message.offset_bottom = 70
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	message.position = Vector2(-330, 250)
-	message.size = Vector2(660, 140)
+	message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_label(message, 46, CREAM))
 
@@ -154,29 +162,39 @@ func _ready() -> void:
 	club.pressed.connect(func(): club_pressed.emit())
 	root.add_child(club)
 
-	card.add_theme_stylebox_override("panel", _panel_style(28))
+	# the score card: a small blackboard in a wooden frame, written in chalk like the clubhouse menu
+	var board := StyleBoxFlat.new()
+	board.bg_color = Color(0.12, 0.07, 0.13, 0.97)
+	board.border_color = Color(0.42, 0.22, 0.1)
+	board.set_border_width_all(12)
+	board.set_corner_radius_all(10)
+	board.shadow_color = Color(0, 0, 0, 0.45)
+	board.shadow_size = 18
+	board.content_margin_left = 34
+	board.content_margin_right = 34
+	board.content_margin_top = 30
+	board.content_margin_bottom = 34
+	card.add_theme_stylebox_override("panel", board)
 	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.position = Vector2(-280, -220)
-	card.size = Vector2(560, 440)
+	card.position = Vector2(-290, -230)
+	card.size = Vector2(580, 460)
 	card.visible = false
 	root.add_child(card)
 	var cv := VBoxContainer.new()
 	cv.alignment = BoxContainer.ALIGNMENT_CENTER
-	cv.add_theme_constant_override("separation", 24)
+	cv.add_theme_constant_override("separation", 22)
 	card.add_child(cv)
+	card_title = Chalk.label("", Chalk.head_font(), 76)
+	card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cv.add_child(card_title)
+	card_text = Chalk.label("", Chalk.hand_font(), 40, Chalk.DIM)
 	card_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cv.add_child(_label(card_text, 38))
-	next.text = "Play again"
-	next.add_theme_font_size_override("font_size", 34)
-	next.add_theme_stylebox_override("normal", _panel_style(24))
-	next.add_theme_color_override("font_color", ORANGE)
+	cv.add_child(card_text)
+	_chalk_button(next, "Play again", Chalk.ORANGE)
 	next.pressed.connect(func(): next_pressed.emit())
 	cv.add_child(next)
 	var menu := Button.new()
-	menu.text = "Clubhouse"
-	menu.add_theme_font_size_override("font_size", 30)
-	menu.add_theme_stylebox_override("normal", _panel_style(24))
-	menu.add_theme_color_override("font_color", CREAM)
+	_chalk_button(menu, "Clubhouse", Chalk.WHITE)
 	menu.pressed.connect(func(): menu_pressed.emit())
 	cv.add_child(menu)
 
@@ -190,13 +208,13 @@ func set_stroke(n: int, par: int) -> void:
 	stroke.text = "Par %d · Stroke %d" % [par, n]
 
 
-func set_distance(yards: float) -> void:
-	dist.text = "%d yds" % roundi(yards)
+func set_distance(text: String) -> void:
+	dist.text = text
 
 
 ## `screen_angle`: wind direction relative to the camera (0 = blowing straight away from you).
 func set_wind(speed_mps: float, screen_angle: float) -> void:
-	wind.text = " %d mph" % roundi(speed_mps * 2.237)
+	wind.text = " %d mph" % roundi(speed_mps * 2.237) if speed_mps > 0.0 else ""
 	wind_arrow.rotation = screen_angle
 	wind_arrow.visible = speed_mps > 0.3
 
@@ -205,8 +223,8 @@ func set_club(label: String, yards: float) -> void:
 	club.text = "%s\n%d yds" % [label, roundi(yards)]
 
 
-func set_power(p: float, yards: float) -> void:
-	power.text = "" if p <= 0.0 else "%d%%\n~%d yds" % [roundi(p * 100), roundi(yards)]
+func set_power(p: float, distance := "") -> void:
+	power.text = "" if p <= 0.0 else "%d%%\n~%s" % [roundi(p * 100), distance]
 
 
 func flash(text: String, seconds := 2.2) -> void:
@@ -220,9 +238,39 @@ func blocks(p: Vector2) -> bool:
 		or (card.is_visible_in_tree() and card.get_global_rect().has_point(p))
 
 
-func show_card(text: String) -> void:
-	card_text.text = text
+func show_card(title_text: String, detail: String) -> void:
+	card_title.text = title_text
+	card_text.text = detail
 	card.visible = true
+	card.modulate.a = 0.0
+	card.scale = Vector2.ONE * 0.92
+	card.pivot_offset = card.size * 0.5
+	var tw := create_tween().set_parallel()
+	tw.tween_property(card, "modulate:a", 1.0, 0.3)
+	tw.tween_property(card, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## A button written in chalk inside a chalk-drawn box.
+func _chalk_button(b: Button, text: String, color: Color) -> void:
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_override("font", Chalk.hand_font())
+	b.add_theme_font_size_override("font_size", 40)
+	for c in ["font_color", "font_hover_color", "font_pressed_color"]:
+		b.add_theme_color_override(c, color)
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(1, 1, 1, 0.0)
+	box.border_color = Color(color, 0.7)
+	box.set_border_width_all(3)
+	box.set_corner_radius_all(14)
+	box.content_margin_top = 8
+	box.content_margin_bottom = 8
+	var down := box.duplicate()
+	down.bg_color = Color(color, 0.12)
+	for s in ["normal", "hover", "focus"]:
+		b.add_theme_stylebox_override(s, box)
+	b.add_theme_stylebox_override("pressed", down)
+	b.material = Chalk.material()
 
 
 func hide_card() -> void:

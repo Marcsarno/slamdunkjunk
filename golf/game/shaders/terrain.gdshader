@@ -52,6 +52,10 @@ void fragment() {
 	uv.y = 1.0 - uv.y;
 	vec4 w = clamp(texture(splat, uv), 0.0, 1.0);
 	float det = texture(detail, uv).r * 2.0;
+	// the painted outlines round greens, bunkers and fairways (detail below ~0.88; the mowing lanes are
+	// 0.9-1.1) read as an inked edge from afar but as a wide dark band underfoot: lift them up close
+	float cam_d = length(CAMERA_POSITION_WORLD - wpos);
+	det = mix(max(det, 0.9), det, smoothstep(10.0, 45.0, cam_d));
 
 	vec3 base_col = mix(col_rough, col_fairway, w.r);
 	base_col = mix(base_col, col_green, w.g);

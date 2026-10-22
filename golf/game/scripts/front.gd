@@ -30,32 +30,22 @@ var list := Control.new()
 var help := Control.new()
 var title := Label.new()
 var fade := ColorRect.new()
-var chalk := ShaderMaterial.new()
-var head_font: Font = load("res://assets/fonts/CabinSketch-Bold.ttf")
-var hand_font: Font = load("res://assets/fonts/PatrickHand-Regular.ttf")
+var chalk: ShaderMaterial
+var head_font: Font = Chalk.head_font()
+var hand_font: Font = Chalk.hand_font()
 var _t := 0.0
 var _busy := false
 
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--capture="):
+		if a.begins_with("--capture=") or a.begins_with("--capture-hole="):
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Music.set_in_play(false)
 	Music.start()
-	var noise := FastNoiseLite.new()
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-	noise.frequency = 0.09
-	noise.fractal_octaves = 3
-	var grain := NoiseTexture2D.new()
-	grain.width = 256
-	grain.height = 256
-	grain.seamless = true
-	grain.noise = noise
-	chalk.shader = load("res://shaders/chalk.gdshader")
-	chalk.set_shader_parameter("grain", grain)
+	chalk = Chalk.material()
 
 	_build_splash()
 	_build_clubhouse()

@@ -13,8 +13,9 @@ const FINE_AIM := 0.45          # radians of aim per screen-width of sideways pu
 const MIN_PULL := 0.06
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 5.0
-const AIM_BACK := 4.4           # aim camera: meters behind the ball ...
+const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
+const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
 
 var terrain: Terrain
 var obstacles: ObstacleGrid
@@ -79,6 +80,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--capture="):
 			add_child(load("res://tests/capture.gd").new())
+		elif a.begins_with("--capture-hole="):
+			add_child(load("res://tests/capture_hole.gd").new())
 
 
 # ---------------------------------------------------------------- hole / shot flow
@@ -93,7 +96,7 @@ func _start_hole() -> void:
 	phase = Phase.INTRO
 	phase_t = 0.0
 	hud.hint.text = "Tap to skip"
-	hud.flash("Hole %d · Par %d\n%d yds" % [terrain.meta.number, par, roundi(_to_pin() * YD)], INTRO_TIME)
+	hud.flash("Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)], INTRO_TIME)
 
 
 func _to_pin() -> float:
@@ -112,9 +115,9 @@ func _setup_shot() -> void:
 	pull = 0.0
 	_place_golfer_back()
 	hud.set_stroke(strokes + 1, par)
-	hud.set_distance(_to_pin() * YD)
+	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	hud.set_club(club.label, club.carry_m * YD)
-	hud.set_power(0, 0)
+	hud.set_power(0)
 	hud.hint.text = "Pull down to swing · drag the sky to turn" if strokes == 0 else ""
 	ball_mesh.visible = true
 	_preview_key = ""
@@ -125,6 +128,15 @@ func _setup_shot() -> void:
 	cam_target = _want_target
 	cam_fov = _want_fov
 	hud.fade_in()
+
+
+## A distance as a golfer says it: feet on the green, yards elsewhere.
+func _dist_text(m: float, feet: bool) -> String:
+	if feet:
+		var ft := maxi(1, roundi(m * 3.281))
+		return "%d ft" % ft
+	var yd := maxi(1, roundi(m * YD))
+	return "1 yd" if yd == 1 else "%d yds" % yd
 
 
 func _default_aim() -> Vector2:
@@ -159,6 +171,7 @@ func _cycle_club() -> void:
 	var ids := ["driver", "iron", "wedge", "putter"]
 	club = Clubs.by_id(ids[(ids.find(club.id) + 1) % ids.size()])
 	hud.set_club(club.label, club.carry_m * YD)
+	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	_place_golfer_back()
 	_preview_key = ""
 
@@ -191,7 +204,7 @@ func _shoot() -> void:
 	strokes += 1
 	last_ball = ball
 	hud.hint.text = ""
-	hud.set_power(0, 0)
+	hud.set_power(0)
 	_show_preview(false)
 	phase = Phase.SWING
 	phase_t = 0.0
@@ -235,7 +248,10 @@ func _shot_done() -> void:
 			hud.flash("Out of bounds! +1 stroke")
 		_:
 			ball = sim.pos
-			hud.flash("%s · %d yds" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], roundi(carried)])
+			if club.id == "putter":
+				hud.flash("%s to go" % _dist_text(_to_pin(), true))
+			else:
+				hud.flash("%s · %s" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
 
 
 func _score_name(diff: int) -> String:
@@ -308,7 +324,7 @@ func _release() -> void:
 			phase = Phase.AIM
 			pull = 0.0
 			golfer.address(_sprite_set("back"))
-			hud.set_power(0, 0)
+			hud.set_power(0)
 		else:
 			_shoot()
 
@@ -333,7 +349,9 @@ func _process(delta: float) -> void:
 				var hv := Vector2(sim.vel.x, sim.vel.y)
 				if hv.length() > 1.0:
 					flight_dir = flight_dir.lerp(hv.normalized(), 0.2).normalized()
-			_chase_cam(delta)
+			# full swings: stay on her through the follow-through, then go after the ball
+			if club.id == "putter" or phase_t > SWING_HOLD:
+				_chase_cam(delta)
 			if sim.is_done():
 				_shot_done()
 		Phase.RESULT:
@@ -343,10 +361,14 @@ func _process(delta: float) -> void:
 		Phase.HOLED:
 			_chase_cam(delta)
 			if phase_t > 2.4 and not hud.card.visible:
-				hud.show_card("%s\n\n%d strokes · par %d" % [_score_name(strokes - par), strokes, par])
-	_update_ball_visual()
-	_update_wind_hud()
+				hud.show_card(_score_name(strokes - par), "%d strokes on a par %d" % [strokes, par])
 	_apply_cam(delta)
+	_update_ball_visual()   # after the camera moves: the ball's size is set from its distance to the camera
+	_update_wind_hud()
+	# while the camera follows the ball she steps out of shot if it comes right up beside her (after a
+	# putt the camera settles where she stands)
+	var following := (phase == Phase.FLIGHT and phase_t > SWING_HOLD) or phase == Phase.RESULT or phase == Phase.HOLED
+	golfer.visible = not (following and cam.global_position.distance_to(golfer.global_position) < 3.0)
 
 
 func _end_intro() -> void:
@@ -392,7 +414,7 @@ func _cut_to_swing_cam() -> void:
 	var g := Terrain.to_course(golfer.position)
 	var a := Vector3(aim.x, aim.y, 0)
 	var r := Vector3(_right().x, _right().y, 0)
-	_want_pos = Terrain.to_world(g + r * 3.6 + a * 0.5 + Vector3(0, 0, 1.0))
+	_want_pos = Terrain.to_world(g + r * 3.0 + a * 0.45 + Vector3(0, 0, 0.95))
 	_want_target = Terrain.to_world(g + a * 0.55 + Vector3(0, 0, 0.8))
 	_want_fov = 52.0
 	cam_pos = _want_pos
@@ -579,14 +601,14 @@ func _update_ball_visual() -> void:
 	if trail_pts.size() < 2:
 		return
 	trail_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-	var cp := cam.global_position
+	var cp := cam.global_position   # (a ribbon about 4 px wide at the ball on a phone, tapering behind)
 	for i in trail_pts.size():
 		var p := trail_pts[i]
 		var t := (trail_pts[mini(i + 1, trail_pts.size() - 1)] - trail_pts[maxi(i - 1, 0)]).normalized()
 		var side := t.cross(cp - p).normalized()
 		var f := float(i) / (trail_pts.size() - 1)
-		var width := cp.distance_to(p) * 0.0022 * (0.3 + 0.7 * f)
-		var c := Color(1.0, 0.7 + 0.25 * f, 0.4, f * 0.55)
+		var width := cp.distance_to(p) * 0.0034 * (0.25 + 0.75 * f)
+		var c := Color(1.0, 0.72 + 0.23 * f, 0.42, f * f * 0.75)
 		trail_mesh.surface_set_color(c)
 		trail_mesh.surface_add_vertex(p + side * width)
 		trail_mesh.surface_set_color(c)
@@ -640,7 +662,7 @@ func _update_preview() -> void:
 	var dist_m: float = Vector2(r.end.x - ball.x, r.end.y - ball.y).length() if putt \
 		else Vector2(r.first_land.x - ball.x, r.first_land.y - ball.y).length()
 	if phase == Phase.PULL:
-		hud.set_power(pull, dist_m * YD)
+		hud.set_power(pull, _dist_text(dist_m, putt))
 	_place_ring()
 	if n == 0:
 		pass
@@ -661,4 +683,4 @@ func _update_wind_hud() -> void:
 	if fwd2.length() < 0.01:
 		return
 	var rel := fwd2.normalized().angle_to(wind.normalized()) if wind.length() > 0.01 else 0.0
-	hud.set_wind(wind.length(), -rel)
+	hud.set_wind(0.0 if club.get("id", "") == "putter" else wind.length(), -rel)   # a rolling putt doesn't feel the wind
