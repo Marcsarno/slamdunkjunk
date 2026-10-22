@@ -1,0 +1,30 @@
+{
+ "fps": 24.0,
+ "size": [
+  448,
+  672
+ ],
+ "frames": 193,
+ "keys": {
+  "address": 94.0,
+  "top": 118.0,
+  "impact": 131.0,
+  "finish": 144.0
+ },
+ "views": {
+  "face": {
+   "x0": 0,
+   "x1": 448,
+   "feet_x": 218.25,
+   "sole_y": 629,
+   "height_px": 567,
+   "touches_top": false
+  }
+ },
+ "bg": [
+  253,
+  253,
+  253
+ ],
+ "note": "Putter, face-on. Until the two-sided putt arrives."
+}

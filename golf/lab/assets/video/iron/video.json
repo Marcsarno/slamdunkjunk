@@ -1,0 +1,38 @@
+{
+ "fps": 24.0,
+ "size": [
+  854,
+  480
+ ],
+ "frames": 193,
+ "keys": {
+  "address": 0.0,
+  "top": 96.0,
+  "impact": 128.5,
+  "finish": 190.0
+ },
+ "views": {
+  "face": {
+   "x0": 0,
+   "x1": 427,
+   "feet_x": 247.5,
+   "sole_y": 467,
+   "height_px": 467,
+   "touches_top": true
+  },
+  "behind": {
+   "x0": 427,
+   "x1": 854,
+   "feet_x": 231.0,
+   "sole_y": 460,
+   "height_px": 460,
+   "touches_top": true
+  }
+ },
+ "bg": [
+  253,
+  253,
+  253
+ ],
+ "note": "Iron, one swing seen from two sides at once: face-on (left) and from behind her (right)."
+}

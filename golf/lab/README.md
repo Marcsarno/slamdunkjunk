@@ -30,10 +30,14 @@ cdn.jsdelivr.net). The published copy is a claude.ai artifact.
 - **Collision:** her torso, chest, pelvis and thigh skin (skinned on the CPU each frame) against arm and
   hand capsules sized from her own arm vertices along their length; arm against arm. Red points mark skin
   inside an arm.
-- **Video reference:** your face-on video, cut by `tools/video_ref.py` into `assets/video/` (look and
-  spacing only, never game art), beside her or traced over her, pinned to her feet at her height and synced
-  at address, top, impact and finish.
-- **Views:** face-on, down the line, from the target, above, four close upper-body views, and four hand
+- **Video reference:** your swing videos, only to check her 3D animation against (never game art). Each
+  club has its video in `assets/video/<club>/` exactly as you made it (`ref.mp4`, plus a VP9 `ref.webm`
+  for browsers without H.264) and a few numbers (`video.json`: keys, where her feet are, her height at
+  address). No frames are exported. The lab seeks the video to the frame matching the clip (synced at
+  address, top, impact and finish) and shows the view that matches the camera: face-on, or from behind her
+  where the video shows both sides. Beside her, or traced over her (the outline is drawn on the fly from
+  the video's plain background).
+- **Views:** face-on, from behind, down the line, from the target, above, four close upper-body views, and four hand
   close-ups (support side, below, above, 3/4);
   the reference camera mirrors hers relative to each golfer. Close-ups clip anything nearer than 16 cm.
 - **Numbers:** trail fist to its grip spot in the club frame (along / face / toe), grip axis vs shaft,
@@ -50,5 +54,5 @@ Mixamo golf clips arrive: put X Bot FBX files in `assets/mixamo/` and add entrie
   lighter textures. `assets/brittany.glb.b64.txt` is the same file as base64 for hosts that don't serve
   .glb (`base64 -w0 assets/brittany.glb > assets/brittany.glb.b64.txt`).
 - `tools/shoot.mjs` (Playwright): screenshots and key-frame / hand / video sheets through `window.lab`.
-- `tools/video_ref.py`: the face-on video reference frames and their keys (`python3 -I tools/video_ref.py
-  <video> assets/video`).
+- `tools/video_ref.py`: adds a swing video as a club's reference (copies the video, measures the keys and
+  her feet; see its header for the commands used).

@@ -1,150 +1,86 @@
-"""Cut the face-on swing video into the Swing Lab's video reference (look and spacing only, never game art).
+"""Add a swing video to the Swing Lab as a reference (to check her 3D animation against; never game art).
 
-usage: python3 -I video_ref.py <video> <out dir, e.g. golf/lab/assets/video>
+usage: python3 -I video_ref.py <video> <out dir, e.g. golf/lab/assets/video/driver>
+       --keys address,top,impact,finish [--views face|face,behind] [--note text]
 
-The video is a white-background, fixed-camera, face-on swing of Brittany. Each frame from just before
-the takeaway to the finish is keyed to a transparent cut-out (background = near-white paper connected to
-the border, plus the grey floor shadow) and saved as v_###.webp. video.json records what the lab needs
-to stand the picture beside or over her at her own size:
-  tpose_px      her height in pixels in the opening T-pose (scales the picture to her model's height)
-  feet_x, sole_y  the middle of her shoes and the sole line at address (pinned to her feet and the ground)
-  keys          address / top / impact / finish, found from the video itself:
-                impact = the ball vanishes (half a frame before the first frame without it),
-                top = the stillest frame between takeaway and impact,
-                address = the last still frame before the takeaway, finish = the first still frame after.
-The video's own impact is not drawn (the club jumps from behind her to past the ball between two
-frames), so impact in the video is a timing mark, not a pose to copy.
+The video itself is the reference: it is copied (remuxed to .mp4, frames untouched) to <out>/ref.mp4, with
+a VP9 copy (ref.webm) for browsers without H.264, and the lab seeks it to the frame that matches the clip. No frames are exported. video.json holds what the
+lab needs to stand each view beside her (or trace its outline over her) at her size:
+  views         one per picture in the frame, left to right: "face" (face-on, target to the right of the
+                picture) and, for a side-by-side video, "behind" (from behind her back)
+  per view:     x0, x1   the view's columns in the frame
+                feet_x, sole_y   the middle of her shoes and the sole line at address (pinned to her feet)
+                height_px        her height at address, hair to sole (scaled to her own height at address)
+  bg            the background colour (the lab's outline separates her from it)
+  keys          address / top / impact / finish, in video frames, picked by eye from the motion
+Made so far:
+  driver  Seedance two-angle driver video: --keys 0,90,120,186 --views face,behind
+  iron    Seedance two-angle iron video:   --keys 0,96,128.5,190 --views face,behind
+  putter  face-on putt video:              --keys 94,118,131,144
 """
+import argparse
 import json
 import os
 import subprocess
-import sys
 import tempfile
 
 import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-VIDEO, OUT = sys.argv[1], sys.argv[2]
-os.makedirs(OUT, exist_ok=True)
+ap = argparse.ArgumentParser()
+ap.add_argument('video'); ap.add_argument('out')
+ap.add_argument('--keys', required=True)
+ap.add_argument('--views', default='face')
+ap.add_argument('--note', default='')
+args = ap.parse_args()
+os.makedirs(args.out, exist_ok=True)
 
+probe = json.loads(subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries',
+                                   'stream=width,height,r_frame_rate,nb_frames', '-of', 'json', args.video],
+                                  capture_output=True, text=True, check=True).stdout)['streams'][0]
+n, d = probe['r_frame_rate'].split('/')
+fps = round(float(n) / float(d), 3)
+W, H = int(probe['width']), int(probe['height'])
+keys = dict(zip(['address', 'top', 'impact', 'finish'], (float(x) for x in args.keys.split(','))))
 
-def cut(rgb):
-    a = rgb.astype(np.float32)
-    lum = a.mean(axis=2)
-    sat = a.max(axis=2) - a.min(axis=2)
-    paper = (a.min(axis=2) >= 246) & (sat <= 6)             # the white page
-    shadow = (lum > 150) & (sat <= 7)                        # the soft grey floor shadow (neutral grey) ...
-    shadow[: int(a.shape[0] * 0.86)] = False                 # ... which is only ever on the floor (the steel shaft is grey too)
-    # background = paper connected to the border, grown into neutral grey shadow touching it
-    lab, _ = ndimage.label(paper)
-    edge_ids = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
-    bg = np.isin(lab, edge_ids[edge_ids > 0])
-    lab2, _ = ndimage.label(paper | shadow)
-    touch = np.unique(lab2[bg])
-    bg |= np.isin(lab2, touch[touch > 0]) & shadow
-    # pockets of pure paper enclosed by her arms and the club are background too
-    plab, pn = ndimage.label(paper & ~bg)
-    if pn:
-        psz = ndimage.sum(np.ones_like(plab), plab, range(1, pn + 1))
-        bg |= np.isin(plab, 1 + np.nonzero(psz > 120)[0])
-    fg = ~bg
-    # keep her and the club (8-connected, so a 1 px shaft stays attached); drop specks and the ball
-    flab, n = ndimage.label(fg, structure=np.ones((3, 3)))
-    if n:
-        sizes = ndimage.sum(np.ones_like(flab), flab, range(1, n + 1))
-        keep = np.isin(flab, 1 + np.nonzero(sizes >= 60)[0])
-        for i, sl in enumerate(ndimage.find_objects(flab), start=1):
-            hh, ww = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
-            if sizes[i - 1] < sizes.max() * 0.05 and 0.6 < hh / max(ww, 1) < 1.6 and max(hh, ww) < 40:
-                keep[flab == i] = False
-        fg = keep
-    # soft edge: un-mix from white in a 2 px band around the cut
-    band = ndimage.binary_dilation(fg, iterations=2) & ~ndimage.binary_erosion(fg, iterations=1)
-    mix = np.clip((255.0 - a.min(axis=2)) / 255.0 * 1.6, 0, 1)
-    alpha = np.where(band, mix, fg.astype(np.float32))
-    safe = np.maximum(alpha, 1e-3)[..., None]
-    col = np.clip((a - (1 - alpha[..., None]) * 255.0) / safe, 0, 255)
-    col = np.where(alpha[..., None] > 0.02, col, 0)
-    return np.dstack([col, alpha * 255]).astype(np.uint8), fg
-
-
-def has_ball(rgb, fg):
-    # the ball: a small round grey-rimmed blob low in the frame that is not part of her
-    a = rgb.astype(np.float32)
-    lum = a.mean(axis=2)
-    sat = a.max(axis=2) - a.min(axis=2)
-    rim = (lum < 225) & (lum > 120) & (sat < 25) & ~fg
-    rim[: int(a.shape[0] * 0.80)] = False
-    for sl in ndimage.find_objects(ndimage.label(rim)[0]):
-        h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
-        if 8 <= h <= 30 and 8 <= w <= 30 and 0.6 < h / w < 1.6:
-            return True
-    return False
-
-
-def shoes(fg, sole):
-    # the two outer runs of her outline just above the sole line (the club head can sit between them)
-    cols = np.nonzero(fg[sole - 28: sole].any(axis=0))[0]
-    runs = [r for r in np.split(cols, np.nonzero(np.diff(cols) > 6)[0] + 1) if len(r) > 10]
-    return (runs[0][0] + runs[0][-1]) / 2, (runs[-1][0] + runs[-1][-1]) / 2
-
-
+# the address frame, to measure where she stands (read only, nothing written)
 with tempfile.TemporaryDirectory() as tmp:
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-i", VIDEO, os.path.join(tmp, "f_%04d.png")], check=True)
-    files = sorted(f for f in os.listdir(tmp) if f.endswith(".png"))
-    fps = 24
-    probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate",
-                            "-of", "csv=p=0", VIDEO], capture_output=True, text=True).stdout.strip()
-    if "/" in probe:
-        n, d = probe.split("/")
-        fps = round(float(n) / float(d), 3)
-    cuts, motion, ball = [], [], []
-    prev = None
-    for f in files:
-        rgb = np.asarray(Image.open(os.path.join(tmp, f)).convert("RGB"))
-        rgba, fg = cut(rgb)
-        al = rgba[..., 3].astype(np.float32) / 255
-        motion.append(0.0 if prev is None else float(np.abs(al - prev).mean() * 1000))
-        prev = al
-        ball.append(has_ball(rgb, fg))
-        cuts.append((rgba, fg))
+    png = os.path.join(tmp, 'a.png')
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', args.video, '-vf', f"select=eq(n\\,{int(keys['address'])})",
+                    '-vframes', '1', png], check=True)
+    a = np.asarray(Image.open(png).convert('RGB')).astype(np.float32)
 
-h, w = cuts[0][1].shape
-n = len(cuts)
-# impact: the end of the longest stretch with the ball in view (at address the club head hides it)
-runs, start = [], None
-for i in range(n + 1):
-    if i < n and ball[i]:
-        start = i if start is None else start
-    elif start is not None:
-        runs.append((i - start, start, i))
-        start = None
-gone = max(runs)[2]
-impact = gone - 0.5
-top = min(range(gone - 20, gone - 3), key=lambda i: motion[i])
-address = top
-while address > 0 and motion[address] > 3:
-    address -= 1
-finish = next((i for i in range(gone + 5, n) if motion[i] < 10), n - 1)
-first, last = max(0, address - 4), min(n - 1, finish + 2)
+names = args.views.split(',')
+c = 12
+corners = np.concatenate([a[:c, :c].reshape(-1, 3), a[:c, -c:].reshape(-1, 3), a[-c:, :c].reshape(-1, 3), a[-c:, -c:].reshape(-1, 3)])
+bg = np.median(corners, axis=0)
+views = {}
+for i, name in enumerate(names):
+    x0, x1 = W * i // len(names), W * (i + 1) // len(names)
+    part = a[:, x0:x1]
+    fg = np.abs(part - bg).max(axis=2) > 40
+    lab, k = ndimage.label(fg)
+    sizes = ndimage.sum(np.ones_like(lab), lab, range(1, k + 1))
+    her = lab == (1 + int(np.argmax(sizes)))
+    ys = np.nonzero(her.any(axis=1))[0]
+    # her shoes: the light (cream) part of her outline in the bottom fifth; the dark club head is left out
+    shoe = her & (part.mean(axis=2) > 175)
+    shoe[: int(H * 0.8)] = False
+    sy, sx = np.nonzero(shoe)
+    sole = int(np.percentile(sy, 99)) if len(sy) else int(ys.max())
+    cols = np.unique(sx)
+    runs = [r for r in np.split(cols, np.nonzero(np.diff(cols) > 4)[0] + 1) if len(r) > 6] if len(cols) else []
+    feet = ((runs[0][0] + runs[0][-1]) / 2 + (runs[-1][0] + runs[-1][-1]) / 2) / 2 if runs else her.shape[1] / 2
+    views[name] = {'x0': x0, 'x1': x1, 'feet_x': float(feet), 'sole_y': sole, 'height_px': int(sole - ys.min()),
+                   'touches_top': bool(ys.min() <= 1)}
 
-# scale from the opening T-pose: hair to sole
-fg0 = cuts[0][1]
-ys0 = np.nonzero(fg0.any(axis=1))[0]
-sole = int(np.median([np.nonzero(cuts[i][1][:, int(x)])[0].max()
-                      for i in (address,) for x in shoes(cuts[i][1], int(h * 0.93))]))
-feet = shoes(cuts[address][1], sole)
-
-for i in range(first, last + 1):
-    Image.fromarray(cuts[i][0], "RGBA").save(os.path.join(OUT, f"v_{i:03d}.webp"), quality=80, alpha_quality=80, method=6)
-meta = {
-    "fps": fps, "size": [int(w), int(h)], "first": first, "last": last,
-    "keys": {"address": address, "top": top, "impact": impact, "finish": finish},
-    "tpose_px": int(ys0.max() - ys0.min()), "feet_x": float(sum(feet) / 2), "stance_px": float(feet[1] - feet[0]),
-    "sole_y": sole,
-    "note": "Face-on, camera fixed. Target to the right of the picture. The video skips its impact pose.",
-}
-json.dump(meta, open(os.path.join(OUT, "video.json"), "w"), indent=1)
+out_mp4 = os.path.join(args.out, 'ref.mp4')
+subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c', 'copy', '-movflags', '+faststart', out_mp4], check=True)
+# a VP9 copy for browsers without H.264 (open-source Chromium); the lab plays the .mp4 where it can
+subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', args.video, '-map', '0:v:0', '-c:v', 'libvpx-vp9', '-crf', '20', '-b:v', '0',
+                '-row-mt', '1', '-g', '12', os.path.join(args.out, 'ref.webm')], check=True)
+meta = {'fps': fps, 'size': [W, H], 'frames': int(probe.get('nb_frames', 0) or 0), 'keys': keys, 'views': views,
+        'bg': [round(float(x)) for x in bg], 'note': args.note}
+json.dump(meta, open(os.path.join(args.out, 'video.json'), 'w'), indent=1)
 print(json.dumps(meta))
-print("motion around the swing:", " ".join(f"{i}:{motion[i]:.0f}" for i in range(first, last + 1)))

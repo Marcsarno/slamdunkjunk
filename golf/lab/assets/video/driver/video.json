@@ -1,0 +1,38 @@
+{
+ "fps": 24.0,
+ "size": [
+  854,
+  480
+ ],
+ "frames": 193,
+ "keys": {
+  "address": 0.0,
+  "top": 90.0,
+  "impact": 120.0,
+  "finish": 186.0
+ },
+ "views": {
+  "face": {
+   "x0": 0,
+   "x1": 427,
+   "feet_x": 252.75,
+   "sole_y": 474,
+   "height_px": 474,
+   "touches_top": true
+  },
+  "behind": {
+   "x0": 427,
+   "x1": 854,
+   "feet_x": 210.25,
+   "sole_y": 459,
+   "height_px": 459,
+   "touches_top": true
+  }
+ },
+ "bg": [
+  253,
+  253,
+  252
+ ],
+ "note": "Driver, one swing seen from two sides at once: face-on (left) and from behind her (right)."
+}

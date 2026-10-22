@@ -108,7 +108,7 @@
         <label class="ck"><input type="checkbox" id="vidline" checked> outline only</label>
       </div>
       <div id="vidctl"></div>
-      <div class="note">Your face-on video of Brittany, for her arms, her hands and the space between them and her body. It is pinned to her feet at her own height, shows from the face-on camera only, and is synced at address, top, impact and finish. The motion still comes from the clip; nothing is taken from the video. The video skips its own impact (the club jumps past the ball between two frames), so judge impact on the reference rig.</div>
+      <div class="note">Your video for the club in hand, to check her against (never game art): face-on, and from behind her where the video shows both sides. It plays as it is, synced to the clip at address, top, impact and finish, pinned to her feet at her height at address. Pick Face-on or From behind to match it; the outline is drawn on the fly from the video's plain background. The motion comes from the clip.</div>
     </section>
 
     <section>
@@ -251,6 +251,11 @@ controls.enableDamping = true;
 
 // ------------------------------------------------------------------ state
 const DEFAULT_VID = { mode: 'off', line: true, opacity: 80, scale: 100, dx: 0, dy: 0, nudge: 0 };
+function fitFor(kind) {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('swinglab.fit.' + kind) || 'null'); } catch {}
+  return { ...DEFAULT_FIT, ...((CLUB_SETUP[kind] || {}).fit || {}), ...(saved || {}) };
+}
 const S = {
   clips: [], clip: null, frame: 0, playing: false, speed: 1, t0: 0,
   view: 'face', follow: false, split: true, lead: 'Left', kind: 'driver',
@@ -705,9 +710,25 @@ function clubQ(shaft, face) {
 // The hand's turn is the club's (through the grip). Its wrist is held at the video's angle for the phase
 // (eased between keys), so the forearm points where that wrist puts it; the upper arm reaches that
 // forearm's elbow as a true hinge, and the hand lands as near the mocap's hand as her arm allows.
-const WRIST_KEYS = { address: [-20, 0], top: [-5, 20], impact: [8, -20], finish: [-30, 15] };
+// Each club's own setup, from its face-on video and golf's usual numbers. Wrists as [toward the palm,
+// toward the thumb]. Driver and iron: the lead wrist bent back a little at address, cocked toward the
+// thumb at the top, slightly bowed at impact; the shaft is turned to the video's at the top (level, at
+// the target) and finish (down her back). Putter: a palm grip (shaft nearly along the forearm), quiet
+// wrists held at their address angles, the stroke rocking with the arms (no top or finish shaft target).
+const CLUB_SETUP = {
+  driver: { fit: { lean: 4, bend: 20, side: 22, diag: 58, tdiag: 58 }, keyShaft: true,
+    lead: { address: [-20, 0], top: [-5, 20], impact: [8, -20], finish: [-30, 15] },
+    trail: { address: [-25, 5], top: [-70, 15], impact: [-30, -5], finish: [15, -10] } },
+  iron: { fit: { lean: 6, bend: 22, side: 18, diag: 58, tdiag: 58 }, keyShaft: true,
+    lead: { address: [-20, 0], top: [-5, 20], impact: [10, -20], finish: [-30, 15] },
+    trail: { address: [-25, 5], top: [-70, 15], impact: [-35, -5], finish: [15, -10] } },
+  putter: { fit: { lean: 2, bend: 22, side: 6, diag: 76, tdiag: 76 }, keyShaft: false,
+    lead: { address: [-10, 0], top: [-10, 0], impact: [-10, 0], finish: [-10, 0] },
+    trail: { address: [-20, 0], top: [-20, 0], impact: [-20, 0], finish: [-20, 0] } },
+};
+const setup = () => CLUB_SETUP[S.kind] || CLUB_SETUP.driver;
 function wristTargetAt(f) {
-  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => WRIST_KEYS[k]);
+  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => setup().lead[k]);
   if (f <= ks[0]) return vs[0];
   if (f >= ks[3]) return vs[3];
   let i = 0; while (i < 2 && f > ks[i + 1]) i++;
@@ -775,9 +796,8 @@ function armToWrist(side, near, flex, dev) {
 }
 // The trail arm: its hand pinned on the club in its grip. The elbow swings about the shoulder-wrist line;
 // the swing is searched for her trail wrist nearest its target with the forearm's roll within PRON.
-const TRAIL_WRIST = { address: [-25, 5], top: [-70, 15], impact: [-30, -5], finish: [15, -10] };
 function trailTargetAt(f) {
-  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => TRAIL_WRIST[k]);
+  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => setup().trail[k]);
   if (f <= ks[0]) return vs[0];
   if (f >= ks[3]) return vs[3];
   let i = 0; while (i < 2 && f > ks[i + 1]) i++;
@@ -1350,8 +1370,27 @@ function poseFrame(f) {
   }
 }
 
+// putt keys: the hands' travel along the target line (a putting stroke hardly rises): address = the last
+// still frame before the stroke, top = the end of the backstroke, impact = the hands back at their address
+// spot, finish = the end of the follow-through (still again or furthest through)
+function findPuttKeys() {
+  const pts = [];
+  const step = Math.max(1, Math.round(ref.fps / 30));
+  for (let f = 1; f < ref.frames; f += step) { poseCharacter(f); pts.push({ f, p: char.bones[S.lead + 'Hand'].getWorldPosition(V()) }); }
+  const lf = char.bones.LeftFoot.getWorldPosition(V()), rf = char.bones.RightFoot.getWorldPosition(V());
+  const tgt = (S.lead === 'Left' ? lf.sub(rf) : rf.sub(lf)).setY(0).normalize();
+  const x = pts.map((q) => q.p.dot(tgt)), sp = pts.map((q, i) => (i ? q.p.distanceTo(pts[i - 1].p) : 0));
+  // the stroke: the fastest stretch; top = the most trail-ward point before it, finish = the most target-ward after
+  let fast = 0; sp.forEach((v, i) => { if (v > sp[fast]) fast = i; });
+  let top = fast; for (let i = fast; i >= 0 && i > fast - 60; i--) if (x[i] < x[top]) top = i;
+  let fin = fast; for (let i = fast; i < pts.length && i < fast + 60; i++) if (x[i] > x[fin]) fin = i;
+  let addr = top; while (addr > 0 && sp[addr] > 0.0015) addr--;
+  let imp = top; for (let i = top; i <= fin; i++) if (x[i] >= x[addr]) { imp = i; break; }
+  return { address: pts[addr].f, top: pts[top].f, impact: pts[imp].f, finish: pts[fin].f };
+}
 // key frames from the lead hand: address (still, low), top (highest before impact), impact (lowest and fastest), finish
 function findKeys() {
+  if (S.clip && S.clip.type === 'putt') return findPuttKeys();
   const pts = [];
   const step = Math.max(1, Math.round(ref.fps / 30));
   for (let f = 1; f < ref.frames; f += step) {
@@ -1436,6 +1475,7 @@ const VIEWS = {
   dtl: (g) => ({ pos: g.mid.clone().addScaledVector(g.target, -3.6).addScaledVector(g.fwd, 0.5).setY(1.15), at: g.mid.clone().addScaledVector(g.fwd, 0.3).setY(0.8) }),
   above: (g) => ({ pos: g.mid.clone().addScaledVector(g.fwd, 0.35).setY(4.4), at: g.mid.clone().addScaledVector(g.fwd, 0.35).setY(0), up: g.fwd.clone() }),
   target: (g) => ({ pos: g.mid.clone().addScaledVector(g.target, 3.6).addScaledVector(g.fwd, 0.5).setY(1.15), at: g.mid.clone().addScaledVector(g.fwd, 0.3).setY(0.8) }),
+  behind: (g) => ({ pos: g.mid.clone().addScaledVector(g.fwd, -3.4).setY(1.0), at: g.mid.clone().setY(0.85) }),
 };
 // close views of her upper body (chest, arms, hands), for checking the arms against her body
 const BODY_VIEWS = {
@@ -1538,47 +1578,80 @@ function drawSkeleton() {
   overlay.add(l);
 }
 
-// ------------------------------------------------------------------ video reference (face-on picture, look and spacing only)
-// The picture stands in the plane of her feet, facing the face-on camera, at her own height (the
-// video's opening T-pose is her full height), its shoes pinned to her feet and its sole line to the
-// ground. Its frame follows the clip's frame through the four keys of each.
-const VID = { meta: null, imgs: {}, tex: null, fill: null, line: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(35, 1, 0.02, 100), shown: -1 };
+// ------------------------------------------------------------------ video reference (to check her against; never game art)
+// Each club has its swing video (assets/video/<club>/ref.mp4, untouched) and a few numbers. The lab seeks
+// the video to the frame that matches the clip (through address, top, impact and finish) and shows the
+// view that matches the camera: face-on, or from behind her for the two-sided videos. The picture stands
+// in the plane of her feet facing that camera, scaled so her height at address in the video is her own
+// height at address, its shoes pinned to her feet and its sole line to the ground. The outline (and the
+// see-through mode over her) separates her from the video's plain background on the fly; nothing is cut
+// out or saved.
+const VID = { sets: {}, kind: null, meta: null, video: null, tex: null, fill: null, line: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(35, 1, 0.02, 100), shown: -1, want: -1, view: 'face' };
 VID.scene.background = new THREE.Color(0x231c2d);
-async function loadVideo() {
-  if (VID.meta) return;
-  const m = await (await fetch('assets/video/video.json')).json();
-  const jobs = [];
-  for (let i = m.first; i <= m.last; i++) {
-    const im = new Image();
-    jobs.push(new Promise((res) => { im.onload = res; im.onerror = res; }));
-    im.src = `assets/video/v_${String(i).padStart(3, '0')}.webp`;
-    VID.imgs[i] = im;
+async function loadVideo(kind = S.kind) {
+  if (!VID.sets[kind]) {
+    const base = `assets/video/${kind}/`;
+    const r = await fetch(base + 'video.json');
+    if (!r.ok) { if (kind !== 'driver') return loadVideo('driver'); throw new Error('no video'); }
+    const meta = await r.json();
+    const video = document.createElement('video');
+    video.muted = true; video.playsInline = true; video.preload = 'auto';
+    // the untouched .mp4 where it plays (a VP9 copy elsewhere), loaded whole so any frame can be sought
+    const file = base + (video.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'ref.mp4' : 'ref.webm');
+    video.src = URL.createObjectURL(await (await fetch(file)).blob());
+    await new Promise((res, rej) => { video.addEventListener('loadeddata', res, { once: true }); video.addEventListener('error', () => rej(new Error('video')), { once: true }); });
+    // each shown frame is drawn into an in-page canvas (the texture); nothing leaves the page
+    const canvas2d = document.createElement('canvas');
+    canvas2d.width = meta.size[0]; canvas2d.height = meta.size[1];
+    video.addEventListener('seeked', () => {
+      canvas2d.getContext('2d').drawImage(video, 0, 0, canvas2d.width, canvas2d.height);
+      if (VID.video === video) { VID.tex.needsUpdate = true; VID.shown = VID.want; }
+    });
+    VID.sets[kind] = { meta, video, canvas2d };
   }
-  await Promise.all(jobs);
-  VID.tex = new THREE.Texture(VID.imgs[m.keys.address]);
-  VID.tex.colorSpace = THREE.SRGBColorSpace;
+  const set = VID.sets[kind];
+  VID.kind = kind; VID.meta = set.meta; VID.video = set.video; VID.shown = -1; VID.want = -1;
+  if (!VID.tex) {
+    VID.tex = new THREE.CanvasTexture(set.canvas2d);
+    VID.tex.colorSpace = THREE.SRGBColorSpace;
+    VID.tex.minFilter = THREE.LinearFilter; VID.tex.generateMipmaps = false;
+    const geo = new THREE.PlaneGeometry(1, 1);
+    // the picture, and her outline: both separate her from the plain background by colour, on the fly
+    const common = {
+      uniforms: { map: { value: VID.tex }, crop: { value: new THREE.Vector4(0, 0, 1, 1) }, texel: { value: new THREE.Vector2() }, bg: { value: new THREE.Vector3(1, 1, 1) }, opacity: { value: 1 }, matte: { value: 0 }, tint: { value: new THREE.Color(0.25, 0.95, 1.0) } },
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+    };
+    const head = `uniform sampler2D map; uniform vec4 crop; uniform vec2 texel; uniform vec3 bg; uniform float opacity; uniform float matte; uniform vec3 tint; varying vec2 vUv;
+      vec2 at(vec2 uv) { return crop.xy + uv * crop.zw; }
+      float her(vec2 uv) { vec3 c = texture2D(map, at(uv)).rgb; vec3 d = abs(c - bg); return smoothstep(0.10, 0.22, max(d.r, max(d.g, d.b))); }`;
+    VID.fill = new THREE.Mesh(geo, new THREE.ShaderMaterial({ ...common, uniforms: { ...common.uniforms },
+      fragmentShader: `${head}
+        void main() { vec4 c = texture2D(map, at(vUv)); float a = matte > 0.5 ? her(vUv) : 1.0; gl_FragColor = vec4(c.rgb, a * opacity);
+          #include <colorspace_fragment>
+        }` }));
+    VID.line = new THREE.Mesh(geo, new THREE.ShaderMaterial({ ...common, uniforms: { ...common.uniforms },
+      fragmentShader: `${head}
+        void main() {
+          float lo = 1.0, hi = 0.0;
+          for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) { float a = her(vUv + vec2(float(i), float(j)) * texel * 1.5); lo = min(lo, a); hi = max(hi, a); }
+          gl_FragColor = vec4(tint, step(0.5, hi) * (1.0 - step(0.5, lo)) * opacity);
+        }` }));
+    VID.scene.add(VID.fill, VID.line);
+  } else if (VID.tex.image !== set.canvas2d) {
+    // a new texture for a new video: the GPU keeps a texture's first size
+    VID.tex.dispose();
+    VID.tex = new THREE.CanvasTexture(set.canvas2d);
+    VID.tex.colorSpace = THREE.SRGBColorSpace;
+    VID.tex.minFilter = THREE.LinearFilter; VID.tex.generateMipmaps = false;
+    for (const o of [VID.fill, VID.line]) o.material.uniforms.map.value = VID.tex;
+  }
   VID.tex.needsUpdate = true;
-  const geo = new THREE.PlaneGeometry(1, 1);
-  VID.fill = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: VID.tex, transparent: true, toneMapped: false, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
-  // outline: where the picture's alpha crosses one half within 1.5 px
-  VID.line = new THREE.Mesh(geo, new THREE.ShaderMaterial({
-    uniforms: { map: { value: VID.tex }, texel: { value: new THREE.Vector2(1 / m.size[0], 1 / m.size[1]) }, opacity: { value: 1 }, tint: { value: new THREE.Color(0.25, 0.95, 1.0) } },
-    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: `uniform sampler2D map; uniform vec2 texel; uniform float opacity; uniform vec3 tint; varying vec2 vUv;
-      void main() {
-        float lo = 1.0, hi = 0.0;
-        for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) {
-          float a = texture2D(map, vUv + vec2(float(i), float(j)) * texel * 1.5).a;
-          lo = min(lo, a); hi = max(hi, a);
-        }
-        float e = step(0.5, hi) * (1.0 - step(0.5, lo));
-        gl_FragColor = vec4(tint, e * opacity);
-      }`,
-    transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
-  }));
-  VID.scene.add(VID.fill, VID.line);
-  VID.meta = m;
+  for (const o of [VID.fill, VID.line]) o.material.uniforms.bg.value.set(...set.meta.bg.map((x) => x / 255));
 }
+const videoViews = () => (VID.meta ? Object.keys(VID.meta.views) : []);
+// which of the video's views goes with the camera: from behind for the behind camera (when the video has it)
+const videoViewFor = (view) => (view === 'behind' && videoViews().includes('behind') ? 'behind' : 'face');
 // the clip's frame -> the video's frame, piecewise through address, top, impact, finish
 function videoFrameFor(f) {
   const m = VID.meta, ks = ['address', 'top', 'impact', 'finish'];
@@ -1587,23 +1660,42 @@ function videoFrameFor(f) {
   if (f <= c[0]) vf = v[0] - (c[0] - f) / ref.fps * m.fps;
   else if (f >= c[3]) vf = v[3] + (f - c[3]) / ref.fps * m.fps;
   else { let i = 0; while (f > c[i + 1]) i++; vf = v[i] + (v[i + 1] - v[i]) * (f - c[i]) / (c[i + 1] - c[i]); }
-  return Math.max(m.first, Math.min(m.last, Math.round(vf + S.vid.nudge)));
+  return Math.max(0, Math.min((m.frames || 1) - 1, Math.round(vf + S.vid.nudge)));
 }
-function placeVideo() {
-  const m = VID.meta, g = S.addrG;
-  const mpp = (char.height / m.tpose_px) * S.vid.scale / 100;        // metres per picture pixel
-  const [W, H] = m.size;
-  const right = (W / 2 - m.feet_x) * mpp + S.vid.dx / 100, up = (m.sole_y - H / 2) * mpp + S.vid.dy / 100;
-  const rot = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(g.target, V(0, 1, 0), g.fwd));
+function seekVideo(vf) {
+  if (vf === VID.want) return;
+  VID.want = vf;
+  VID.video.currentTime = (vf + 0.5) / VID.meta.fps;
+}
+// resolves once the video shows the frame asked for (for pictures)
+function videoSettled() {
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const tick = () => (VID.shown === VID.want || performance.now() - t0 > 3000 ? res() : setTimeout(tick, 15));
+    tick();
+  });
+}
+function placeVideo(viewName) {
+  const m = VID.meta, g = S.addrG, vw = m.views[viewName];
+  const [W, H] = m.size, w = vw.x1 - vw.x0;
+  const mpp = ((S.herAddrHeight || char.height) / vw.height_px) * S.vid.scale / 100;   // metres per picture pixel
+  const behind = viewName === 'behind';
+  const right = behind ? g.target.clone().negate() : g.target.clone(), facing = behind ? g.fwd.clone().negate() : g.fwd.clone();
+  const across = (w / 2 - vw.feet_x) * mpp + S.vid.dx / 100, up = (vw.sole_y - H / 2) * mpp + S.vid.dy / 100;
+  const rot = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, V(0, 1, 0), facing));
   for (const o of [VID.fill, VID.line]) {
-    o.position.copy(g.mid).setY(char.ground + up).addScaledVector(g.target, right);
+    o.position.copy(g.mid).setY(char.ground + up).addScaledVector(right, across);
     o.quaternion.copy(rot);
-    o.scale.set(W * mpp, H * mpp, 1);
+    o.scale.set(w * mpp, H * mpp, 1);
+    const u = o.material.uniforms;
+    u.crop.value.set(vw.x0 / W, 0, w / W, 1);
+    u.texel.value.set(1 / W, 1 / H);
   }
-  const vf = videoFrameFor(S.frame);
-  if (vf !== VID.shown) { VID.tex.image = VID.imgs[vf]; VID.tex.needsUpdate = true; VID.shown = vf; }
+  seekVideo(videoFrameFor(S.frame));
+  VID.view = viewName;
   VID.line.material.uniforms.opacity.value = S.vid.opacity / 100;
-  VID.fill.material.opacity = S.vid.mode === 'over' ? S.vid.opacity / 100 : 1;
+  VID.fill.material.uniforms.opacity.value = S.vid.mode === 'over' ? S.vid.opacity / 100 : 1;
+  VID.fill.material.uniforms.matte.value = S.vid.mode === 'over' ? 1 : 0;
 }
 const videoOn = () => !!VID.meta && S.vid.mode !== 'off' && !!S.addrG;
 
@@ -1617,20 +1709,21 @@ function render(target) {
   renderer.setScissorTest(true);
   renderer.setClearColor(0x15111c, 1);
   renderer.setViewport(0, 0, W, H); renderer.setScissor(0, 0, W, H); renderer.clear();
-  const vid = videoOn(), beside = vid && S.vid.mode === 'beside', faceOn = S.view === 'face';
+  const vid = videoOn(), beside = vid && S.vid.mode === 'beside';
+  const vView = vid ? videoViewFor(S.view) : 'face', faceOn = S.view === vView;
   const n = 1 + (S.split ? 1 : 0) + (beside ? 1 : 0);
   const pw = W / n;
   camA.aspect = pw / H; camA.updateProjectionMatrix();
   camB.aspect = pw / H; camB.updateProjectionMatrix();
   syncRefCamera();
-  if (vid) placeVideo();
+  if (vid) placeVideo(vView);
   let x = 0;
   const panel = (scene, cam) => { renderer.setViewport(x, 0, pw, H); renderer.setScissor(x, 0, pw, H); renderer.render(scene, cam); };
   if (beside) {
     // the picture only reads from the front: the user's camera when it is face-on, else the face-on camera
     VID.line.visible = false; VID.fill.visible = true;
     let cam = camA;
-    if (!faceOn) { const v = VIEWS.face(S.addrG); VID.cam.position.copy(v.pos); VID.cam.up.set(0, 1, 0); VID.cam.lookAt(v.at); VID.cam.aspect = pw / H; VID.cam.updateProjectionMatrix(); cam = VID.cam; }
+    if (!faceOn) { const v = VIEWS[vView](S.addrG); VID.cam.position.copy(v.pos); VID.cam.up.set(0, 1, 0); VID.cam.lookAt(v.at); VID.cam.aspect = pw / H; VID.cam.updateProjectionMatrix(); cam = VID.cam; }
     panel(VID.scene, cam);
     x += pw;
   }
@@ -1651,7 +1744,7 @@ function render(target) {
     $('labA').style.left = `${(beside ? cw : 0) + 8}px`;
     $('labB').style.left = `${(beside ? 2 * cw : cw) + 8}px`;
     $('labB').style.display = S.split ? '' : 'none';
-    $('labV').textContent = vid ? `Video, face-on · f${VID.shown}` : 'Video, face-on';
+    $('labV').textContent = vid ? `Video, ${VID.kind}, ${vView === 'behind' ? 'from behind' : 'face-on'} · f${VID.shown}` : 'Video';
   }
 }
 
@@ -1690,7 +1783,7 @@ function showNumbers() {
   $('nums').innerHTML = rows.map(([a, b, c]) => `<tr><td>${a}</td><td class="${c}">${b}</td></tr>`).join('');
   const k = Object.entries(S.keys).find(([, v]) => v === S.frame);
   $('hud').textContent = `${S.clip.label} · frame ${S.frame}/${ref.frames - 1} · ${(S.frame / ref.fps).toFixed(2)} s${k ? ' · ' + k[0] : ''}` +
-    (videoOn() ? ` · video frame ${videoFrameFor(S.frame)}${S.vid.mode === 'over' && S.view !== 'face' ? ' (traced in face-on only)' : ''}` : '');
+    (videoOn() ? ` · video frame ${videoFrameFor(S.frame)}${S.vid.mode === 'over' && S.view !== videoViewFor(S.view) ? ' (traced face-on / from behind only)' : ''}` : '');
 }
 function buildUI() {
   const sel = $('clip');
@@ -1702,7 +1795,7 @@ function buildUI() {
   $('step+').onclick = () => setFrame(S.frame + Math.max(1, Math.round(ref.fps / 30)));
   $('frame').oninput = () => setFrame(+$('frame').value);
   const vb = $('viewbtns');
-  for (const [v, l] of [['face', 'Face-on'], ['dtl', 'Down the line'], ['target', 'From the target'], ['above', 'Above']]) {
+  for (const [v, l] of [['face', 'Face-on'], ['behind', 'From behind'], ['dtl', 'Down the line'], ['target', 'From the target'], ['above', 'Above']]) {
     const b = document.createElement('button'); b.textContent = l; b.dataset.v = v; b.onclick = () => setView(v); vb.appendChild(b);
   }
   const bb = document.createElement('div'); bb.className = 'row'; bb.id = 'bodybtns'; $('handbtns').before(bb);
@@ -1716,11 +1809,7 @@ function buildUI() {
   $('split').onchange = () => { S.split = $('split').checked; };
   for (const id of ['skel', 'fingers', 'colmarks']) $(id).onchange = drawSkeleton;
   $('mesh').onchange = () => { char.mesh.visible = $('mesh').checked; };
-  $('clubkind').onchange = () => {
-    S.kind = $('clubkind').value; S.fit.length = 0; buildClub();
-    if (refClub.group) { sceneB.remove(refClub.group); refClub.group = null; }
-    if (S.ready && $('linefrom').value === 'grip') solveAtAddress(); else refresh(true);   // the hold is solved per club
-  };
+  $('clubkind').onchange = async () => { setClub($('clubkind').value); if (S.ready) solveAtAddress(); };
   $('lead').onchange = () => { S.lead = $('lead').value; refresh(true); };
   $('trailfit').onchange = () => refresh(true);
   $('trailgrip').onchange = () => refresh(true);
@@ -1761,7 +1850,7 @@ function buildUI() {
     try { await navigator.clipboard.writeText(t.value); $('copyfit').textContent = 'Copied'; } catch { t.select(); }
     setTimeout(() => ($('copyfit').textContent = 'Copy fit'), 1500);
   };
-  $('resetfit').onclick = () => { S.fit = { ...DEFAULT_FIT }; syncSliders(); buildClub(); refresh(true); };
+  $('resetfit').onclick = () => { try { localStorage.removeItem('swinglab.fit.' + S.kind); } catch {} S.fit = fitFor(S.kind); syncSliders(); buildClub(); solveAtAddress(); };
   // video reference
   const vsl = [['opacity', 'trace opacity (%)', 0, 100, 5], ['scale', 'size (% of her height)', 80, 120, 1], ['dx', 'shift sideways (cm)', -30, 30, 1],
     ['dy', 'shift up (cm)', -20, 20, 1], ['nudge', 'sync nudge (video frames)', -8, 8, 1]];
@@ -1771,7 +1860,7 @@ function buildUI() {
     $('vidctl').appendChild(l);
     $('vid_' + k).oninput = () => { S.vid[k] = +$('vid_' + k).value; videoChanged(); };
   }
-  $('vidmode').onchange = async () => { S.vid.mode = $('vidmode').value; if (S.vid.mode !== 'off') await loadVideo(); videoChanged(); };
+  $('vidmode').onchange = async () => { S.vid.mode = $('vidmode').value; if (S.vid.mode !== 'off') await loadVideo(S.kind); videoChanged(); };
   $('vidline').onchange = () => { S.vid.line = $('vidline').checked; videoChanged(); };
   syncVideoUI();
 }
@@ -1783,6 +1872,15 @@ function videoChanged() {
   syncVideoUI();
   try { localStorage.setItem('swinglab.video', JSON.stringify(S.vid)); } catch {}
   if (S.ready) setFrame(S.frame);
+}
+// switch club: its own fit (remembered per club), its club model, its video
+function setClub(kind) {
+  S.kind = kind; $('clubkind').value = kind;
+  S.fit = fitFor(kind);
+  buildClub();
+  if (refClub.group) { sceneB.remove(refClub.group); refClub.group = null; }
+  syncSliders();
+  if (S.vid.mode !== 'off') loadVideo(kind).then(videoChanged).catch(() => {});
 }
 function syncSliders() {
   for (const k of Object.keys(DEFAULT_FIT)) {
@@ -1895,6 +1993,7 @@ function solveWrists(g) {
   const topDir = g.target.clone().multiplyScalar(Math.cos(S.fit.topTilt / DEG)).addScaledVector(up, -Math.sin(S.fit.topTilt / DEG));
   for (const k of ['top', 'impact', 'finish']) {
     const f = S.keys[k];
+    if (k !== 'impact' && !setup().keyShaft) { S.fit.wc[k] = S.fit.wc.address; continue; }   // the putt rocks: carry the address hold
     for (let it = 0; it < (k === 'impact' ? 3 : 1); it++) {
       poseLead(f);
       const C0 = club.group.getWorldQuaternion(Q()), s0 = V(0, 0, 1).applyQuaternion(C0);
@@ -1958,6 +2057,7 @@ function squareFace(g) {
 // impact: the lead fist's lowest point between the top and the finish (the hands' fastest frame comes a
 // few frames early: the shaft is still level then)
 function refineImpact() {
+  if (S.clip && S.clip.type === 'putt') { keyButtons(); return; }
   let best = null;
   for (let f = S.keys.top; f <= S.keys.finish; f++) {
     poseCharacter(f);
@@ -1992,6 +2092,8 @@ function solveAtAddress() {
 async function loadClip(c) {
   clearTimeout(scanTimer);
   S.clip = c;
+  if (c.type === 'putt' && S.kind !== 'putter') setClub('putter');
+  else if (c.type !== 'putt' && S.kind === 'putter') setClub('driver');
   clearRef();
   if (c.kind === 'bvh') await loadBVH(c.file, c.scale || 0.056444); else await loadFBX(c.file);
   $('clipnote').textContent = c.note || '';
@@ -2010,8 +2112,8 @@ async function loadClip(c) {
   keyButtons();
   setFrame(S.keys.address);
   S.addrG = golferFrame(charGet);              // the video's fixed camera stands in this frame
-  if (!S.fitLoaded) { solveAtAddress(); S.fitLoaded = true; }
-  else { refineImpact(); refresh(true); }
+  S.herAddrHeight = new THREE.Box3().setFromObject(char.mesh, true).max.y - char.ground;   // her height at address, for the video's scale
+  solveAtAddress();                              // the hold depends on this clip's own hands
   // the ball sits just in front of the clubhead at address
   const head = club.head.getWorldPosition(V()), g = golferFrame(charGet);
   club.ball.position.set(head.x, char.ground + 0.0214, head.z).addScaledVector(g.target, 0.03);
@@ -2033,18 +2135,23 @@ function loop(now) {
 
 // ------------------------------------------------------------------ automation API (sheets, tests)
 window.lab = {
-  get state() { return S; }, get ref() { return ref; }, get char() { return char; }, get club() { return club; }, THREE, poseFrame,
+  get state() { return S; }, get VID() { return VID; }, get ref() { return ref; }, get char() { return char; }, get club() { return club; }, THREE, poseFrame,
   setClip: async (i) => { $('clip').value = i; await loadClip(S.clips[i]); },
   setFrame, setView,
   setFit: (f) => { Object.assign(S.fit, f); syncSliders(); buildClub(); refresh(true); },
   set: (id, v) => { $(id).checked = v; $(id).dispatchEvent(new Event('change')); },
   measure, keys: () => S.keys, scan: () => S.scan, COL, collide, restCharacter, solve: () => { solveAtAddress(); return { fit: { ...S.fit }, solve: S.wristSolve }; },
-  setClub: (kind) => { $('clubkind').value = kind; $('clubkind').dispatchEvent(new Event('change')); },
+  setClub: (kind) => { setClub(kind); solveAtAddress(); },
   setLine: (v) => { $('linefrom').value = v; $('linefrom').dispatchEvent(new Event('change')); },
   solveTilt: () => { const a = solveTilt(); solveAtAddress(); const b = solveTilt(); solveAtAddress(); return [a, b]; },
-  setVideo: async (v) => { Object.assign(S.vid, v); if (S.vid.mode !== 'off') await loadVideo(); videoChanged(); },
+  setVideo: async (v) => { Object.assign(S.vid, v); if (S.vid.mode !== 'off') await loadVideo(S.kind); videoChanged(); },
   videoFrame: () => (videoOn() ? videoFrameFor(S.frame) : null),
   // one picture: Brittany | reference, at a frame and view
+  async shotAsync(frame, view, w = 520, h = 600) {
+    window.lab.shot(frame, view, w, h);
+    if (videoOn()) { render({ w, h }); await videoSettled(); }
+    return window.lab.shot(frame, view, w, h);
+  },
   shot(frame, view, w = 520, h = 600) {
     const prev = [canvas.style.width, canvas.style.height];
     renderer.setPixelRatio(1);
@@ -2061,11 +2168,10 @@ window.lab = {
 // ------------------------------------------------------------------ boot
 (async function boot() {
   S.clips = await (await fetch('assets/clips.json')).json();
-  S.fit = { ...DEFAULT_FIT };
-  try { const saved = JSON.parse(localStorage.getItem('swinglab.fit.driver') || 'null'); if (saved) { S.fit = { ...DEFAULT_FIT, ...saved }; S.fitLoaded = !!saved.wc; } } catch {}   // fits from before the club-first hand get solved
+  S.fit = fitFor(S.kind);
   try { const sv = JSON.parse(localStorage.getItem('swinglab.video') || 'null'); if (sv) S.vid = { ...DEFAULT_VID, ...sv }; } catch {}
   buildUI();
-  if (S.vid.mode !== 'off') await loadVideo().catch(() => { S.vid.mode = 'off'; syncVideoUI(); });
+  if (S.vid.mode !== 'off') await loadVideo(S.kind).catch(() => { S.vid.mode = 'off'; syncVideoUI(); });
   await loadCharacter();
   buildClub();
   syncSliders();
