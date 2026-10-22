@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- page:start -->
+<title>Fart Machine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- pwa:start -->
+<meta name="theme-color" content="#F3C33A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fart Machine">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!-- pwa:end -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Barlow+Semi+Condensed:wght@500;700&family=VT323&display=swap">
+<style>
+  /* Layout: one toy-panel column, the whoopee cushion on top, an LCD readout, then the preset keys */
+  :root {
+    --mustard: #F3C33A;
+    --mustard-deep: #E0AC22;
+    --ink: #2A1530;
+    --rubber: #E0365A;
+    --rubber-dark: #9E1C3C;
+    --cream: #FFF4D8;
+    --gas: #9BC53D;
+    --lcd: #B8C788;
+    --lcd-ink: #26301A;
+    --display: "Bagel Fat One", "Arial Black", Impact, system-ui, sans-serif;
+    --body: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+    --digits: "VT323", ui-monospace, "Courier New", monospace;
+    color-scheme: light;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background-color: var(--mustard);
+    background-image: radial-gradient(var(--mustard-deep) 1.5px, transparent 1.6px);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .machine {
+    box-sizing: border-box;
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100%;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  header { text-align: center; }
+  h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 13vw, 3.6rem);
+    line-height: .9;
+    color: var(--rubber);
+    -webkit-text-stroke: 2px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 4px 0 var(--ink);
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  .tagline {
+    margin: 10px 0 0;
+    font-weight: 700;
+    font-size: .8rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  /* The big random button: a whoopee cushion */
+  .stage { position: relative; display: grid; place-items: center; }
+  .cushion {
+    position: relative;
+    width: min(78vw, 300px);
+    aspect-ratio: 240 / 200;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    transform-origin: 50% 85%;
+    touch-action: manipulation;
+  }
+  .cushion svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .cushion-label {
+    position: absolute;
+    left: 0; right: 0; top: 38%;
+    transform: translateY(-50%);
+    font-family: var(--display);
+    font-size: clamp(1.7rem, 9vw, 2.3rem);
+    color: var(--cream);
+    -webkit-text-stroke: 1.5px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 3px 0 var(--ink);
+    pointer-events: none;
+  }
+  .cushion:focus-visible { outline: 4px dashed var(--ink); outline-offset: 6px; border-radius: 40%; }
+  .cushion.squish { animation: squish .42s cubic-bezier(.3, 1.6, .5, 1); }
+  .cushion.rumble svg { animation: rumble .09s linear infinite; }
+  @keyframes squish {
+    0% { transform: scale(1, 1); }
+    30% { transform: scale(1.12, .78); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes rumble {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-1.5px, 1px); }
+    75% { transform: translate(1.5px, -1px); }
+  }
+  .puff {
+    position: absolute;
+    left: 50%; bottom: 4%;
+    width: 46px; height: 46px;
+    margin-left: -23px;
+    border-radius: 50%;
+    background: var(--gas);
+    opacity: 0;
+    pointer-events: none;
+    filter: blur(1px);
+    animation: puff 1.3s ease-out forwards;
+  }
+  @keyframes puff {
+    0% { opacity: .85; transform: translate(0, 0) scale(.3); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(var(--s)); }
+  }
+
+  /* LCD readout */
+  .lcd {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--lcd);
+    color: var(--lcd-ink);
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    box-shadow: inset 0 3px 0 rgba(0, 0, 0, .12);
+    font-family: var(--digits);
+    font-size: 1.35rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+  .lcd-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lcd-count { flex: none; font-variant-numeric: tabular-nums; }
+
+  /* Preset keys */
+  .presets { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .key {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--cream);
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: 0 5px 0 var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .06s, box-shadow .06s, background-color .1s, color .1s;
+  }
+  .key:active, .key.pressed { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+  .key.on { background: var(--rubber); color: var(--cream); }
+  .key:focus-visible { outline: 3px dashed var(--ink); outline-offset: 4px; }
+  .key-name { font-family: var(--display); font-size: 1.35rem; line-height: 1.1; min-width: 0; }
+  .key-spec {
+    flex: none;
+    font-family: var(--digits);
+    font-size: 1.2rem;
+    opacity: .75;
+    font-variant-numeric: tabular-nums;
+  }
+  .key.on .key-spec { opacity: 1; }
+
+  .fineprint {
+    margin: 0;
+    text-align: center;
+    font-size: .8rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    opacity: .75;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cushion.squish, .cushion.rumble svg, .puff { animation: none; }
+    .puff { display: none; }
+  }
+</style>
+<!-- page:end -->
+</head>
+<body>
+<!-- body:start -->
+<main class="machine">
+  <header>
+    <h1>Fart Machine</h1>
+    <p class="tagline">5 presets · 1 random · no batteries</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <button class="cushion" id="random" type="button" aria-label="Random fart">
+      <svg viewBox="0 0 240 200" aria-hidden="true">
+        <path d="M100 150 L140 150 L150 190 Q120 200 90 190 Z" fill="#E0365A" stroke="#2A1530" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M95 182 Q120 190 145 182" fill="none" stroke="#9E1C3C" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="120" cy="88" rx="108" ry="80" fill="#E0365A" stroke="#2A1530" stroke-width="6"/>
+        <ellipse cx="120" cy="88" rx="88" ry="62" fill="none" stroke="#9E1C3C" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+        <ellipse cx="74" cy="46" rx="30" ry="12" fill="#FFF4D8" opacity=".45" transform="rotate(-22 74 46)"/>
+      </svg>
+      <span class="cushion-label">Random</span>
+    </button>
+  </div>
+
+  <div class="lcd" role="status" aria-live="polite">
+    <span class="lcd-main" id="readout">Ready. Press anything.</span>
+    <span class="lcd-count" id="count">000</span>
+  </div>
+
+  <ul class="presets" id="presets"></ul>
+
+  <p class="fineprint">Every press comes out a little different. Turn your volume up.</p>
+</main>
+
+<script>
+(() => {
+  const SR = 44100;
+
+  // Each preset is a recipe for the synth below: pitch from f0 to f1 (Hz), flutter (Hz) and how deep it goes,
+  // pitch jitter, how much breathy noise, the muffling filter, wet bubbles, buzz width, sputtering, and grit.
+  const PRESETS = [
+    { name: 'The Classic', p: { dur: .9, f0: 110, f1: 82, flutter: 16, flutterDepth: .45, jitter: .1, noise: .15, cutoff: 1300, q: 1.6, bubbles: 0, duty: .32, sputter: .08, drive: 2.2 } },
+    { name: 'The Squeaker', p: { dur: .65, f0: 240, f1: 430, flutter: 0, flutterDepth: 0, jitter: .07, noise: .05, cutoff: 3200, q: 3, bubbles: 0, duty: .18, sputter: 0, drive: 1.6 } },
+    { name: 'The Thunder', p: { dur: 2.3, f0: 72, f1: 46, flutter: 8, flutterDepth: .55, jitter: .14, noise: .28, cutoff: 750, q: 1.2, bubbles: 2, duty: .4, sputter: .3, drive: 3 } },
+    { name: 'The Wet One', p: { dur: 1.1, f0: 92, f1: 70, flutter: 22, flutterDepth: .5, jitter: .18, noise: .42, cutoff: 950, q: 2.2, bubbles: 16, duty: .35, sputter: .25, drive: 2.5 } },
+    { name: 'The Machine Gun', p: { dur: .085, f0: 125, f1: 105, flutter: 0, flutterDepth: 0, jitter: .08, noise: .12, cutoff: 1500, q: 1.8, bubbles: 0, duty: .3, sputter: 0, drive: 2.4, bursts: 8, gap: .05 } },
+  ];
+
+  const ADJ = ['Mystery', 'Rogue', 'Sneaky', 'Bashful', 'Grand', 'Tiny', 'Haunted', 'Elevator', 'Sunday', 'Office', 'Polite', 'Majestic'];
+  const NOUN = ['Toot', 'Rumbler', 'Trumpet', 'Squonk', 'Bubbler', 'Honker', 'Blurt', 'Whistle', 'Flapper', 'Tuba', 'Foghorn', 'Kazoo'];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+
+  function randomRecipe() {
+    const f0 = 55 * Math.pow(2, Math.random() * 2.3);
+    const p = {
+      dur: rand(.3, 1.9), f0, f1: f0 * rand(.6, 1.45),
+      flutter: rand(0, 26), flutterDepth: Math.random() < .3 ? 0 : rand(.15, .6),
+      jitter: rand(.04, .2), noise: rand(0, .45), cutoff: rand(650, 2800), q: rand(1.1, 3),
+      bubbles: Math.random() < .35 ? Math.floor(rand(3, 16)) : 0,
+      duty: rand(.18, .42), sputter: Math.random() < .5 ? rand(.05, .3) : 0, drive: rand(1.6, 3),
+    };
+    if (Math.random() < .12) Object.assign(p, { bursts: Math.floor(rand(3, 8)), dur: rand(.06, .14), gap: rand(.03, .08) });
+    return p;
+  }
+
+  // Nudge a recipe so no two presses sound the same.
+  function vary(p, amt) {
+    const k = () => 1 + rand(-amt, amt);
+    return { ...p, dur: p.dur * k(), f0: p.f0 * k(), f1: p.f1 * k(), flutter: p.flutter * k() };
+  }
+
+  const seconds = p => (p.bursts || 1) * (p.dur + (p.gap || 0)) - (p.gap || 0);
+
+  // Smooth random wobble, sampled at `rate` points per second.
+  function wobble(rate, dur) {
+    const pts = Array.from({ length: Math.ceil(rate * dur) + 3 }, () => Math.random() * 2 - 1);
+    return t => {
+      const x = t * rate, i = Math.floor(x), s = (1 - Math.cos((x - i) * Math.PI)) / 2;
+      return pts[i] * (1 - s) + pts[i + 1] * s;
+    };
+  }
+
+  // One fart: a buzzing pulse wave (the flapping) plus breathy noise, shaped by an envelope with flutter
+  // and sputters, muffled by a resonant low-pass filter, with optional wet bubble pops on top.
+  function synthOne(p, out, offset) {
+    const n = Math.floor(p.dur * SR);
+    const pitchW = wobble(28, p.dur), ampW = wobble(14, p.dur), gateW = wobble(9, p.dur);
+    const att = Math.min(.025, p.dur * .2), rel = Math.max(.03, p.dur * .18);
+    const flPhase = Math.random() * Math.PI * 2, damp = 1 / p.q;
+    let phase = 0, brown = 0, low = 0, band = 0;
+    for (let i = 0; i < n && offset + i < out.length; i++) {
+      const t = i / SR, u = t / p.dur;
+      let env = Math.min(1, t / att) * Math.min(1, (p.dur - t) / rel) * (1 - .35 * u);
+      if (p.flutterDepth) env *= 1 - p.flutterDepth * (.5 + .5 * Math.sin(2 * Math.PI * p.flutter * t + flPhase + 2 * ampW(t)));
+      if (p.sputter) env *= Math.min(1, Math.max(.05, 3 * ((gateW(t) + 1) / 2 - p.sputter * .5)));
+      const f = p.f0 * Math.pow(p.f1 / p.f0, u) * (1 + p.jitter * pitchW(t)) * (.85 + .15 * env);
+      phase = (phase + f / SR) % 1;
+      const duty = Math.min(.9, p.duty * (.7 + .5 * env));
+      const buzz = phase < duty ? 1 : -duty / (1 - duty);
+      const white = Math.random() * 2 - 1;
+      brown = (brown + .02 * white) / 1.02;
+      const x = (buzz * (1 - p.noise) + p.noise * (brown * 2.5 + white * .3)) * env;
+      const fc = p.cutoff * (.45 + .55 * env);
+      const F = 2 * Math.sin(Math.PI * Math.min(fc, SR / 7) / SR);
+      low += F * band;
+      band += F * (x - low - damp * band);
+      out[offset + i] += Math.tanh(low * p.drive);
+    }
+    for (let b = 0; b < (p.bubbles || 0); b++) {
+      const start = offset + Math.floor(Math.random() * p.dur * .95 * SR);
+      const f0 = rand(180, 600), amp = rand(.35, .85), len = Math.floor(rand(.02, .05) * SR);
+      let ph = 0;
+      for (let i = 0; i < len && start + i < out.length; i++) {
+        const t = i / SR;
+        ph += f0 * (1 + 1.2 * i / len) / SR;
+        out[start + i] += amp * Math.sin(2 * Math.PI * ph) * Math.exp(-t / .01) * (1 - Math.exp(-t / .001));
+      }
+    }
+  }
+
+  function render(p) {
+    const bursts = p.bursts || 1, gap = p.gap || 0;
+    const out = new Float32Array(Math.ceil((seconds(p) + .2) * SR));
+    for (let k = 0; k < bursts; k++) {
+      synthOne(bursts > 1 ? vary(p, .12) : p, out, Math.floor(k * (p.dur + gap) * SR));
+    }
+    let peak = 0;
+    for (let i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
+    const g = peak ? .92 / peak : 0;
+    for (let i = 0; i < out.length; i++) out[i] *= g;
+    return out;
+  }
+
+  let ctx;
+  function audio() {
+    if (!ctx) {
+      // iOS: play through the ringer switch like a video would.
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function playSamples(data) {
+    const c = audio();
+    const buf = c.createBuffer(1, data.length, SR);
+    buf.getChannelData(0).set(data);
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    src.connect(c.destination);
+    src.start();
+  }
+
+  // Screen bits
+  const $ = id => document.getElementById(id);
+  const cushion = $('random'), stage = $('stage'), readout = $('readout'), countEl = $('count');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let toots = 0;
+  try { toots = parseInt(localStorage.getItem('fart-machine-toots'), 10) || 0; } catch (e) {}
+  const showCount = () => { countEl.textContent = String(Math.min(toots, 999)).padStart(3, '0'); };
+  showCount();
+
+  function puffs(p) {
+    if (reduceMotion) return;
+    const count = Math.round(3 + Math.min(seconds(p), 2.3) * 3 + p.noise * 6);
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      el.className = 'puff';
+      el.style.setProperty('--dx', `${rand(-130, 130)}px`);
+      el.style.setProperty('--dy', `${rand(-40, 70)}px`);
+      el.style.setProperty('--s', rand(1.2, 2.6).toFixed(2));
+      el.style.animationDelay = `${(i / count) * Math.min(seconds(p), 1.5)}s`;
+      el.addEventListener('animationend', () => el.remove());
+      stage.appendChild(el);
+    }
+  }
+
+  let rumbleTimer;
+  function fart(name, recipe, key) {
+    const p = vary(recipe, .08);
+    playSamples(render(p));
+    const len = seconds(p);
+
+    readout.textContent = `${name} ${len.toFixed(2)}s ${Math.round(p.f0)}Hz`;
+    toots++;
+    showCount();
+    try { localStorage.setItem('fart-machine-toots', toots); } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate(Math.min(len * 1000, 1500)); } catch (e) {}
+
+    cushion.classList.remove('squish');
+    void cushion.offsetWidth;
+    cushion.classList.add('squish', 'rumble');
+    clearTimeout(rumbleTimer);
+    rumbleTimer = setTimeout(() => cushion.classList.remove('rumble'), len * 1000);
+    puffs(p);
+
+    if (key) {
+      key.classList.add('on');
+      clearTimeout(key._t);
+      key._t = setTimeout(() => key.classList.remove('on'), len * 1000);
+    }
+  }
+
+  cushion.addEventListener('click', () => fart(`${pick(ADJ)} ${pick(NOUN)}`, randomRecipe(), null));
+
+  const list = $('presets');
+  PRESETS.forEach(({ name, p }) => {
+    const li = document.createElement('li');
+    const key = document.createElement('button');
+    key.type = 'button';
+    key.className = 'key';
+    key.innerHTML = `<span class="key-name"></span><span class="key-spec"></span>`;
+    key.querySelector('.key-name').textContent = name;
+    key.querySelector('.key-spec').textContent = `${seconds(p).toFixed(1)}s · ${p.f0}Hz`;
+    key.addEventListener('click', () => fart(name, p, key));
+    li.appendChild(key);
+    list.appendChild(li);
+  });
+
+  // Keyboard: 1-5 for presets, R or space for random.
+  document.addEventListener('keydown', e => {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    const keys = list.querySelectorAll('.key');
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= keys.length) keys[n - 1].click();
+    else if (e.key === 'r' || e.key === 'R') cushion.click();
+  });
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+  }
+})();
+</script>
+<!-- body:end -->
+</body>
+</html>
