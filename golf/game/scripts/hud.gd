@@ -4,6 +4,7 @@ extends CanvasLayer
 
 signal club_pressed
 signal next_pressed
+signal menu_pressed
 
 const ORANGE := Color(1.0, 0.62, 0.18)
 const CREAM := Color(1.0, 0.94, 0.84)
@@ -171,6 +172,13 @@ func _ready() -> void:
 	next.add_theme_color_override("font_color", ORANGE)
 	next.pressed.connect(func(): next_pressed.emit())
 	cv.add_child(next)
+	var menu := Button.new()
+	menu.text = "Clubhouse"
+	menu.add_theme_font_size_override("font_size", 30)
+	menu.add_theme_stylebox_override("normal", _panel_style(24))
+	menu.add_theme_color_override("font_color", CREAM)
+	menu.pressed.connect(func(): menu_pressed.emit())
+	cv.add_child(menu)
 
 
 func set_hole(number: int, name: String, par: int) -> void:
@@ -204,6 +212,12 @@ func set_power(p: float, yards: float) -> void:
 func flash(text: String, seconds := 2.2) -> void:
 	message.text = text
 	_msg_time = seconds
+
+
+## True where a touch belongs to a button (the club box, the score card), not to aiming or swinging.
+func blocks(p: Vector2) -> bool:
+	return (club.is_visible_in_tree() and club.get_global_rect().has_point(p)) \
+		or (card.is_visible_in_tree() and card.get_global_rect().has_point(p))
 
 
 func show_card(text: String) -> void:

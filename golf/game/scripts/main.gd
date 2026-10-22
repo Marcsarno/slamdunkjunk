@@ -68,6 +68,9 @@ func _ready() -> void:
 	add_child(hud)
 	hud.club_pressed.connect(_cycle_club)
 	hud.next_pressed.connect(_start_hole)
+	hud.menu_pressed.connect(func():
+		get_tree().set_meta("front_menu", true)   # straight back to the clubhouse board, no splash
+		get_tree().change_scene_to_file("res://scenes/front.tscn"))
 	var w: Dictionary = terrain.meta.wind
 	wind = Vector2.from_angle(randf() * TAU) * randf_range(float(w.min), float(w.max))
 	_start_hole()
@@ -248,13 +251,14 @@ func _score_name(diff: int) -> String:
 
 # ---------------------------------------------------------------- input
 ## One finger at a time, read as touches (a mouse arrives as touches too: emulate_touch_from_mouse).
-## Phones give each finger any id, so the first finger down is followed, whatever its index.
+## Phones give each finger any id, so the first finger down is followed, whatever its index. Buttons
+## get their taps as mouse clicks (emulate_mouse_from_touch); a touch that lands on one is theirs.
 var _finger := -1
 
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventScreenTouch:
-		if e.pressed and _finger == -1:
+		if e.pressed and _finger == -1 and not hud.blocks(e.position):
 			_finger = e.index
 			_press(e.position)
 		elif not e.pressed and e.index == _finger:
