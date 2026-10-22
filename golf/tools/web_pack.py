@@ -41,6 +41,31 @@ for f in os.listdir(src):
     if f not in ('index.html', 'index.wasm', 'index.pck'):
         shutil.copy(os.path.join(src, f), out)
 
+# On-screen checks while it loads, and any error in plain words instead of a blank screen (the host's
+# viewer can refuse things a normal web server allows, and a phone shows no console).
+checks = """<div id="diag" style="position:fixed;left:8px;right:8px;bottom:8px;z-index:9;font:13px/1.4 system-ui,sans-serif;color:#f3e6ff;background:rgba(23,13,36,.92);border:1px solid #6b4a8a;border-radius:8px;padding:8px 10px;white-space:pre-wrap;pointer-events:none"></div>
+<script>
+(function () {
+  const box = document.getElementById('diag');
+  const line = (t) => { box.textContent += (box.textContent ? '\\n' : '') + t; };
+  window.__diag = line;
+  window.addEventListener('error', (e) => line('Error: ' + (e.message || e.type) + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')));
+  window.addEventListener('unhandledrejection', (e) => line('Error: ' + (e.reason && e.reason.message || e.reason)));
+  line('Checking this browser...');
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    line('WebGL 2: ' + (gl ? 'yes' : 'NO (the game needs it)'));
+  } catch (e) { line('WebGL 2: error ' + e.message); }
+  line('Unzip (DecompressionStream): ' + (typeof DecompressionStream === 'function' ? 'yes' : 'NO'));
+  if (typeof WebAssembly !== 'object') line('WebAssembly: NO (the game engine needs it)');
+  else WebAssembly.instantiate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))
+    .then(() => line('WebAssembly: yes'), (e) => line('WebAssembly: BLOCKED - ' + e.message));
+  fetch('index.pck.1.wasm', { method: 'HEAD' }).then((r) => line('Game files reachable: ' + (r.ok ? 'yes' : 'NO (' + r.status + ')')),
+    (e) => line('Game files reachable: NO - ' + e.message));
+}());
+</script>
+"""
+
 shim = """<script>
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
@@ -77,7 +102,11 @@ shim = """<script>
 html = open(os.path.join(src, 'index.html'), encoding='utf-8').read()
 marker = '<script src="index.js"></script>'
 assert marker in html
-html = html.replace(marker, shim + '\t\t' + marker)
+html = html.replace(marker, checks + shim + '\t\t' + marker)
+# the checks box goes once the game is running; a failure notice from Godot's loader is echoed into it
+html = html.replace("setStatusMode('hidden');\n\t\t}, displayFailureNotice);",
+                    "setStatusMode('hidden'); document.getElementById('diag').remove();\n\t\t}, (e) => { window.__diag('Engine failed: ' + (e && e.message || e)); displayFailureNotice(e); });")
+assert "document.getElementById('diag').remove()" in html
 # the host wraps the page in its own document: keep Godot's title, style and body content only
 title = re.search(r'<title>.*?</title>', html, re.S).group(0)
 style = re.search(r'<style>.*?</style>', html, re.S).group(0)
