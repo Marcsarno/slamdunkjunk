@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/back_iron_01.png-0d7f5381103a88878e7922033775
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

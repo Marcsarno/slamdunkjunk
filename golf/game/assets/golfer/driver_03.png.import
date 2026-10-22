@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/driver_03.png-8f0d79444a1744f02d1e7c7a3153f9a
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

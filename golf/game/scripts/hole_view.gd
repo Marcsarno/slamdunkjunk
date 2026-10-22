@@ -104,7 +104,7 @@ func _environment() -> void:
 				# plain night sky: a clean moon from the hole's element sheet, low enough to be in view
 				az = deg_to_rad(float(theme.get("moon_azimuth", -14.0)))
 				el = deg_to_rad(float(theme.get("moon_elevation", 24.0)))
-				if FileAccess.file_exists(folder + "moon_clean.png"):
+				if ResourceLoader.exists(folder + "moon_clean.png"):   # (exported builds hold the imported image, not the .png)
 					mat.set_shader_parameter("moon_tex", load(folder + "moon_clean.png"))
 					half_deg = 8.0
 			moon_dir = Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
@@ -402,7 +402,7 @@ func _pin() -> void:
 
 # ---------------------------------------------------------------- bats
 func _make_bats() -> void:
-	if not FileAccess.file_exists(CARD_DIR + "bat_up.png"):
+	if not ResourceLoader.exists(CARD_DIR + "bat_up.png"):
 		return
 	_bat_tex = [load(CARD_DIR + "bat_up.png"), load(CARD_DIR + "bat_down.png")]
 	var tee := terrain.tee()

@@ -13,7 +13,7 @@ var title := Label.new()
 var stroke := Label.new()
 var dist := Label.new()
 var wind := Label.new()
-var wind_arrow := Label.new()
+var wind_arrow := WindArrow.new()
 var power := Label.new()
 var message := Label.new()
 var hint := Label.new()
@@ -37,6 +37,20 @@ func _panel_style(radius := 18) -> StyleBoxFlat:
 	sb.content_margin_top = 10
 	sb.content_margin_bottom = 10
 	return sb
+
+
+## The wind arrow, drawn (web builds have no system font to fall back on for an arrow glyph).
+class WindArrow extends Control:
+	func _draw() -> void:
+		var c := Vector2(11, 15)
+		var ink := Color(0.06, 0.02, 0.1)
+		var col := Color(0.6, 1.0, 0.8)
+		var head := PackedVector2Array([c + Vector2(0, -13), c + Vector2(9, -2), c + Vector2(-9, -2)])
+		var outline_head := PackedVector2Array([c + Vector2(0, -16), c + Vector2(12, -0.5), c + Vector2(-12, -0.5)])
+		draw_line(c + Vector2(0, -3), c + Vector2(0, 13), ink, 8.0)
+		draw_colored_polygon(outline_head, ink)
+		draw_line(c + Vector2(0, -3), c + Vector2(0, 12), col, 4.0)
+		draw_colored_polygon(head, col)
 
 
 func _label(l: Label, size: int, color := CREAM) -> Label:
@@ -80,9 +94,10 @@ func _ready() -> void:
 	wrow.alignment = BoxContainer.ALIGNMENT_END
 	wrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	right.add_child(wrow)
-	wind_arrow.text = "↑"
-	wind_arrow.pivot_offset = Vector2(10, 18)
-	wrow.add_child(_label(wind_arrow, 30, Color(0.6, 1.0, 0.8)))
+	wind_arrow.custom_minimum_size = Vector2(22, 30)
+	wind_arrow.pivot_offset = Vector2(11, 15)
+	wind_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrow.add_child(wind_arrow)
 	wrow.add_child(_label(wind, 24, Color(0.6, 1.0, 0.8)))
 
 	power.set_anchors_preset(Control.PRESET_CENTER)

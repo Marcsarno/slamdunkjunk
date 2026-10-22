@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/iron_02.png-91ff4bc916a5324c2f2c26e615f72fb0.
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
