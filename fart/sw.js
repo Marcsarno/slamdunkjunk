@@ -1,5 +1,5 @@
 // Offline support: serve from the cache straight away, refresh the cache from the network in the background.
-const CACHE = 'fart-machine-v1';
+const CACHE = 'fart-machine-v2';
 const SHELL = [
   './',
   'index.html',
@@ -8,6 +8,7 @@ const SHELL = [
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
   'icons/apple-touch-icon.png',
+  ...['classic', 'squeaker', 'wet', 'thunder', 'long-haul', 'toot', 'dry', 'poop-toot', 'blat'].map(n => `sounds/${n}.mp3`),
 ];
 
 self.addEventListener('install', e => {
