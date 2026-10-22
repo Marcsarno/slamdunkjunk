@@ -106,6 +106,7 @@ func _environment() -> void:
 				el = deg_to_rad(float(theme.get("moon_elevation", 24.0)))
 				if ResourceLoader.exists(folder + "moon_clean.png"):   # (exported builds hold the imported image, not the .png)
 					mat.set_shader_parameter("moon_tex", load(folder + "moon_clean.png"))
+					mat.set_shader_parameter("moon_glow", 1.0)
 					half_deg = 8.0
 			moon_dir = Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
 			mat.set_shader_parameter("moon_half", tan(deg_to_rad(half_deg)))

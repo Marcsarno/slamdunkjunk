@@ -67,6 +67,12 @@ checks = """<div id="diag" style="position:fixed;left:8px;right:8px;bottom:8px;z
 """
 
 shim = """<script>
+// Phones report 3x pixel density; drawing the 3D scene at that every frame costs more than it shows.
+// Godot sizes its canvas from devicePixelRatio, so it sees at most 2.
+(function () {
+  const real = window.devicePixelRatio || 1;
+  try { Object.defineProperty(window, 'devicePixelRatio', { get: () => Math.min(2, real), configurable: true }); } catch (e) {}
+}());
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
   const PLAN = %s;

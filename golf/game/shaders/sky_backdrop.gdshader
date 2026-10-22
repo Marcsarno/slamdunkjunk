@@ -16,6 +16,10 @@ uniform float yaw_deg = 0.0;
 uniform vec3 moon_dir = vec3(0.0, 0.6, -0.8);
 uniform float moon_half = 0.08;
 uniform float moon_scale = 1.0;
+// 1: draw only the moon's disc from moon_tex and give it a soft glow here, fading to nothing well inside
+// the sprite (the painted glow ends in a hard rim that shows on sharp phone screens)
+uniform float moon_glow = 0.0;
+uniform vec3 moon_glow_color = vec3(1.0, 0.72, 0.36);
 uniform vec3 top_color : source_color = vec3(0.12, 0.08, 0.25);
 uniform vec3 horizon_color : source_color = vec3(0.45, 0.32, 0.55);
 uniform vec3 ground_color : source_color = vec3(0.35, 0.3, 0.45);
@@ -52,7 +56,14 @@ void sky() {
 		muv.y = 1.0 - muv.y;
 		if (muv.x > 0.0 && muv.x < 1.0 && muv.y > 0.0 && muv.y < 1.0) {
 			vec4 mc = texture(moon_tex, muv);
-			c = mix(c, mc.rgb, mc.a);
+			if (moon_glow > 0.5) {
+				float r = length(muv - 0.5);
+				float glow = 0.5 * exp(-max(r - 0.30, 0.0) / 0.065) * (1.0 - smoothstep(0.36, 0.49, r));
+				c = mix(c, moon_glow_color, glow);
+				c = mix(c, mc.rgb, smoothstep(0.80, 0.95, mc.a));
+			} else {
+				c = mix(c, mc.rgb, mc.a);
+			}
 		}
 	}
 	COLOR = c * energy;

@@ -62,6 +62,8 @@ func _init(t: Terrain, obs: ObstacleGrid, pin_pos: Vector3, wind_v: Vector2 = Ve
 
 func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	pos = from
+	_prev_pos = from
+	_acc = 0.0
 	vel = velocity
 	lift = lift_coef
 	spin_brake = lift_coef * SPIN_BRAKE
@@ -82,13 +84,28 @@ func is_done() -> bool:
 	return state >= State.STOPPED
 
 
-## Advance by `dt` seconds using fixed internal substeps.
+## Advance by `dt` seconds using fixed internal substeps. Time left over (less than one step) carries
+## to the next frame, so the ball moves evenly whatever the frame rate; draw_pos() blends the last two
+## steps by that leftover for a smooth picture.
+var _acc := 0.0
+var _prev_pos := Vector3.ZERO
+
+
 func advance(dt: float) -> void:
-	var steps := maxi(1, int(round(dt / DT)))
-	for i in steps:
+	_acc += dt
+	while _acc >= DT:
 		if is_done():
+			_acc = 0.0
 			return
+		_prev_pos = pos
 		_step(DT)
+		_acc -= DT
+
+
+func draw_pos() -> Vector3:
+	if is_done():
+		return pos
+	return _prev_pos.lerp(pos, clampf(_acc / DT, 0.0, 1.0))
 
 
 func _step(dt: float) -> void:

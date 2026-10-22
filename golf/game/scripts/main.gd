@@ -398,7 +398,7 @@ func _cut_to_swing_cam() -> void:
 func _chase_cam(_delta: float) -> void:
 	if sim == null:
 		return
-	var b := sim.pos
+	var b := sim.draw_pos()
 	var dir := Vector3(flight_dir.x, flight_dir.y, 0)
 	var side := Vector3(flight_dir.y, -flight_dir.x, 0)
 	var p: Vector3
@@ -417,21 +417,48 @@ func _chase_cam(_delta: float) -> void:
 	_want_target = Terrain.to_world(b + sim.vel * 0.12 + Vector3(0, 0, 0.3))
 
 
-func _intro_cam() -> void:
+## A point on the hole's centre line at a fractional index, on a smooth (Catmull-Rom) curve through the
+## path points, so the flyover glides instead of turning at each point.
+func _path_at(f: float) -> Vector2:
 	var path: Array = terrain.meta.path
+	var n := path.size()
+	f = clampf(f, 0.0, n - 1.0)
+	var i := mini(int(f), n - 2)
+	var t := f - i
+	var p := func(k: int) -> Vector2: return Vector2(path[clampi(k, 0, n - 1)][0], path[clampi(k, 0, n - 1)][1])
+	var p0: Vector2 = p.call(i - 1)
+	var p1: Vector2 = p.call(i)
+	var p2: Vector2 = p.call(i + 1)
+	var p3: Vector2 = p.call(i + 2)
+	var t2 := t * t
+	var t3 := t2 * t
+	return 0.5 * (2.0 * p1 + (p2 - p0) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (3.0 * p1 - p0 - 3.0 * p2 + p3) * t3)
+
+
+## The ground height under the centre line, averaged over a stretch so the camera rides over the
+## mounds instead of bobbing with them.
+func _path_height(f: float) -> float:
+	var h := 0.0
+	for k in 5:
+		var q := _path_at(f + (k - 2) * 0.75)
+		h += terrain.height(q.x, q.y)
+	return h / 5.0
+
+
+func _intro_cam() -> void:
+	var n: int = terrain.meta.path.size()
 	var u := clampf(phase_t / INTRO_TIME, 0.0, 1.0)
 	u = u * u * (3.0 - 2.0 * u)
-	var f := u * (path.size() - 1)
-	var i := mini(int(f), path.size() - 2)
-	var k := f - i
-	var p2 := Vector2(path[i][0], path[i][1]).lerp(Vector2(path[i + 1][0], path[i + 1][1]), k)
-	var j := mini(i + 4, path.size() - 1)
-	var ahead := Vector2(path[j][0], path[j][1])
-	if j == path.size() - 1:
-		ahead = Vector2(terrain.pin().x, terrain.pin().y)
-	var h := terrain.height(p2.x, p2.y)
+	var f := u * (n - 1)
+	var p2 := _path_at(f)
+	# looking four points ahead, sliding toward the pin over the last stretch
+	var fa := f + 4.0
+	var ahead := _path_at(fa)
+	var pin2 := Vector2(terrain.pin().x, terrain.pin().y)
+	ahead = ahead.lerp(pin2, clampf(fa - (n - 1.0) + 1.0, 0.0, 1.0))
+	var h := _path_height(f)
 	cam_pos = Terrain.to_world(Vector3(p2.x, p2.y, h + 26.0 - 8.0 * u))
-	cam_target = Terrain.to_world(Vector3(ahead.x, ahead.y, terrain.height(ahead.x, ahead.y)))
+	cam_target = Terrain.to_world(Vector3(ahead.x, ahead.y, _path_height(minf(fa, n - 1.0))))
 	cam_fov = 62.0
 	_want_pos = cam_pos
 	_want_target = cam_target
@@ -527,7 +554,7 @@ func _marker_texture() -> ImageTexture:
 
 
 func _update_ball_visual() -> void:
-	var b := sim.pos if (phase == Phase.FLIGHT or phase == Phase.RESULT or phase == Phase.HOLED) and sim else ball
+	var b := sim.draw_pos() if (phase == Phase.FLIGHT or phase == Phase.RESULT or phase == Phase.HOLED) and sim else ball
 	var w := Terrain.to_world(b)
 	ball_mesh.position = w
 	var d := cam.global_position.distance_to(w)

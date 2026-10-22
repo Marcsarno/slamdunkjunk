@@ -24,6 +24,9 @@ var next := Button.new()
 var _msg_time := 0.0
 var fade := ColorRect.new()
 var _fade_t := 0.0
+var fps := Label.new()
+var _fps_t := 0.0
+var _fps_worst := 0.0
 
 
 func _panel_style(radius := 18) -> StyleBoxFlat:
@@ -129,6 +132,11 @@ func _ready() -> void:
 	root.add_child(vig)
 	root.move_child(vig, 0)
 
+	# frame rate in the corner when the web page is opened with #fps (for checking on a phone)
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("location.hash", true)) == "#fps":
+		fps.position = Vector2(16, 150)
+		root.add_child(_label(fps, 24, Color(0.6, 1.0, 0.8)))
+
 	fade.color = Color(0.05, 0.02, 0.08, 0.0)
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -214,6 +222,13 @@ func fade_in(seconds := 0.35) -> void:
 
 
 func _process(delta: float) -> void:
+	if fps.is_inside_tree():
+		_fps_worst = maxf(_fps_worst, delta)
+		_fps_t += delta
+		if _fps_t >= 1.0:
+			fps.text = "%d fps · slowest frame %d ms" % [Engine.get_frames_per_second(), roundi(_fps_worst * 1000.0)]
+			_fps_t = 0.0
+			_fps_worst = 0.0
 	if _fade_t > 0.0:
 		_fade_t -= delta
 		fade.color.a = clampf(_fade_t / 0.35, 0.0, 1.0)
