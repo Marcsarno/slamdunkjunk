@@ -18,11 +18,13 @@ import sys
 
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 from scipy.spatial import cKDTree
 
 PHYS_CELL = 1.0
 SURF_CELL = 0.5
 ALBEDO_PX_PER_M = 10.0
+SPLAT_PX_PER_M = 4.0
 MARGIN = 8.0
 MAX_TEXTURE = 4096
 
@@ -94,23 +96,41 @@ class Hole:
         self.path_s = np.concatenate([[0], np.cumsum(seg)])
         self.length = float(self.path_s[-1])
         self.tree = cKDTree(self.path)
+        tan = np.gradient(self.path, axis=0)
+        self.tangent = tan / np.linalg.norm(tan, axis=1, keepdims=True)
         ctrl = np.asarray(spec["path"], float)
         _, ctrl_idx = self.tree.query(ctrl)
         self.width_s = self.path_s[ctrl_idx]
         self.widths = np.asarray(spec["fairway_width"], float)
-        self.noise = Noise(spec.get("seed", 1))
-        self.noise_fine = Noise(spec.get("seed", 1) + 7, wavelength=(5.0, 14.0))
+        # broad rolls only: wavelengths of 70-200 m keep fairway grades to a few percent
+        self.noise = Noise(spec.get("seed", 1), wavelength=(70.0, 200.0))
+        self.noise_fine = Noise(spec.get("seed", 1) + 7, wavelength=(5.0, 14.0))   # paint only, never height
         self.edge_noise = Noise(spec.get("seed", 1) + 3, wavelength=(9.0, 30.0))
+        # ponds sit just below the local ground so their banks stay ~3:1 instead of cliffs
+        for w in spec.get("water", []):
+            w["level"] = None
         lo = self.path.min(axis=0)
         hi = self.path.max(axis=0)
         reach = max(self.widths) / 2 + spec["rough_width"] + spec["deep_rough_width"] + MARGIN
         self.x0, self.y0 = math.floor(lo[0] - reach), math.floor(lo[1] - reach)
         self.x1, self.y1 = math.ceil(hi[0] + reach), math.ceil(hi[1] + reach)
+        for w in spec.get("water", []):
+            c = np.array([[w["center"][0]]], float), np.array([[w["center"][1]]], float)
+            w["level"] = round(float(self.base_height(*c)[0, 0]) + w.get("level_offset", -0.6), 3)
 
     # --- geometry helpers -------------------------------------------------------------------
     def path_query(self, x, y):
         d, idx = self.tree.query(np.stack([x.ravel(), y.ravel()], axis=1))
         return d.reshape(x.shape), self.path_s[idx].reshape(x.shape)
+
+    def lateral(self, x, y):
+        """Signed offset from the centerline (+ = right of the line of play), and distance along it."""
+        _, idx = self.tree.query(np.stack([x.ravel(), y.ravel()], axis=1))
+        p = self.path[idx]
+        t = self.tangent[idx]
+        off = np.stack([x.ravel(), y.ravel()], axis=1) - p
+        lat = off[:, 0] * t[:, 1] - off[:, 1] * t[:, 0]
+        return lat.reshape(x.shape), self.path_s[idx].reshape(x.shape)
 
     def half_width(self, s):
         return np.interp(s, self.width_s, self.widths) / 2
@@ -124,40 +144,83 @@ class Hole:
         return np.where(s > tail, np.maximum(e, s - tail), e)
 
     # --- fields -----------------------------------------------------------------------------
-    def height(self, x, y):
+    BASE_CELL = 2.0
+    BASE_SMOOTH = 6.0     # meters (gaussian sigma): removes seams where the nearest centerline point jumps
+
+    def base_height(self, x, y):
+        """Smoothed landform, sampled bilinearly from a cached grid."""
+        if not hasattr(self, "_base"):
+            pad = 20.0
+            xs = np.arange(self.x0 - pad, self.x1 + pad + 1e-6, self.BASE_CELL)
+            ys = np.arange(self.y0 - pad, self.y1 + pad + 1e-6, self.BASE_CELL)
+            bx, by = np.meshgrid(xs, ys)
+            raw = self._raw_base_height(bx, by)
+            self._base = ndimage.gaussian_filter(raw, self.BASE_SMOOTH / self.BASE_CELL, mode="nearest")
+            self._base_origin = (xs[0], ys[0])
+        fx = (np.asarray(x, float) - self._base_origin[0]) / self.BASE_CELL
+        fy = (np.asarray(y, float) - self._base_origin[1]) / self.BASE_CELL
+        return ndimage.map_coordinates(self._base, [fy.ravel(), fx.ravel()], order=1, mode="nearest").reshape(np.shape(x))
+
+    def _raw_base_height(self, x, y):
+        """Landform before features: tee-to-green fall, cross tilt, broad rolls, framing banks."""
         sp, el = self.spec, self.spec["elevation"]
-        d, s = self.path_query(x, y)
+        lat, s = self.lateral(x, y)
+        d = np.abs(lat)
         t = smoothstep(0.0, 1.0, s / self.length)
         h = el["tee"] + (el["green"] - el["tee"]) * t
+        h += el.get("cross_tilt", 0.012) * lat                      # 1-2% fall across for drainage
         play = self.half_width(s) + sp["rough_width"] * 0.5
-        h += el["undulation"] * self.noise(x, y) * (0.6 + 0.4 * smoothstep(0, play, d))
-        h += 0.12 * self.noise_fine(x, y)
-        h += np.minimum(el["bank_slope"] * np.maximum(0.0, d - play) ** 1.25, 9.0)
+        rolls = el.get("roll_height", 0.45)
+        h += rolls * self.noise(x, y) * (1.0 + 0.8 * smoothstep(play * 0.5, play * 1.5, d))
+        # framing banks beyond the rough: smoothstep rise, steepest grade = 1.5 * H / width
+        bank_h = el.get("bank_height", 3.0)
+        bank_w = max(bank_h * 10.0, 20.0)                          # keeps banks under ~15%
+        h += bank_h * smoothstep(play, play + bank_w, d)
         for m in el.get("mounds", []):
+            hm = min(m["height"], 0.11 * m["radius"])               # gaussian max grade ~1.36 h/R -> <15%
             r2 = ((x - m["center"][0]) ** 2 + (y - m["center"][1]) ** 2) / m["radius"] ** 2
-            h += m["height"] * np.exp(-2.5 * r2)
-        # tee box: flat pad
+            h += hm * np.exp(-2.5 * r2)
+        return h
+
+    def height(self, x, y):
+        sp, el = self.spec, self.spec["elevation"]
+        h = self.base_height(x, y)
+        # tee: level pad raised ~0.45 m, 3:1 sides, a hair of fall toward the front for drainage
         tx, ty = sp["tee"]["center"]
         hw, hl = sp["tee"]["size"][0] / 2, sp["tee"]["size"][1] / 2
         q = np.maximum(np.abs(x - tx) - hw, np.abs(y - ty) - hl)
-        tee_h = el["tee"] + 0.25
-        h = h + (tee_h - h) * (1 - smoothstep(0.0, 4.0, q))
-        # green: tilted plane, blended into the surrounds
+        pad = float(self.base_height(np.array([[tx]], float), np.array([[ty]], float))[0, 0]) + 0.45
+        pad_surface = pad - 0.005 * (y - ty)
+        h = h + (pad_surface - h) * (1 - smoothstep(0.0, 2.2, q))
+        # green: tilted plane (1.5-3%), pushed up slightly, falling off at <=17.5% into the surrounds
         g = sp["green"]
+        gx, gy = g["center"]
         gr, _ = ellipse_r(x, y, g)
-        plane = el["green"] + 0.3 + g["slope"][0] * (x - g["center"][0]) + g["slope"][1] * (y - g["center"][1])
-        h = h + (plane - h) * (1 - smoothstep(1.0, 1.7, gr))
-        # bunkers: bowl with a raised lip
+        slope = np.array(g["slope"], float)
+        mag = np.linalg.norm(slope)
+        if mag > 0:
+            slope = slope / mag * np.clip(mag, 0.015, 0.028)
+        center_h = float(self.base_height(np.array([[gx]], float), np.array([[gy]], float))[0, 0]) + 0.35
+        plane = center_h + slope[0] * (x - gx) + slope[1] * (y - gy)
+        r_min = min(g["radius"])
+        falloff = 6.0 / r_min                                          # ~6 m apron/falloff
+        h = h + (plane - h) * (1 - smoothstep(1.0, 1.0 + falloff, gr))
+        # bunkers: flat sand floor, faces ~35-40%, lip raised on the side facing the tee
         for b in sp["bunkers"]:
             br = kidney_r(x, y, b)
-            bowl = b["depth"] * (1 - np.clip(br, 0, 1) ** 3)
-            lip = 0.18 * np.exp(-((br - 1.05) / 0.12) ** 2)
-            h = h - bowl + lip
-        # water: shoreline falls away under the waterline
+            depth = b.get("depth", 0.45)
+            bmin = min(b["radius"])
+            edge_w = min(0.6, 1.5 * depth / (0.38 * bmin))              # radius fraction for the face
+            h = h - depth * (1 - smoothstep(1.0 - edge_w, 1.0, br))
+            toward_tee = np.clip(((ty - b["center"][1]) * (y - b["center"][1])
+                                  + (tx - b["center"][0]) * (x - b["center"][0])) /
+                                 (np.hypot(ty - b["center"][1], tx - b["center"][0]) * bmin + 1e-6), 0, 1)
+            h = h + 0.25 * (1 - toward_tee) * np.exp(-((br - 1.12) / 0.14) ** 2)
+        # water: banks fall away under the waterline
         for w in sp.get("water", []):
             wr, _ = ellipse_r(x, y, w)
-            floor = w["level"] - 0.9
-            h = h + (floor - h) * (1 - smoothstep(0.85, 1.25, wr))
+            floor = w["level"] - 0.7
+            h = h + (floor - h) * (1 - smoothstep(0.8, 1.5, wr))
         return h
 
     def surface(self, x, y, h):
@@ -206,14 +269,15 @@ def paint_albedo(hole, out_path):
     rgb = np.zeros(gx.shape + (3,), np.float32)
     for k, c in PALETTE.items():
         rgb[surf == k] = c
-    d, s = hole.path_query(gx, gy)
-    stripe = (np.floor(s / 7.0) % 2 == 0)
-    fw = surf == FAIRWAY
-    rgb[fw & stripe] *= 1.10
-    rgb[fw & ~stripe] *= 0.90
-    gr, gth = ellipse_r(gx, gy, hole.spec["green"])
+    lat, s = hole.lateral(gx, gy)
+    stripe = (np.floor(lat / 6.0) % 2 == 0)                       # mowed in lanes along the line of play
+    fw = np.isin(surf, [FAIRWAY, TEE])
+    rgb[fw & stripe] *= 1.06
+    rgb[fw & ~stripe] *= 0.94
     gm = surf == GREEN
-    rgb[gm] *= (1.0 + 0.06 * np.sign(np.sin(gr[gm] * 14.0)))[:, None]
+    gstripe = np.floor((gx * 0.8 + gy * 0.6) / 1.8) % 2 == 0
+    rgb[gm & gstripe] *= 1.04
+    rgb[gm & ~gstripe] *= 0.96
     # painted outlines where surfaces meet (the concept art has crisp, darker borders)
     edge = np.zeros(surf.shape, bool)
     for axis in (0, 1):
@@ -241,7 +305,80 @@ def paint_albedo(hole, out_path):
     return img.size
 
 
-def build(spec_path, out_dir):
+GRADE_LIMITS = {  # percent; from golf architecture guidance (pin areas <=3%, surrounds <=17.5%)
+    "green": 3.0, "tee": 2.0, "fairway": 6.0, "fringe": 17.5, "rough": 17.5, "deep_rough": 20.0, "sand": 45.0,
+}
+
+
+def slope_report(hole, px, py, heights, spec):
+    gy_, gx_ = np.gradient(heights.astype(np.float64), PHYS_CELL)
+    pct = np.hypot(gx_, gy_) * 100
+    surf = hole.surface(px, py, heights)
+    print("grade report (percent)    p50    p95    max   limit")
+    worst = []
+    for k, name in enumerate(SURFACE_NAMES):
+        m = ndimage.binary_erosion(surf == k, iterations=1)   # interior cells only
+        if name in ("oob", "water") or not m.any():
+            continue
+        p50, p95, mx = np.percentile(pct[m], 50), np.percentile(pct[m], 95), pct[m].max()
+        lim = GRADE_LIMITS.get(name)
+        flag = "" if lim is None or p95 <= lim else "  <-- over"
+        if flag:
+            worst.append(name)
+        print(f"  {name:12s}          {p50:5.1f}  {p95:5.1f}  {mx:5.1f}  {lim}{flag}")
+    pin = spec["pin"]
+    near = np.hypot(px - pin[0], py - pin[1]) < 3.0
+    print(f"  pin area (3 m)        max {pct[near].max():.1f}%  (limit 3.0)")
+    return worst
+
+
+def surface_edges(surf):
+    edge = np.zeros(surf.shape, bool)
+    for axis in (0, 1):
+        dif = np.diff(surf.astype(int), axis=axis) != 0
+        if axis == 0:
+            edge[1:, :] |= dif
+            edge[:-1, :] |= dif
+        else:
+            edge[:, 1:] |= dif
+            edge[:, :-1] |= dif
+    return edge
+
+
+def paint_splat(hole, out_dir):
+    """Texture weights for the Godot terrain shader, plus a brightness overlay.
+
+    splat.png  R fairway (incl. tee), G green, B sand, A darkening (deep rough / out of bounds);
+               rough is whatever weight is left over.
+    detail.png grayscale, 128 = neutral: mowing lanes, collar ring, painted outlines at edges.
+    Row 0 is the far end of the hole (max y), like an image of the hole seen from above.
+    """
+    cell = 1.0 / SPLAT_PX_PER_M
+    gx, gy = grid(hole, cell)
+    surf = hole.surface(gx, gy, hole.height(gx, gy))
+    w = np.zeros(gx.shape + (4,), np.float32)
+    w[..., 0] = np.isin(surf, [FAIRWAY, TEE]) + 0.75 * (surf == FRINGE)
+    w[..., 1] = (surf == GREEN) + 0.25 * (surf == FRINGE)
+    w[..., 2] = surf == SAND
+    w[..., 3] = 0.45 * (surf == DEEP) + 0.75 * (surf == OOB) + 0.6 * (surf == WATER)
+    for c in range(4):
+        w[..., c] = ndimage.gaussian_filter(w[..., c], 0.6)
+    lat, s = hole.lateral(gx, gy)
+    det = np.full(gx.shape, 1.0, np.float32)
+    lanes = np.where(np.floor(lat / 6.0) % 2 == 0, 1.07, 0.93)
+    det = np.where(np.isin(surf, [FAIRWAY, TEE]), lanes, det)
+    gl = np.where(np.floor((gx * 0.8 + gy * 0.6) / 1.8) % 2 == 0, 1.05, 0.95)
+    det = np.where(surf == GREEN, gl, det)
+    det = np.where(surf == FRINGE, 0.9, det)
+    edge = ndimage.binary_dilation(surface_edges(surf), iterations=1)
+    det = np.where(edge & (surf != WATER), det * 0.72, det)
+    det = ndimage.gaussian_filter(det, 0.7)
+    Image.fromarray(np.clip(w[::-1] * 255, 0, 255).astype(np.uint8), "RGBA").save(os.path.join(out_dir, "splat.png"))
+    Image.fromarray(np.clip(det[::-1] * 128, 0, 255).astype(np.uint8), "L").save(os.path.join(out_dir, "detail.png"))
+    return [int(gx.shape[1]), int(gx.shape[0])]
+
+
+def build(spec_path, out_dir, preview_dir=None):
     spec = json.load(open(spec_path))
     os.makedirs(out_dir, exist_ok=True)
     hole = Hole(spec)
@@ -250,8 +387,12 @@ def build(spec_path, out_dir):
     sx, sy = grid(hole, SURF_CELL)
     surface = hole.surface(sx, sy, hole.height(sx, sy))
     heights.tofile(os.path.join(out_dir, "heights.bin"))
+    slope_report(hole, px, py, heights, spec)
     surface.tofile(os.path.join(out_dir, "surface.bin"))
-    albedo_size = paint_albedo(hole, os.path.join(out_dir, "albedo.png"))
+    splat_size = paint_splat(hole, out_dir)
+    if preview_dir:
+        os.makedirs(preview_dir, exist_ok=True)
+        paint_albedo(hole, os.path.join(preview_dir, "albedo.png"))
     gp = spec["green"]
     pin = spec["pin"]
     pin_h = float(hole.height(np.array([[pin[0]]], float), np.array([[pin[1]]], float))[0, 0])
@@ -262,7 +403,8 @@ def build(spec_path, out_dir):
         "phys": {"cell": PHYS_CELL, "nx": int(px.shape[1]), "ny": int(px.shape[0]), "file": "heights.bin"},
         "surf": {"cell": SURF_CELL, "nx": int(sx.shape[1]), "ny": int(sx.shape[0]), "file": "surface.bin",
                  "names": SURFACE_NAMES},
-        "albedo": {"file": "albedo.png", "size": list(albedo_size)},
+        "splat": {"file": "splat.png", "detail": "detail.png", "size": splat_size},
+        "theme": spec.get("theme", {}),
         "tee": [0.0, 0.0, tee_h], "pin": [pin[0], pin[1], pin_h],
         "green": gp, "length": round(hole.length, 1),
         "path": [[round(float(a), 2), round(float(b), 2)] for a, b in hole.path[::20]],
@@ -271,10 +413,10 @@ def build(spec_path, out_dir):
     json.dump(meta, open(os.path.join(out_dir, "terrain.json"), "w"), indent=1)
     counts = {SURFACE_NAMES[k]: int((surface == k).sum()) for k in range(len(SURFACE_NAMES))}
     print(f"{spec['id']}: length {hole.length:.0f} m, grid {px.shape[1]}x{px.shape[0]}, "
-          f"h {heights.min():.1f}..{heights.max():.1f} m, albedo {albedo_size}")
+          f"h {heights.min():.1f}..{heights.max():.1f} m, splat {splat_size}")
     print("surface cells:", counts)
     return hole, meta
 
 
 if __name__ == "__main__":
-    build(sys.argv[1], sys.argv[2])
+    build(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)

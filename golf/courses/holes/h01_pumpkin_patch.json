@@ -68,8 +68,8 @@
     ],
     "rotation": 0.35,
     "slope": [
-      0.012,
-      -0.018
+      0.008,
+      0.02
     ]
   },
   "pin": [
@@ -87,7 +87,7 @@
         4.5
       ],
       "rotation": -0.5,
-      "depth": 0.55
+      "depth": 0.45
     },
     {
       "center": [
@@ -99,11 +99,11 @@
         3.5
       ],
       "rotation": 0.6,
-      "depth": 0.5
+      "depth": 0.45
     },
     {
       "center": [
-        -37,
+        -34,
         291
       ],
       "radius": [
@@ -111,64 +111,64 @@
         3.2
       ],
       "rotation": 1.3,
-      "depth": 0.6
+      "depth": 0.45
     },
     {
       "center": [
-        -62,
-        279
+        -65,
+        277
       ],
       "radius": [
         6,
         3
       ],
       "rotation": 0.4,
-      "depth": 0.6
+      "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -27,
+        -33,
         118
       ],
       "radius": [
         11,
         26
       ],
-      "rotation": 0.12,
-      "level": -0.35
+      "rotation": 0.12
     }
   ],
   "elevation": {
     "tee": 1.6,
     "green": 4.2,
-    "undulation": 0.7,
-    "bank_slope": 0.1,
+    "cross_tilt": 0.012,
+    "roll_height": 0.45,
+    "bank_height": 3.0,
     "mounds": [
       {
         "center": [
-          20,
+          36,
           150
         ],
-        "radius": 18,
-        "height": 3.0
+        "radius": 24,
+        "height": 2.4
       },
       {
         "center": [
-          -12,
-          245
+          -46,
+          232
         ],
-        "radius": 10,
-        "height": 1.2
+        "radius": 16,
+        "height": 1.6
       },
       {
         "center": [
-          -70,
-          300
+          -74,
+          304
         ],
-        "radius": 20,
-        "height": 4.5
+        "radius": 24,
+        "height": 2.6
       }
     ]
   },
@@ -197,19 +197,76 @@
     }
   ],
   "lantern_spacing": 26,
-  "trees": {
-    "near": [
+  "theme": {
+    "sky": "sky_harvest",
+    "sky_yaw": 0.58,
+    "sky_top": 0.95,
+    "horizon": [
+      {
+        "image": "horizon_hills",
+        "radius": 1100,
+        "height": 150,
+        "repeats": 3,
+        "tint": [
+          0.85,
+          0.8,
+          0.95
+        ]
+      },
+      {
+        "image": "horizon_pines",
+        "radius": 620,
+        "height": 70,
+        "repeats": 7,
+        "tint": [
+          0.7,
+          0.62,
+          0.8
+        ]
+      }
+    ],
+    "landmark": {
+      "image": "horizon_castle",
+      "azimuth": -28,
+      "radius": 950,
+      "height": 210
+    },
+    "card_tint": [
+      0.9,
+      0.8,
+      0.86
+    ],
+    "moon_light": [
+      1.0,
+      0.78,
+      0.62
+    ],
+    "fog": [
+      0.42,
+      0.24,
+      0.36
+    ],
+    "trees_near": [
+      "apple_tree",
       "maple_orange",
+      "apple_tree",
       "maple_red",
-      "maple_orange",
       "haunted_tree",
       "lantern_tree"
     ],
-    "far": [
+    "trees_far": [
       "pine_blue",
-      "pine_blue",
-      "maple_red"
+      "maple_red",
+      "birch",
+      "dead_tree"
     ],
-    "spacing": 8.5
-  }
+    "cornfield": {
+      "side": "right",
+      "from": 0.12,
+      "to": 0.5,
+      "gap": 5.0,
+      "depth": 24
+    }
+  },
+  "trees_spacing": 8.5
 }

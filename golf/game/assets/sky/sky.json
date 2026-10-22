@@ -1,0 +1,66 @@
+{
+ "sky_harvest": {
+  "size": [
+   2172,
+   724
+  ],
+  "moon_uv": [
+   0.6843,
+   0.3153
+  ],
+  "top_color": [
+   0.346,
+   0.188,
+   0.488
+  ],
+  "horizon_color": [
+   0.992,
+   0.459,
+   0.114
+  ]
+ },
+ "sky_spiderwood": {
+  "size": [
+   2172,
+   724
+  ],
+  "moon_uv": [
+   0.636,
+   0.3931
+  ],
+  "top_color": [
+   0.109,
+   0.079,
+   0.328
+  ],
+  "horizon_color": [
+   0.746,
+   0.493,
+   0.933
+  ]
+ },
+ "horizon_hills": {
+  "size": [
+   2172,
+   724
+  ]
+ },
+ "horizon_castle": {
+  "size": [
+   2172,
+   724
+  ]
+ },
+ "horizon_pines": {
+  "size": [
+   2172,
+   724
+  ]
+ },
+ "horizon_bare_trees": {
+  "size": [
+   2172,
+   724
+  ]
+ }
+}

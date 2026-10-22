@@ -1,0 +1,77 @@
+extends Node
+## Scripted play-through that saves screenshots, for checking the look without a phone.
+## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 -- --capture=<dir>
+
+var main: Node
+var out_dir := ""
+var t := 0.0
+var step := 0
+var shots_taken := 0
+
+
+func _ready() -> void:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--capture="):
+			out_dir = a.trim_prefix("--capture=")
+	DirAccess.make_dir_recursive_absolute(out_dir)
+	main = get_parent()
+
+
+func snap(name: String) -> void:
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(out_dir.path_join("%02d_%s.png" % [shots_taken, name]))
+	shots_taken += 1
+	print("captured %s phase=%d cam=%s target=%s golfer=%s aim=%s" % [name, main.phase, main.cam.global_position, main.cam_target, main.golfer.position, main.aim])
+
+
+func _process(delta: float) -> void:
+	t += delta
+	match step:
+		0:
+			if t > 1.5:
+				snap("intro")
+				step += 1
+				if "--introonly" in OS.get_cmdline_user_args():
+					get_tree().quit()
+		1:
+			if t > 2.0:
+				main._press(Vector2(360, 900))       # skip the intro
+				step += 1
+		2:
+			if t > 3.0:
+				snap("aim")
+				main._press(Vector2(360, 800))       # start a pull
+				step += 1
+		3:
+			if t > 3.3:
+				main._drag(Vector2(330, 800 + 1280 * 0.28 * 0.92), Vector2(0, 50))
+				step += 1
+		4:
+			if t > 3.8:
+				snap("pull")
+				main._release()
+				step += 1
+		5:
+			if t > 3.95:
+				snap("swing")
+				step += 1
+		6:
+			if t > 4.6:
+				snap("launch")
+				step += 1
+		7:
+			if t > 6.0:
+				snap("flight_mid")
+				step += 1
+		8:
+			if t > 8.0:
+				snap("flight_late")
+				step += 1
+		9:
+			if main.phase == main.Phase.RESULT or t > 16.0:
+				snap("result")
+				step += 1
+		10:
+			if main.phase == main.Phase.AIM:
+				snap("second_shot")
+				get_tree().quit()

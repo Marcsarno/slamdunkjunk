@@ -3,11 +3,10 @@
 usage: python3 build_hole.py <hole.json> <out_dir> [--preview]
 
 Outputs in <out_dir>:
-  heights.bin, surface.bin, albedo.png, terrain.json   (from hole_gen)
+  heights.bin, surface.bin, splat.png, detail.png, terrain.json   (from hole_gen)
   hole.glb      terrain mesh (same 1 m lattice as heights.bin), water, 3D props
   props.json    lanterns (for lights), obstacles (ball collisions), cards (painted billboards)
-  hole.blend    the Blender scene, for inspection
-  preview.png   (with --preview) a quick overhead render
+  golf/build/<hole>/hole.blend, albedo.png, preview.png   inspection files (not shipped)
 """
 import json
 import math
@@ -28,7 +27,8 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 SPEC, OUT = args[0], args[1]
 PREVIEW = "--preview" in sys.argv
 
-hole, meta = hole_gen.build(SPEC, OUT)
+BUILD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", os.path.basename(os.path.normpath(OUT)))
+hole, meta = hole_gen.build(SPEC, OUT, BUILD)
 spec = hole.spec
 random.seed(spec.get("seed", 1))
 rng = np.random.default_rng(spec.get("seed", 1))
@@ -208,7 +208,24 @@ for g, gy_ in enumerate(spec.get("graveyards", [])):
         props.fence(col, f"Fence_{g}", pts, h_at, post_gap=1.1)
 
 # painted cards (billboards in Godot): trees near the rough edge, forest beyond
-tree_cfg = spec.get("trees", {})
+theme = spec.get("theme", {})
+tree_cfg = dict(spec.get("trees", {}))
+tree_cfg.update({k: v for k, v in (("near", theme.get("trees_near")), ("far", theme.get("trees_far"))) if v})
+
+
+def in_cornfield(x, y):
+    cf = theme.get("cornfield")
+    if not cf:
+        return False
+    lat, s_ = hole.lateral(np.array([[x]]), np.array([[y]]))
+    lat, s_ = float(lat[0, 0]), float(s_[0, 0])
+    sgn = 1 if cf.get("side", "right") == "right" else -1
+    start = hole.half_width(s_) + spec["rough_width"] + cf.get("gap", 4.0) - 3.0
+    return hole.length * cf["from"] - 4 < s_ < hole.length * cf["to"] + 4 and start < lat * sgn < start + cf.get("depth", 26.0) + 4
+
+
+TREE_HEIGHT = {"pine_blue": (9.0, 13.0), "haunted_tree": (5.5, 7.5), "lantern_tree": (5.5, 7.5),
+               "dead_tree": (6.0, 8.5), "birch": (8.0, 11.0), "apple_tree": (5.5, 7.5)}
 sp = tree_cfg.get("spacing", 8.5)
 for yy in np.arange(y0 + 4, y1 - 4, sp):
     for xx in np.arange(x0 + 4, x1 - 4, sp):
@@ -219,7 +236,7 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
         if s < 6 and d < 25:
             continue                       # keep the view from the tee open
         edge = hole.half_width(s) + spec["rough_width"]
-        if d < edge - 4 or not free(x, y, 2.5):
+        if d < edge - 4 or not free(x, y, 2.5) or in_cornfield(x, y):
             continue
         su = surf_at(x, y)
         if su == hole_gen.WATER:
@@ -229,11 +246,10 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
             continue
         pool = tree_cfg.get("near" if near_zone else "far", ["maple_orange"])
         img = pool[int(rng.integers(0, len(pool)))]
-        height = float(rng.uniform(7.0, 10.0) if img != "pine_blue" else rng.uniform(9.0, 13.0))
-        if img in ("haunted_tree", "lantern_tree"):
-            height *= 0.75
+        height = float(rng.uniform(*TREE_HEIGHT.get(img, (7.0, 10.0))))
         z = h_at(x, y)
-        cards.append({"image": img, "pos": [round(x, 2), round(y, 2), round(z - 0.15, 2)], "height": round(height, 2)})
+        cards.append({"image": img, "pos": [round(x, 2), round(y, 2), round(z - 0.15, 2)], "height": round(height, 2),
+                      "shadow": True})
         if near_zone:
             obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": 0.45, "h": height * 0.45})
             obstacles.append({"type": "sphere", "pos": [x, y, z + height * 0.62], "r": height * 0.28, "soft": True})
@@ -250,6 +266,93 @@ for name, at, ht in (("scarecrow", 0.45, 2.3), ("pumpkin_pile", 0.2, 1.4), ("pum
             taken.append((x, y, 1.5))
             break
 
+# ---------- ground cover and set dressing (no collision: the surface type decides the lie) -----
+def card(img, x, y, height, shadow=False, sink=0.05):
+    cards.append({"image": img, "pos": [round(float(x), 2), round(float(y), 2), round(h_at(x, y) - sink, 2)],
+                  "height": round(float(height), 2), "shadow": shadow})
+
+
+def scatter(img, spacing, prob, hrange, zone, shadow=False):
+    """zone(x, y, d, s, surface) -> bool"""
+    n = 0
+    for yy in np.arange(y0 + 2, y1 - 2, spacing):
+        for xx in np.arange(x0 + 2, x1 - 2, spacing):
+            if rng.random() > prob:
+                continue
+            x = float(xx + rng.uniform(-spacing * 0.45, spacing * 0.45))
+            y = float(yy + rng.uniform(-spacing * 0.45, spacing * 0.45))
+            d, s = hole.path_query(np.array([[x]]), np.array([[y]]))
+            d, s = float(d[0, 0]), float(s[0, 0])
+            su = surf_at(x, y)
+            if su in (hole_gen.FAIRWAY, hole_gen.GREEN, hole_gen.SAND, hole_gen.WATER, hole_gen.TEE, hole_gen.FRINGE):
+                continue
+            if not zone(x, y, d, s, su) or not free(x, y, 0.4):
+                continue
+            card(img, x, y, rng.uniform(*hrange), shadow)
+            n += 1
+    return n
+
+
+rough_w = spec["rough_width"]
+counts = {}
+counts["grass_tuft"] = scatter("grass_tuft", 2.6, 0.45, (0.35, 0.6),
+                               lambda x, y, d, s, su: su == hole_gen.ROUGH and d < hole.half_width(s) + rough_w * 0.8)
+counts["tall_grass"] = scatter("tall_grass", 3.2, 0.5, (0.9, 1.4), lambda x, y, d, s, su: su == hole_gen.DEEP)
+counts["leaf_pile"] = scatter("leaf_pile", 6.0, 0.35, (0.3, 0.5), lambda x, y, d, s, su: su in (hole_gen.ROUGH, hole_gen.DEEP))
+counts["fern"] = scatter("fern", 7.0, 0.35, (0.6, 0.95), lambda x, y, d, s, su: su in (hole_gen.DEEP, hole_gen.OOB) and d < hole.half_width(s) + rough_w + spec["deep_rough_width"] + 10)
+# glowing mushrooms in the graveyards and a crow keeping watch
+for g in spec.get("graveyards", []):
+    for _ in range(5):
+        a, rr = random.uniform(0, math.tau), g["radius"] * random.uniform(0.3, 1.2)
+        x, y = g["center"][0] + math.cos(a) * rr, g["center"][1] + math.sin(a) * rr
+        if free(x, y, 0.5) and surf_at(x, y) in (hole_gen.ROUGH, hole_gen.DEEP, hole_gen.OOB):
+            card("mushrooms", x, y, random.uniform(0.45, 0.75))
+    if g.get("fence"):
+        a = math.pi * 1.3
+        x, y = g["center"][0] + math.cos(a) * (g["radius"] + 3.2), g["center"][1] + math.sin(a) * (g["radius"] + 3.2)
+        card("crow_post", x, y, 1.6, shadow=True)
+        taken.append((x, y, 0.6))
+# cattails around the ponds
+for w in spec.get("water", []):
+    cx, cy = w["center"]
+    rx, ry = w["radius"]
+    rot = w.get("rotation", 0.0)
+    for a in np.arange(0, math.tau, 0.09):
+        if rng.random() > 0.55:
+            continue
+        k = rng.uniform(1.0, 1.18)
+        u, v = math.cos(a) * rx * k, math.sin(a) * ry * k
+        x = cx + u * math.cos(rot) - v * math.sin(rot)
+        y = cy + u * math.sin(rot) + v * math.cos(rot)
+        if surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.TEE):
+            card("cattails", x, y, rng.uniform(1.2, 1.8), sink=0.1)
+# a cornfield along one side of the hole (theme), with hay bales at its edge
+cf = theme.get("cornfield")
+if cf:
+    sgn = 1 if cf.get("side", "right") == "right" else -1
+    n_corn = 0
+    for s_ in np.arange(hole.length * cf["from"], hole.length * cf["to"], 1.7):
+        p, d = path_point(s_)
+        nrm = np.array([d[1], -d[0]]) * sgn
+        start = hole.half_width(s_) + rough_w + cf.get("gap", 4.0)
+        for row in np.arange(start, start + cf.get("depth", 26.0), 2.3):
+            x, y = p + nrm * (row + rng.uniform(-0.4, 0.4)) + d * rng.uniform(-0.5, 0.5)
+            if surf_at(x, y) in (hole_gen.WATER, hole_gen.FAIRWAY, hole_gen.GREEN) or not free(x, y, 0.3):
+                continue
+            card("corn", x, y, rng.uniform(2.0, 2.6), shadow=False, sink=0.1)
+            n_corn += 1
+    counts["corn"] = n_corn
+    for k in range(3):
+        s_ = hole.length * (cf["from"] + (cf["to"] - cf["from"]) * (0.2 + 0.3 * k))
+        p, d = path_point(s_)
+        x, y = p + np.array([d[1], -d[0]]) * sgn * (hole.half_width(s_) + rough_w + cf.get("gap", 4.0) - 2.0)
+        if free(x, y, 1.5):
+            card("hay_bales", x, y, 1.3, shadow=True)
+            obstacles.append({"type": "box", "pos": [x, y, h_at(x, y)], "size": [2.4, 1.2, 1.3],
+                              "rot": math.atan2(d[1], d[0])})
+            taken.append((x, y, 1.5))
+print("ground cover:", counts)
+
 for o in obstacles:
     o["pos"] = [round(float(v), 3) for v in o["pos"]]
 json.dump({"lanterns": lanterns, "obstacles": obstacles, "cards": cards},
@@ -265,12 +368,18 @@ for ob in scene.objects:
         tris += len(me.loop_triangles)
 print(f"terrain tris {terrain_tris}, total tris {tris}, lanterns {len(lanterns)}, "
       f"obstacles {len(obstacles)}, cards {len(cards)}")
+for me in bpy.data.meshes:
+    if "Col" in me.color_attributes:
+        me.color_attributes.active_color_name = "Col"
+        me.color_attributes.render_color_index = me.color_attributes.find("Col")
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "hole.glb"), export_format="GLB",
-                          export_lights=False, export_cameras=False, export_image_format="NONE")
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "hole.blend"))
+                          export_lights=False, export_cameras=False, export_image_format="NONE",
+                          export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+os.makedirs(BUILD, exist_ok=True)
+bpy.ops.wm.save_as_mainfile(filepath=os.path.join(BUILD, "hole.blend"))
 
 if PREVIEW:
-    img = bpy.data.images.load(os.path.abspath(os.path.join(OUT, "albedo.png")))
+    img = bpy.data.images.load(os.path.abspath(os.path.join(BUILD, "albedo.png")))
     tm.use_nodes = True
     tex = tm.node_tree.nodes.new("ShaderNodeTexImage")
     tex.image = img
@@ -291,5 +400,5 @@ if PREVIEW:
     scene.render.engine = "BLENDER_EEVEE"
     scene.render.resolution_x, scene.render.resolution_y = 540, 960
     scene.eevee.taa_render_samples = 8
-    scene.render.filepath = os.path.join(OUT, "preview.png")
+    scene.render.filepath = os.path.join(BUILD, "preview.png")
     bpy.ops.render.render(write_still=True)
