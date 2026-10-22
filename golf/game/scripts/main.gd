@@ -13,6 +13,8 @@ const FINE_AIM := 0.45          # radians of aim per screen-width of sideways pu
 const MIN_PULL := 0.06
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 5.0
+const AIM_BACK := 4.4           # aim camera: meters behind the ball ...
+const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
 
 var terrain: Terrain
 var obstacles: ObstacleGrid
@@ -111,7 +113,13 @@ func _setup_shot() -> void:
 	hud.hint.text = "Pull down to swing · drag the sky to turn" if strokes == 0 else ""
 	ball_mesh.visible = true
 	_preview_key = ""
+	trail_pts.clear()
 	phase = Phase.AIM
+	_aim_cam()
+	cam_pos = _want_pos
+	cam_target = _want_target
+	cam_fov = _want_fov
+	hud.fade_in()
 
 
 func _default_aim() -> Vector2:
@@ -348,7 +356,7 @@ func _aim_cam_pos() -> Vector3:
 	var a := Vector3(aim.x, aim.y, 0)
 	if club.id == "putter":
 		return Terrain.to_world(ball - a * 3.0 + Vector3(0, 0, 1.3))
-	return Terrain.to_world(ball - a * (6.5 - pull * 1.2) + Vector3(0, 0, 2.7 - pull * 0.4))
+	return Terrain.to_world(ball - a * (AIM_BACK - pull * 0.8) + Vector3(0, 0, AIM_HEIGHT - pull * 0.3))
 
 
 func _aim_cam_target() -> Vector3:
@@ -356,8 +364,8 @@ func _aim_cam_target() -> Vector3:
 	if club.id == "putter":
 		var t := ball + a * 5.0
 		return Terrain.to_world(Vector3(t.x, t.y, terrain.height(t.x, t.y)))
-	var t2 := ball + a * 45.0
-	return Terrain.to_world(Vector3(t2.x, t2.y, terrain.height(t2.x, t2.y) + 1.5))
+	var t2 := ball + a * 40.0
+	return Terrain.to_world(Vector3(t2.x, t2.y, terrain.height(t2.x, t2.y) + 2.5))
 
 
 func _aim_cam() -> void:
@@ -460,17 +468,18 @@ func _make_ball_visuals() -> void:
 	trail.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(trail)
 
-	var tor := TorusMesh.new()
-	tor.inner_radius = 0.8
-	tor.outer_radius = 1.0
-	tor.rings = 24
-	tor.ring_segments = 6
-	ring.mesh = tor
+	var q := QuadMesh.new()
+	q.size = Vector2(0.075, 0.075)
+	ring.mesh = q
 	var rm := StandardMaterial3D.new()
 	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	rm.albedo_color = Color(1.0, 0.6, 0.15)
+	rm.albedo_texture = _marker_texture()
+	rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	rm.fixed_size = true
 	rm.no_depth_test = true
 	rm.disable_fog = true
+	rm.render_priority = 10
 	ring.material_override = rm
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ring)
@@ -496,6 +505,20 @@ func _make_ball_visuals() -> void:
 	_show_preview(false)
 
 
+func _marker_texture() -> ImageTexture:
+	var n := 128
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var d := Vector2(x - n * 0.5 + 0.5, y - n * 0.5 + 0.5).length() / (n * 0.5)
+			var ring_a := clampf(1.0 - absf(d - 0.78) / 0.11, 0.0, 1.0)
+			var dot_a := clampf(1.0 - d / 0.16, 0.0, 1.0)
+			var glow := clampf(1.0 - d, 0.0, 1.0) * 0.25
+			var a := maxf(maxf(ring_a, dot_a), glow)
+			img.set_pixel(x, y, Color(1.0, 0.82 - 0.2 * ring_a, 0.45 - 0.2 * ring_a, a))
+	return ImageTexture.create_from_image(img)
+
+
 func _update_ball_visual() -> void:
 	var b := sim.pos if (phase == Phase.FLIGHT or phase == Phase.RESULT or phase == Phase.HOLED) and sim else ball
 	var w := Terrain.to_world(b)
@@ -506,10 +529,12 @@ func _update_ball_visual() -> void:
 	# trail
 	if phase == Phase.FLIGHT and sim.state == BallSim.State.FLYING:
 		trail_pts.append(w)
-		if trail_pts.size() > 70:
+		if trail_pts.size() > 90:
 			trail_pts.remove_at(0)
-	elif trail_pts.size() > 0 and phase != Phase.FLIGHT:
+	elif trail_pts.size() > 0:
 		trail_pts.remove_at(0)
+		if trail_pts.size() > 0:
+			trail_pts.remove_at(0)
 	trail_mesh.clear_surfaces()
 	if trail_pts.size() < 2:
 		return
@@ -520,8 +545,8 @@ func _update_ball_visual() -> void:
 		var t := (trail_pts[mini(i + 1, trail_pts.size() - 1)] - trail_pts[maxi(i - 1, 0)]).normalized()
 		var side := t.cross(cp - p).normalized()
 		var f := float(i) / (trail_pts.size() - 1)
-		var width := maxf(0.04, cp.distance_to(p) * 0.004) * f
-		var c := Color(1.0, 0.6 + 0.3 * f, 0.25, f * 0.8)
+		var width := cp.distance_to(p) * 0.0022 * (0.3 + 0.7 * f)
+		var c := Color(1.0, 0.7 + 0.25 * f, 0.4, f * 0.55)
 		trail_mesh.surface_set_color(c)
 		trail_mesh.surface_add_vertex(p + side * width)
 		trail_mesh.surface_set_color(c)
@@ -546,20 +571,30 @@ func _update_preview() -> void:
 		Clubs.launch_velocity(club, p, aim), club.lift, 0.06, not putt)
 	preview = r
 	var pts: Array = r.points
-	var show_n := int(pts.size() * (0.4 if putt else 0.55))
 	var mm := dots.multimesh
-	var n := mini(show_n, mm.instance_count)
-	var step := maxi(1, int(ceil(float(show_n) / mm.instance_count)))
 	var count := 0
-	for i in range(0, show_n, step):
-		if count >= mm.instance_count:
-			break
-		var w := Terrain.to_world(pts[i])
-		var s := 0.03 + w.distance_to(Terrain.to_world(ball)) * 0.006
-		if putt:
-			s = 0.025
-		mm.set_instance_transform(count, Transform3D(Basis().scaled(Vector3.ONE * s), w))
-		count += 1
+	if putt:
+		# putts: the first stretch of the actual roll, so the break shows but the finish doesn't
+		var show_n := int(pts.size() * 0.4)
+		var step := maxi(1, int(ceil(float(show_n) / mm.instance_count)))
+		for i in range(0, show_n, step):
+			if count >= mm.instance_count:
+				break
+			mm.set_instance_transform(count, Transform3D(Basis().scaled(Vector3.ONE * 0.025), Terrain.to_world(pts[i]) + Vector3(0, 0.02, 0)))
+			count += 1
+	elif r.first_land != Vector3.INF:
+		# full shots: dashes along the ground under the flight path, ball to landing spot
+		var land: Vector3 = r.first_land
+		var span := Vector2(land.x - ball.x, land.y - ball.y)
+		var n_dash := mini(mm.instance_count, maxi(4, int(span.length() / 6.0)))
+		for i in range(1, n_dash):
+			var t := float(i) / n_dash
+			var p2 := Vector2(ball.x, ball.y) + span * t
+			var g := Vector3(p2.x, p2.y, terrain.height(p2.x, p2.y) + 0.08)
+			var s := 0.05 + span.length() * t * 0.004
+			mm.set_instance_transform(count, Transform3D(Basis().scaled(Vector3(s, s * 0.35, s)), Terrain.to_world(g)))
+			count += 1
+	var n := count
 	mm.visible_instance_count = count
 	ring.visible = not putt and r.first_land != Vector3.INF
 	var dist_m: float = Vector2(r.end.x - ball.x, r.end.y - ball.y).length() if putt \
@@ -575,13 +610,9 @@ func _place_ring() -> void:
 	if not ring.visible or preview.is_empty():
 		return
 	var fl: Vector3 = preview.first_land
-	var w := Terrain.to_world(fl) + Vector3(0, 0.15, 0)
-	ring.position = w
-	var s := maxf(1.2, cam.global_position.distance_to(w) * 0.022)
-	ring.scale = Vector3(s, s * 0.4, s)
+	ring.position = Terrain.to_world(fl) + Vector3(0, 0.4, 0)
 	var m := ring.material_override as StandardMaterial3D
-	m.albedo_color.a = 1.0
-	m.albedo_color = Color(1.0, 0.6, 0.15) if phase == Phase.PULL else Color(1.0, 0.85, 0.6)
+	m.albedo_color = Color(1, 1, 1, 1.0) if phase == Phase.PULL else Color(1, 1, 1, 0.55)
 
 
 func _update_wind_hud() -> void:

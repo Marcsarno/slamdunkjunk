@@ -22,6 +22,8 @@ var card := PanelContainer.new()
 var card_text := Label.new()
 var next := Button.new()
 var _msg_time := 0.0
+var fade := ColorRect.new()
+var _fade_t := 0.0
 
 
 func _panel_style(radius := 18) -> StyleBoxFlat:
@@ -103,6 +105,11 @@ func _ready() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_label(hint, 26, Color(1, 1, 1, 0.85)))
 
+	fade.color = Color(0.05, 0.02, 0.08, 0.0)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(fade)
+
 	club.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	club.position = Vector2(-250, -140)
 	club.size = Vector2(220, 100)
@@ -176,7 +183,16 @@ func hide_card() -> void:
 	card.visible = false
 
 
+## Cover the cut to a new shot with a short fade from dark.
+func fade_in(seconds := 0.35) -> void:
+	_fade_t = seconds
+	fade.color.a = 1.0
+
+
 func _process(delta: float) -> void:
+	if _fade_t > 0.0:
+		_fade_t -= delta
+		fade.color.a = clampf(_fade_t / 0.35, 0.0, 1.0)
 	if _msg_time > 0.0:
 		_msg_time -= delta
 		message.modulate.a = clampf(_msg_time * 2.0, 0.0, 1.0)

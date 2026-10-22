@@ -43,53 +43,15 @@
   ]
  },
  "theme": {
-  "sky": "sky_harvest",
-  "sky_yaw": 0.58,
-  "sky_top": 0.95,
-  "horizon": [
-   {
-    "image": "horizon_hills",
-    "radius": 1100,
-    "height": 150,
-    "repeats": 3,
-    "tint": [
-     0.85,
-     0.8,
-     0.95
-    ]
-   },
-   {
-    "image": "horizon_pines",
-    "radius": 620,
-    "height": 70,
-    "repeats": 7,
-    "tint": [
-     0.7,
-     0.62,
-     0.8
-    ]
-   }
-  ],
-  "landmark": {
-   "image": "horizon_castle",
-   "azimuth": -28,
-   "radius": 950,
-   "height": 210
-  },
   "card_tint": [
-   0.9,
-   0.8,
-   0.86
+   0.92,
+   0.84,
+   0.9
   ],
   "moon_light": [
    1.0,
-   0.78,
+   0.82,
    0.62
-  ],
-  "fog": [
-   0.42,
-   0.24,
-   0.36
   ],
   "trees_near": [
    "apple_tree",
@@ -111,7 +73,24 @@
    "to": 0.5,
    "gap": 5.0,
    "depth": 24
-  }
+  },
+  "backdrop": {
+   "hole": "01-pumpkin-patch",
+   "variant": "a",
+   "span": 90,
+   "yaw": -10,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 46,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.45
+   }
+  ]
  },
  "tee": [
   0.0,

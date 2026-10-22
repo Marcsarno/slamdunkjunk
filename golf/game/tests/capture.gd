@@ -73,5 +73,9 @@ func _process(delta: float) -> void:
 				step += 1
 		10:
 			if main.phase == main.Phase.AIM:
+				t = 0.0
+				step += 1
+		11:
+			if t > 0.8:
 				snap("second_shot")
 				get_tree().quit()

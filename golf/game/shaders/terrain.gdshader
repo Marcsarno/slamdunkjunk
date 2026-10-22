@@ -18,6 +18,7 @@ uniform float tile_green = 4.5;
 uniform float tile_sand = 3.5;
 uniform vec3 dark_tint : source_color = vec3(0.42, 0.42, 0.40);
 uniform float brightness = 1.0;
+uniform vec3 grass_tint : source_color = vec3(1.0);   // pulls the painted grass toward the hole's palette
 
 varying vec2 cxy;
 
@@ -41,6 +42,7 @@ void fragment() {
 	vec3 c = tex2(tex_rough, cxy, tile_grass);
 	c = mix(c, tex2(tex_fairway, cxy.yx, tile_grass), clamp(w.r, 0.0, 1.0));
 	c = mix(c, tex2(tex_green, cxy, tile_green), clamp(w.g, 0.0, 1.0));
+	c *= grass_tint;
 	c = mix(c, tex2(tex_sand, cxy, tile_sand), clamp(w.b, 0.0, 1.0));
 	c *= mix(vec3(1.0), dark_tint, clamp(w.a, 0.0, 1.0));
 	ALBEDO = c * det * brightness;
