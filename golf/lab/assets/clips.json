@@ -1,0 +1,137 @@
+[
+ {
+  "label": "CMU 64_01 \u00b7 Swing",
+  "file": "assets/mocap/64_01.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_02 \u00b7 Swing",
+  "file": "assets/mocap/64_02.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_03 \u00b7 Swing",
+  "file": "assets/mocap/64_03.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_04 \u00b7 Swing",
+  "file": "assets/mocap/64_04.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_05 \u00b7 Swing",
+  "file": "assets/mocap/64_05.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_06 \u00b7 Swing",
+  "file": "assets/mocap/64_06.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_07 \u00b7 Swing",
+  "file": "assets/mocap/64_07.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_08 \u00b7 Swing",
+  "file": "assets/mocap/64_08.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_09 \u00b7 Swing",
+  "file": "assets/mocap/64_09.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_10 \u00b7 Swing",
+  "file": "assets/mocap/64_10.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "swing",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_11 \u00b7 Putt",
+  "file": "assets/mocap/64_11.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "putt",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_12 \u00b7 Putt",
+  "file": "assets/mocap/64_12.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "putt",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_13 \u00b7 Putt",
+  "file": "assets/mocap/64_13.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "putt",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_14 \u00b7 Putt",
+  "file": "assets/mocap/64_14.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "putt",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ },
+ {
+  "label": "CMU 64_15 \u00b7 Putt",
+  "file": "assets/mocap/64_15.bvh",
+  "kind": "bvh",
+  "scale": 0.056444,
+  "type": "putt",
+  "refLabel": "CMU mocap skeleton (subject 64)",
+  "note": "Real motion capture, CMU Graphics Lab subject 64 (golf), cgspeed BVH conversion. Stand-in until the Mixamo golf clips arrive; drop X Bot FBX files in assets/mixamo and list them here."
+ }
+]
