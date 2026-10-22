@@ -146,6 +146,12 @@ def free(x, y, r):
     return all((x - a) ** 2 + (y - b) ** 2 > (r + c) ** 2 for a, b, c in taken)
 
 
+def face_tee(x, y):
+    """rot_z that turns a prop's front (-Y) toward the tee, where the player looks from."""
+    tx, ty = spec["tee"]["center"]
+    return math.atan2(tx - x, -(ty - y))
+
+
 # jack-o'-lanterns lining the fairway, alternating sides
 side = 1
 spacing = spec.get("lantern_spacing", 26)
@@ -157,11 +163,31 @@ for s in np.arange(spec["fairway_start"] * 0.6, hole.length - 16, spacing):
     if surf_at(x, y) in (hole_gen.ROUGH, hole_gen.DEEP) and free(x, y, 1.0):
         r = random.uniform(0.32, 0.42)
         props.jack(col, f"Jack_{len(lanterns)}", (x, y, h_at(x, y)), r=r,
-                   rot_z=math.atan2(-d[0], d[1]) + math.pi + random.uniform(-0.4, 0.4) - side * 0.5)
+                   rot_z=face_tee(x, y) + random.uniform(-0.35, 0.35))
         lanterns.append([round(x, 2), round(y, 2), round(h_at(x, y) + r * 0.7, 2)])
         obstacles.append({"type": "sphere", "pos": [x, y, h_at(x, y) + r * 0.6], "r": r})
         taken.append((x, y, 1.0))
     side = -side
+
+# pumpkin patches near the tee: a few carved lanterns plus plain pumpkins, all facing the player
+for k, pc in enumerate(spec.get("pumpkin_clusters", [])):
+    cx, cy = pc["center"]
+    for i in range(pc.get("carved", 2) + pc.get("plain", 3)):
+        for _ in range(40):
+            a, rr = random.uniform(0, math.tau), random.uniform(0.3, pc.get("radius", 1.6))
+            x, y = cx + math.cos(a) * rr, cy + math.sin(a) * rr
+            if free(x, y, 0.45) and surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.GREEN, hole_gen.TEE, hole_gen.SAND):
+                break
+        else:
+            continue
+        carved = i < pc.get("carved", 2)
+        r = random.uniform(0.3, 0.45) if carved else random.uniform(0.18, 0.32)
+        props.jack(col, f"Patch_{k}_{i}", (x, y, h_at(x, y)), r=r,
+                   rot_z=face_tee(x, y) + random.uniform(-0.5, 0.5), carved=carved)
+        if carved:
+            lanterns.append([round(x, 2), round(y, 2), round(h_at(x, y) + r * 0.7, 2)])
+        obstacles.append({"type": "sphere", "pos": [x, y, h_at(x, y) + r * 0.6], "r": r})
+        taken.append((x, y, 0.45))
 
 # graveyards: tombstones (ball bounces off them), skeleton arms, optional fence
 for g, gy_ in enumerate(spec.get("graveyards", [])):
@@ -295,7 +321,7 @@ def scatter(img, spacing, prob, hrange, zone, shadow=False):
 
 rough_w = spec["rough_width"]
 counts = {}
-counts["grass_tuft"] = scatter("grass_tuft", 2.6, 0.45, (0.35, 0.6),
+counts["grass_tuft"] = scatter("grass_tuft", 3.4, 0.18, (0.3, 0.5),
                                lambda x, y, d, s, su: su == hole_gen.ROUGH and d < hole.half_width(s) + rough_w * 0.8)
 counts["tall_grass"] = scatter("tall_grass", 3.2, 0.5, (0.9, 1.4), lambda x, y, d, s, su: su == hole_gen.DEEP)
 counts["leaf_pile"] = scatter("leaf_pile", 6.0, 0.35, (0.3, 0.5), lambda x, y, d, s, su: su in (hole_gen.ROUGH, hole_gen.DEEP))

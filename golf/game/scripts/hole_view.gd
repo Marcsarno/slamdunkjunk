@@ -8,6 +8,8 @@ const CARD_DIR := "res://assets/cards/"
 const TEX_DIR := "res://assets/textures/"
 const BACKDROP_DIR := "res://assets/backdrops/"
 const LANTERN_LIGHTS := 6
+const TERRAIN_LAYER := 2
+const POOLS := 16
 
 var dir: String
 var terrain: Terrain
@@ -21,6 +23,7 @@ var _light_timer := 0.0
 var _bats: Array = []
 var _bat_tex: Array[Texture2D] = []
 var _bat_t := 0.0
+var _terrain_mat: ShaderMaterial
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -39,10 +42,11 @@ func build(hole_dir: String, t: Terrain) -> void:
 	for i in LANTERN_LIGHTS:
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.55, 0.2)
-		l.light_energy = 2.4
-		l.omni_range = 7.5
-		l.omni_attenuation = 1.4
+		l.light_energy = 2.6
+		l.omni_range = 6.5
+		l.omni_attenuation = 1.6
 		l.shadow_enabled = false
+		l.light_cull_mask = ~TERRAIN_LAYER
 		add_child(l)
 		lantern_lights.append(l)
 
@@ -54,22 +58,30 @@ static func _col(a: Variant, fallback: Color) -> Color:
 
 
 # ---------------------------------------------------------------- sky, fog, light
+func _sky_style() -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--sky="):
+			return arg.trim_prefix("--sky=")
+	return theme.get("sky_style", "night")
+
+
 func _environment() -> void:
 	var bd: Dictionary = theme.get("backdrop", {})
-	var fog_col := _col(theme.get("fog"), Color(0.32, 0.2, 0.42))
-	var top_col := Color(0.12, 0.08, 0.25)
-	var moon_dir := Vector3(0.3, 0.6, -0.75).normalized()
-	var moon_col := _col(theme.get("moon_light"), Color(0.8, 0.75, 1.0))
-	env.background_mode = Environment.BG_SKY
-	var sky := Sky.new()
-	sky.radiance_size = Sky.RADIANCE_SIZE_32
+	var style := _sky_style()
+	var fog_col := _col(theme.get("fog"), Color(0.30, 0.21, 0.40))
+	var top_col := _col(theme.get("sky_top"), Color(0.07, 0.04, 0.14))
+	var horizon_col := _col(theme.get("sky_horizon"), Color(0.40, 0.28, 0.50))
+	var moon_dir := Vector3(-0.3, 0.55, -0.78).normalized()
+	var moon_col := _col(theme.get("moon_light"), Color(0.72, 0.7, 1.0))
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/sky_backdrop.gdshader")
+	mat.set_shader_parameter("paint_mix", 1.0 if style == "painted" else 0.0)
+	mat.set_shader_parameter("haze", float(theme.get("backdrop_haze", 0.45)))
 	if not bd.is_empty():
 		var all_meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BACKDROP_DIR + "meta.json"))
-		var info: Dictionary = all_meta[bd.hole][bd.get("variant", "a")]
-		var mat := ShaderMaterial.new()
-		mat.shader = load("res://shaders/sky_backdrop.gdshader")
-		var folder: String = BACKDROP_DIR + bd.hole + "/"
 		var v: String = bd.get("variant", "a")
+		var info: Dictionary = all_meta[bd.hole][v]
+		var folder: String = BACKDROP_DIR + bd.hole + "/"
 		mat.set_shader_parameter("backdrop", load(folder + v + ".jpg"))
 		var span: float = bd.get("span", 90.0)
 		var aspect: float = float(info.size[0]) / float(info.size[1])
@@ -79,10 +91,6 @@ func _environment() -> void:
 		mat.set_shader_parameter("aspect", aspect)
 		mat.set_shader_parameter("horizon_v", horizon_v)
 		mat.set_shader_parameter("yaw_deg", yaw)
-		top_col = _col(info.top_color, top_col)
-		fog_col = _col(theme.get("fog", info.fog_color), fog_col)
-		mat.set_shader_parameter("top_color", top_col)
-		mat.set_shader_parameter("ground_color", fog_col)
 		if info.has("moon"):
 			var mi: Dictionary = info.moon
 			mat.set_shader_parameter("moon_tex", load(folder + v + "_moon.png"))
@@ -91,44 +99,69 @@ func _environment() -> void:
 			var cv := (float(box[1]) + float(box[3])) * 0.5
 			var az := deg_to_rad((cu - 0.5) * span + yaw)
 			var el := deg_to_rad((horizon_v - cv) * span / aspect)
-			moon_dir = Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
 			var half_deg := (float(box[2]) - float(box[0])) * span * 0.5
+			if style != "painted":
+				# plain night sky: a clean moon from the hole's element sheet, low enough to be in view
+				az = deg_to_rad(float(theme.get("moon_azimuth", -14.0)))
+				el = deg_to_rad(float(theme.get("moon_elevation", 24.0)))
+				if FileAccess.file_exists(folder + "moon_clean.png"):
+					mat.set_shader_parameter("moon_tex", load(folder + "moon_clean.png"))
+					half_deg = 8.0
+			moon_dir = Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
 			mat.set_shader_parameter("moon_half", tan(deg_to_rad(half_deg)))
+			mat.set_shader_parameter("moon_scale", float(theme.get("moon_scale", 1.0)))
 			mat.set_shader_parameter("moon_dir", moon_dir)
-		sky.sky_material = mat
-	else:
-		var ps := ProceduralSkyMaterial.new()
-		ps.sky_top_color = top_col
-		ps.sky_horizon_color = fog_col
-		ps.ground_horizon_color = fog_col
-		ps.ground_bottom_color = fog_col.darkened(0.6)
-		sky.sky_material = ps
+	mat.set_shader_parameter("top_color", top_col)
+	mat.set_shader_parameter("horizon_color", horizon_col)
+	mat.set_shader_parameter("ground_color", fog_col)
+	var sky := Sky.new()
+	sky.radiance_size = Sky.RADIANCE_SIZE_32
+	sky.sky_material = mat
+	env.background_mode = Environment.BG_SKY
 	env.sky = sky
+	# night lighting (matched by eye to the Blender style render): low cool ambient, moonlight
+	# with long shadows, a warm rim from the other side, and lantern glow carrying the scene
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = top_col.lerp(fog_col, 0.5).lightened(0.25)
-	env.ambient_light_energy = float(theme.get("ambient", 0.6))
+	env.ambient_light_color = Color(0.46, 0.40, 0.66)
+	env.ambient_light_energy = float(theme.get("ambient", 0.22))
 	env.fog_enabled = true
 	env.fog_light_color = fog_col
-	env.fog_density = float(theme.get("fog_density", 0.0035))
+	env.fog_density = float(theme.get("fog_density", 0.0045))
 	env.fog_sky_affect = 0.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.8
-	env.glow_bloom = 0.06
-	env.glow_hdr_threshold = 0.95
+	env.glow_intensity = 1.1
+	env.glow_strength = 1.1
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.0
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = float(theme.get("exposure", 0.95))
+	env.tonemap_exposure = float(theme.get("exposure", 0.9))
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 
 	moon_light.light_color = moon_col
-	moon_light.light_energy = float(theme.get("moon_energy", 0.9))
+	moon_light.light_energy = float(theme.get("moon_energy", 0.75))
 	moon_light.shadow_enabled = true
 	moon_light.directional_shadow_max_distance = 80.0
 	moon_light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	moon_light.shadow_blur = 1.5
 	add_child(moon_light)
-	moon_light.look_at_from_position(moon_dir * 100.0, Vector3.ZERO, Vector3.UP)
+	# Art-directed key light: the moon hangs ahead in the sky, but the light falls from behind the
+	# player's shoulder so everything facing the camera is lit (as in the Blender render).
+	var key := moon_dir
+	if theme.has("light_azimuth"):
+		var la := deg_to_rad(float(theme.light_azimuth))
+		var le := deg_to_rad(float(theme.get("light_elevation", 38.0)))
+		key = Vector3(sin(la) * cos(le), sin(le), -cos(la) * cos(le))
+	moon_light.look_at_from_position(key * 100.0, Vector3.ZERO, Vector3.UP)
+	moon_dir = key
+	var rim := DirectionalLight3D.new()
+	rim.light_color = Color(1.0, 0.56, 0.36)
+	rim.light_energy = float(theme.get("rim_energy", 0.32))
+	rim.shadow_enabled = false
+	add_child(rim)
+	var back := Vector3(-moon_dir.x, 0.35, -moon_dir.z).normalized()
+	rim.look_at_from_position(back * 100.0, Vector3.ZERO, Vector3.UP)
 
 
 # ---------------------------------------------------------------- materials
@@ -147,8 +180,11 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("tex_sand", _texture("sand"))
 	m.set_shader_parameter("origin", Vector2(terrain.meta.origin[0], terrain.meta.origin[1]))
 	m.set_shader_parameter("extent", Vector2(terrain.meta.extent[0], terrain.meta.extent[1]))
-	m.set_shader_parameter("grass_tint", _col(theme.get("grass_tint"), Color(0.74, 0.86, 0.66)))
-	m.set_shader_parameter("brightness", float(theme.get("ground_brightness", 0.82)))
+	m.set_shader_parameter("texture_strength", float(theme.get("texture_strength", 0.35)))
+	m.set_shader_parameter("brightness", float(theme.get("ground_brightness", 1.0)))
+	var none: Array[Vector4] = []
+	none.resize(POOLS)
+	m.set_shader_parameter("pools", none)
 	return m
 
 
@@ -167,14 +203,24 @@ func _textured_vc(tex_name: String, scale: float, boost: float, rough: float) ->
 	return m
 
 
+## Pumpkin shells glow faintly from the candle inside, which keeps them orange under blue moonlight.
+func _pumpkin_material() -> StandardMaterial3D:
+	var m := _textured_vc("", 1.0, 1.0, 0.5)
+	m.emission_enabled = true
+	m.emission = Color(1.0, 0.42, 0.08)
+	m.emission_energy_multiplier = 0.35
+	return m
+
+
 func _apply_materials(root: Node) -> void:
 	var terrain_mat := _terrain_material()
+	_terrain_mat = terrain_mat
 	var glow := StandardMaterial3D.new()
 	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	glow.albedo_color = Color(1.0, 0.78, 0.35)
 	glow.emission_enabled = true
 	glow.emission = Color(1.0, 0.55, 0.15)
-	glow.emission_energy_multiplier = 3.0
+	glow.emission_energy_multiplier = 4.5
 	var water := ShaderMaterial.new()
 	water.shader = load("res://shaders/water.gdshader")
 	water.set_shader_parameter("sky_color", env.fog_light_color)
@@ -186,7 +232,7 @@ func _apply_materials(root: Node) -> void:
 		"water": water,
 		"stone_vc": _textured_vc("stone", 0.9, 2.1, 0.9),
 		"dirt_vc": _textured_vc("dirt", 0.8, 2.4, 1.0),
-		"pumpkin_vc": _textured_vc("", 1.0, 1.0, 0.55),
+		"pumpkin_vc": _pumpkin_material(),
 		"bone_vc": _textured_vc("", 1.0, 1.0, 0.7),
 		"iron_vc": _textured_vc("", 1.0, 1.0, 0.45),
 	}
@@ -200,6 +246,8 @@ func _apply_materials(root: Node) -> void:
 				continue
 			if name in ["terrain", "skirt_vc", "water"]:
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if name in ["terrain", "skirt_vc"]:
+				mi.layers = TERRAIN_LAYER
 			mi.set_surface_override_material(i, by_name[name])
 
 
@@ -398,3 +446,12 @@ func _process(delta: float) -> void:
 		if l.visible:
 			var p: Array = near[i]
 			l.position = Terrain.to_world(Vector3(p[0], p[1], p[2] + 0.35))
+	if _terrain_mat:
+		var pools: Array[Vector4] = []
+		for i in POOLS:
+			if i < near.size():
+				var w := Terrain.to_world(Vector3(near[i][0], near[i][1], near[i][2]))
+				pools.append(Vector4(w.x, w.y, w.z, 2.2))
+			else:
+				pools.append(Vector4.ZERO)
+		_terrain_mat.set_shader_parameter("pools", pools)

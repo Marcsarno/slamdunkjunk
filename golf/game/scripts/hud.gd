@@ -105,6 +105,15 @@ func _ready() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_label(hint, 26, Color(1, 1, 1, 0.85)))
 
+	var vig := ColorRect.new()
+	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vm := ShaderMaterial.new()
+	vm.shader = load("res://shaders/vignette.gdshader")
+	vig.material = vm
+	root.add_child(vig)
+	root.move_child(vig, 0)
+
 	fade.color = Color(0.05, 0.02, 0.08, 0.0)
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE

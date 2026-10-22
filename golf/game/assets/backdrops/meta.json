@@ -60,7 +60,7 @@
     0.367
    ]
   },
-  "elements": 15
+  "elements": 13
  },
  "02-witchs-hollow": {
   "a": {
@@ -186,7 +186,7 @@
     0.574
    ]
   },
-  "elements": 15
+  "elements": 17
  },
  "04-spiderwood": {
   "a": {
@@ -249,7 +249,7 @@
     0.507
    ]
   },
-  "elements": 15
+  "elements": 9
  },
  "05-haunted-harvest": {
   "a": {
@@ -312,7 +312,7 @@
     0.382
    ]
   },
-  "elements": 15
+  "elements": 12
  },
  "06-ghostlight-marsh": {
   "a": {
@@ -375,7 +375,7 @@
     0.581
    ]
   },
-  "elements": 15
+  "elements": 16
  },
  "07-vampires-garden": {
   "a": {
@@ -438,7 +438,7 @@
     0.441
    ]
   },
-  "elements": 15
+  "elements": 11
  },
  "08-headless-trail": {
   "a": {
@@ -564,6 +564,6 @@
     0.464
    ]
   },
-  "elements": 15
+  "elements": 10
  }
 }

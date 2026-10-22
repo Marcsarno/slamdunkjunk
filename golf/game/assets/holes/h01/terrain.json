@@ -43,16 +43,6 @@
   ]
  },
  "theme": {
-  "card_tint": [
-   0.92,
-   0.84,
-   0.9
-  ],
-  "moon_light": [
-   1.0,
-   0.82,
-   0.62
-  ],
   "trees_near": [
    "apple_tree",
    "maple_orange",
@@ -78,7 +68,7 @@
    "hole": "01-pumpkin-patch",
    "variant": "a",
    "span": 90,
-   "yaw": -10,
+   "yaw": 12,
    "horizon_v": 0.8
   },
   "rings": [
@@ -90,7 +80,14 @@
     "repeats": 9,
     "haze": 0.45
    }
-  ]
+  ],
+  "sky_style": "night",
+  "moon_azimuth": -14,
+  "moon_elevation": 24,
+  "moon_scale": 0.75,
+  "backdrop_haze": 0.45,
+  "light_azimuth": 200,
+  "light_elevation": 36
  },
  "tee": [
   0.0,

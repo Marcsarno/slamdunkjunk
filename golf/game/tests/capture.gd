@@ -40,6 +40,9 @@ func _process(delta: float) -> void:
 		2:
 			if t > 3.0:
 				snap("aim")
+				if "--stills" in OS.get_cmdline_user_args():
+					get_tree().quit()
+					return
 				main._press(Vector2(360, 800))       # start a pull
 				step += 1
 		3:

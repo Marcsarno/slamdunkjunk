@@ -179,6 +179,15 @@
   "graveyards": [
     {
       "center": [
+        -14,
+        17
+      ],
+      "radius": 6,
+      "count": 7,
+      "fence": true
+    },
+    {
+      "center": [
         -50,
         206
       ],
@@ -196,18 +205,8 @@
       "fence": false
     }
   ],
-  "lantern_spacing": 26,
+  "lantern_spacing": 15,
   "theme": {
-    "card_tint": [
-      0.92,
-      0.84,
-      0.9
-    ],
-    "moon_light": [
-      1.0,
-      0.82,
-      0.62
-    ],
     "trees_near": [
       "apple_tree",
       "maple_orange",
@@ -233,7 +232,7 @@
       "hole": "01-pumpkin-patch",
       "variant": "a",
       "span": 90,
-      "yaw": -10,
+      "yaw": 12,
       "horizon_v": 0.8
     },
     "rings": [
@@ -245,7 +244,66 @@
         "repeats": 9,
         "haze": 0.45
       }
-    ]
+    ],
+    "sky_style": "night",
+    "moon_azimuth": -14,
+    "moon_elevation": 24,
+    "moon_scale": 0.75,
+    "backdrop_haze": 0.45,
+    "light_azimuth": 200,
+    "light_elevation": 36
   },
-  "trees_spacing": 8.5
+  "trees_spacing": 8.5,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.5
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 1.2
+    },
+    {
+      "center": [
+        -5.0,
+        6.5
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        6.5,
+        5
+      ],
+      "carved": 2,
+      "plain": 3
+    },
+    {
+      "center": [
+        -6.5,
+        2
+      ],
+      "carved": 1,
+      "plain": 3
+    },
+    {
+      "center": [
+        9,
+        26
+      ],
+      "carved": 2,
+      "plain": 2
+    },
+    {
+      "center": [
+        -8,
+        31
+      ],
+      "carved": 1,
+      "plain": 3
+    }
+  ]
 }

@@ -101,26 +101,30 @@ def remove_moon(rgb, moon):
 
 
 def slice_elements(path, out_dir):
+    """Cut the atlas into its pieces by finding connected objects (pieces overlap the nominal
+    5x3 grid lines), then number them in reading order to match CATALOG.txt."""
     im = Image.open(path).convert("RGBA")
     a = np.array(im)
     a[..., 3] = np.where(a[..., 3] < 20, 0, a[..., 3])
-    cw, ch = im.width / 5, im.height / 3
+    solid = a[..., 3] > 40
+    lab, k = ndimage.label(ndimage.binary_dilation(solid, iterations=6))
+    objs = []
+    for i, sl in enumerate(ndimage.find_objects(lab), start=1):
+        if (lab[sl] == i).sum() < 1500:
+            continue
+        cy = (sl[0].start + sl[0].stop) / 2
+        cx = (sl[1].start + sl[1].stop) / 2
+        objs.append((int(cy // (im.height / 3)), cx, i, sl))
+    # small detached bits (bats, sparks) join the nearest big object in the same grid cell
+    objs.sort(key=lambda o: (o[0], o[1]))
     n = 0
-    for r in range(3):
-        for c in range(5):
-            cell = a[int(r * ch):int((r + 1) * ch), int(c * cw):int((c + 1) * cw)]
-            m = cell[..., 3] > 40
-            if not m.any():
-                continue
-            lab, k = ndimage.label(ndimage.binary_dilation(m, iterations=4))
-            sizes = ndimage.sum(m, lab, range(1, k + 1))
-            keep = np.isin(lab, 1 + np.nonzero(sizes > sizes.max() * 0.05)[0])
-            cell = cell.copy()
-            cell[..., 3] = np.where(keep, cell[..., 3], 0)
-            piece = Image.fromarray(cell)
-            piece = piece.crop(piece.getchannel("A").getbbox())
-            n += 1
-            piece.save(os.path.join(out_dir, f"el_{n:02d}.png"), optimize=True)
+    for row, cx, i, sl in objs:
+        piece = a[sl].copy()
+        piece[..., 3] = np.where(lab[sl] == i, piece[..., 3], 0)
+        img = Image.fromarray(piece)
+        img = img.crop(img.getchannel("A").getbbox())
+        n += 1
+        img.save(os.path.join(out_dir, f"el_{n:02d}.png"), optimize=True)
     return n
 
 
@@ -148,6 +152,12 @@ for hole_dir in sorted(glob.glob(os.path.join(SRC, "midnight-golf-background-art
         info["fog_color"] = [round(float(c) / 255, 3) for c in rgb[int(h * 0.94):].reshape(-1, 3).mean(axis=0)]
         entry[v] = info
     entry["elements"] = slice_elements(os.path.join(hole_dir, "elements.png"), out)
+    # element 1 is always the hole's moon: keep a square copy for the plain night sky
+    m = Image.open(os.path.join(out, "el_01.png")).convert("RGBA")
+    n = int(max(m.size) * 1.12)
+    sq = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    sq.paste(m, ((n - m.width) // 2, (n - m.height) // 2))
+    sq.save(os.path.join(out, "moon_clean.png"), optimize=True)
     meta[slug] = entry
     print(slug, {v: entry[v].get("moon", {}).get("uv") for v in ("a", "b")}, "elements", entry["elements"])
 json.dump(meta, open(os.path.join(DST, "meta.json"), "w"), indent=1)
