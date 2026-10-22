@@ -35,7 +35,14 @@ rng = np.random.default_rng(spec.get("seed", 1))
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
-col = scene.collection
+# Hole: unique geometry -> hole.glb. Library: one mesh per vegetation/prop variant -> library.glb.
+# Instances: linked copies of library meshes, only for Blender preview renders (the game draws
+# them with MultiMesh from props.json).
+col = bpy.data.collections.new("Hole")
+LIB = bpy.data.collections.new("Library")
+INST = bpy.data.collections.new("Instances")
+for c in (col, LIB, INST):
+    scene.collection.children.link(c)
 
 
 def h_at(x, y):
@@ -100,6 +107,11 @@ terrain_tris = len(bm.faces)
 for f in bm.faces:
     f.smooth = True
 tm = bpy.data.materials.new("terrain")
+tm.use_nodes = True
+_tex = tm.node_tree.nodes.new("ShaderNodeTexImage")
+_tex.image = bpy.data.images.load(os.path.abspath(os.path.join(OUT, "ground.jpg")))
+tm.node_tree.links.new(_tex.outputs["Color"], tm.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
+tm.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 1.0
 terrain = props.link("Terrain", bm, [tm], col)
 
 # coarse skirt under and around the lattice, out to the horizon ring
@@ -120,7 +132,7 @@ for j in range(gx.shape[0] - 1):
         bm.faces.new((verts[j][i], verts[j][i + 1], verts[j + 1][i + 1], verts[j + 1][i]))
 for f in bm.faces:
     f.smooth = True
-props.paint(bm, lambda co, n: (0.13, 0.17, 0.11))
+props.paint(bm, lambda co, n: (0.10, 0.16, 0.07))
 props.link("Skirt", bm, [props.material("skirt_vc", 1.0)], col)
 
 # ---------- water --------------------------------------------------------------------------
@@ -134,7 +146,11 @@ for k, w in enumerate(spec.get("water", [])):
         u, v = math.cos(a) * rx, math.sin(a) * ry
         ring.append(bm.verts.new(c + Vector((u * math.cos(rot) - v * math.sin(rot), u * math.sin(rot) + v * math.cos(rot), 0))))
     bm.faces.new(ring)
-    wm = bpy.data.materials.new("water")
+    wm = bpy.data.materials.get("water") or bpy.data.materials.new("water")
+    wm.use_nodes = True
+    _b = wm.node_tree.nodes["Principled BSDF"]
+    _b.inputs["Base Color"].default_value = (0.01, 0.015, 0.03, 1)
+    _b.inputs["Roughness"].default_value = 0.06
     props.link(f"Water_{k}", bm, [wm], col)
 
 # ---------- props --------------------------------------------------------------------------
@@ -155,7 +171,7 @@ def face_tee(x, y):
 # jack-o'-lanterns lining the fairway, alternating sides
 side = 1
 spacing = spec.get("lantern_spacing", 26)
-for s in np.arange(spec["fairway_start"] * 0.6, hole.length - 16, spacing):
+for s in np.repeat(np.arange(spec["fairway_start"] * 0.6, hole.length - 16, spacing), 2):
     p, d = path_point(s)
     nrm = np.array([d[1], -d[0]]) * side
     off = hole.half_width(s) + 2.2 + random.uniform(0, 1.5)
@@ -252,7 +268,7 @@ def in_cornfield(x, y):
 
 TREE_HEIGHT = {"pine_blue": (9.0, 13.0), "haunted_tree": (5.5, 7.5), "lantern_tree": (5.5, 7.5),
                "dead_tree": (6.0, 8.5), "birch": (8.0, 11.0), "apple_tree": (5.5, 7.5)}
-sp = tree_cfg.get("spacing", 8.5)
+sp = spec.get("trees_spacing", tree_cfg.get("spacing", 8.5))
 for yy in np.arange(y0 + 4, y1 - 4, sp):
     for xx in np.arange(x0 + 4, x1 - 4, sp):
         x = float(xx + rng.uniform(-sp * 0.4, sp * 0.4))
@@ -268,7 +284,7 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
         if su == hole_gen.WATER:
             continue
         near_zone = d < edge + spec["deep_rough_width"]
-        if rng.random() > (0.55 if near_zone else 0.35):
+        if rng.random() > (0.75 if near_zone else 0.4):
             continue
         pool = tree_cfg.get("near" if near_zone else "far", ["maple_orange"])
         img = pool[int(rng.integers(0, len(pool)))]
@@ -379,9 +395,123 @@ if cf:
             taken.append((x, y, 1.5))
 print("ground cover:", counts)
 
+# ---------- 3D library + instances (replaces the painted cards) ------------------------------
+import zlib  # noqa: E402
+from collections import defaultdict  # noqa: E402
+
+FIXED_SCALE = {"leaf_pile", "mushrooms", "pumpkin_pile", "hay_bales", "scarecrow", "crow_post", "cattails"}
+FACE_PLAYER = {"scarecrow", "crow_post"}
+variants = {}
+for img in sorted({c["image"] for c in cards}):
+    if img not in props.VARIANTS:
+        print("no 3D model for", img)
+        continue
+    fn, n = props.VARIANTS[img]
+    variants[img] = []
+    for k in range(n):
+        bm, mats, h = fn(zlib.crc32(img.encode()) % 1000 + 37 * k)
+        ob = props.link(f"{img}_{k}", bm, mats, LIB)
+        ob.location = (0, 0, -1000)
+        variants[img].append((ob, h))
+instances = defaultdict(list)
+for c in cards:
+    vs = variants.get(c["image"])
+    if not vs:
+        continue
+    ob, h = vs[int(rng.integers(len(vs)))]
+    x, y, z = c["pos"]
+    if c["image"] in FIXED_SCALE:
+        sc = float(rng.uniform(0.85, 1.15))
+    else:
+        sc = c["height"] / h
+    rot = face_tee(x, y) if c["image"] in FACE_PLAYER else float(rng.uniform(0, math.tau))
+    instances[ob.name].append([round(x, 2), round(y, 2), round(z, 2), round(rot, 3), round(sc, 3)])
+    inst = bpy.data.objects.new(ob.name + "_i", ob.data)
+    inst.location = (x, y, z)
+    inst.rotation_euler = (0, 0, rot)
+    inst.scale = (sc, sc, sc)
+    INST.objects.link(inst)
+
+
+# ---------- distant scenery: rolling hills ring with pine silhouettes, and the moon ----------
+def scenery():
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    r_in = max(x1 - x0, y1 - y0) * 0.5 + 40.0
+    r_out = r_in + 520.0
+    bm = bmesh.new()
+    rings, segs = 14, 96
+    verts = []
+    hn = hole_gen.Noise(spec.get("seed", 1) + 11, waves=10, wavelength=(120.0, 420.0))
+    for j in range(rings):
+        t = j / (rings - 1)
+        r = r_in + (r_out - r_in) * t ** 1.3
+        row = []
+        for i in range(segs):
+            a = math.tau * i / segs
+            x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+            base = float(hole.base_height(np.array([[np.clip(x, x0, x1)]]), np.array([[np.clip(y, y0, y1)]]))[0, 0]) if t == 0 else 0.0
+            hgt = (base - 1.0) * (1 - t) + (8.0 + 38.0 * t + 26.0 * float(hn(np.array([x]), np.array([y]))[0])) * min(1.0, t * 3.0)
+            row.append(bm.verts.new((x, y, hgt)))
+        verts.append(row)
+    for j in range(rings - 1):
+        for i in range(segs):
+            bm.faces.new((verts[j][i], verts[j][(i + 1) % segs], verts[j + 1][(i + 1) % segs], verts[j + 1][i]))
+    for f in bm.faces:
+        f.smooth = True
+    props.paint(bm, lambda co, n: props.lerp((0.10, 0.15, 0.08), (0.12, 0.10, 0.16), min(1.0, max(0.0, co.z / 50.0))))
+    props.link("Hills", bm, [props.material("hills_vc", 1.0)], col)
+    # pine silhouettes on the near hills: one merged mesh (it is far away, one draw call)
+    bm = bmesh.new()
+    pine_bm, _, ph = props.far_pine(5)
+    me = bpy.data.meshes.new("tmp_pine")
+    pine_bm.to_mesh(me)
+    pine_bm.free()
+    count = 0
+    for k in range(900):
+        a = rng.uniform(0, math.tau)
+        t = rng.uniform(0.02, 0.35) ** 1.2
+        r = r_in + (r_out - r_in) * t
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        if np.hypot(x - meta["tee"][0], y - meta["tee"][1]) < r_in * 0.5:
+            continue
+        hgt = (8.0 + 38.0 * t + 26.0 * float(hn(np.array([x]), np.array([y]))[0])) * min(1.0, t * 3.0) - 0.5
+        sc = rng.uniform(1.4, 2.6)
+        m = Matrix.Translation((x, y, hgt)) @ Matrix.Rotation(rng.uniform(0, 6.28), 4, "Z") @ Matrix.Scale(sc, 4)
+        before = len(bm.verts)
+        bm.from_mesh(me)
+        bm.verts.ensure_lookup_table()
+        bmesh.ops.transform(bm, matrix=m, verts=bm.verts[before:])
+        count += 1
+    bpy.data.meshes.remove(me)
+    props.link("FarPines", bm, [props.material("pine_vc", 0.9)], col)
+    # moon: emissive cratered sphere far away, in the theme's direction from the tee looking down-range
+    th = spec.get("theme", {})
+    az = math.radians(th.get("moon_azimuth", -14.0))
+    el = math.radians(th.get("moon_elevation", 24.0))
+    dist = 1400.0
+    d = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
+    bm = bmesh.new()
+    ret = bmesh.ops.create_icosphere(bm, subdivisions=4, radius=60.0)
+    for f in bm.faces:
+        f.smooth = True
+    props.paint(bm, lambda co, n: tuple(v * (0.75 + 0.25 * noise.noise(co * 0.05)) for v in (1.0, 0.7, 0.3)))
+    moon = props.link("Moon", bm, [props.material("moon_glow", 1.0, emit=(1.0, 0.62, 0.22), strength=1.6)], col)
+    moon.location = Vector((meta["tee"][0], meta["tee"][1], 0)) + d * dist
+    print(f"scenery: hills ring {r_in:.0f}-{r_out:.0f} m, {count} far pines")
+    return moon.location
+
+
+from mathutils import Matrix, noise  # noqa: E402
+# 3D hills, far pines and a 3D moon: the all-3D experiment (2026-10-22). Off unless the theme asks,
+# because the game's painted sky draws its own moon and horizon.
+moon_pos = scenery() if spec.get("theme", {}).get("scenery_3d") else None
+
 for o in obstacles:
     o["pos"] = [round(float(v), 3) for v in o["pos"]]
-json.dump({"lanterns": lanterns, "obstacles": obstacles, "cards": cards},
+out_props = {"lanterns": lanterns, "obstacles": obstacles, "cards": cards, "instances": instances}
+if moon_pos is not None:
+    out_props["moon"] = [round(v, 1) for v in moon_pos]
+json.dump(out_props,
           open(os.path.join(OUT, "props.json"), "w"), indent=1)
 
 # ---------- export -------------------------------------------------------------------------
@@ -393,38 +523,23 @@ for ob in scene.objects:
         me.calc_loop_triangles()
         tris += len(me.loop_triangles)
 print(f"terrain tris {terrain_tris}, total tris {tris}, lanterns {len(lanterns)}, "
-      f"obstacles {len(obstacles)}, cards {len(cards)}")
+      f"obstacles {len(obstacles)}, instances {sum(len(v) for v in instances.values())}")
 for me in bpy.data.meshes:
     if "Col" in me.color_attributes:
         me.color_attributes.active_color_name = "Col"
         me.color_attributes.render_color_index = me.color_attributes.find("Col")
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "hole.glb"), export_format="GLB",
-                          export_lights=False, export_cameras=False, export_image_format="NONE",
-                          export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+
+
+def export(collection, path):
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection]
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_active_collection=True,
+                              export_lights=False, export_cameras=False, export_image_format="NONE",
+                              export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+
+
+export("Hole", os.path.join(OUT, "hole.glb"))
+if instances:
+    export("Library", os.path.join(OUT, "library.glb"))
 os.makedirs(BUILD, exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(BUILD, "hole.blend"))
 
-if PREVIEW:
-    img = bpy.data.images.load(os.path.abspath(os.path.join(BUILD, "albedo.png")))
-    tm.use_nodes = True
-    tex = tm.node_tree.nodes.new("ShaderNodeTexImage")
-    tex.image = img
-    tm.node_tree.links.new(tex.outputs["Color"], tm.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
-    sun = bpy.data.objects.new("Sun", bpy.data.lights.new("Sun", "SUN"))
-    sun.data.energy = 3
-    sun.rotation_euler = (0.7, 0.2, 0.5)
-    col.objects.link(sun)
-    cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
-    cam.location = (meta["tee"][0] + 5, -40, 60)
-    tgt = Vector((-25, 170, 0))
-    cam.rotation_euler = (tgt - cam.location).to_track_quat("-Z", "Y").to_euler()
-    cam.data.lens = 24
-    col.objects.link(cam)
-    scene.camera = cam
-    w = bpy.data.worlds.new("w")
-    scene.world = w
-    scene.render.engine = "BLENDER_EEVEE"
-    scene.render.resolution_x, scene.render.resolution_y = 540, 960
-    scene.eevee.taa_render_samples = 8
-    scene.render.filepath = os.path.join(BUILD, "preview.png")
-    bpy.ops.render.render(write_still=True)

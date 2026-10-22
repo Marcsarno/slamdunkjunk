@@ -378,6 +378,44 @@ def paint_splat(hole, out_dir):
     return [int(gx.shape[1]), int(gx.shape[0])]
 
 
+GROUND = {  # calm night-course palette (sRGB), tuned on the Blender style test
+    OOB: (0.11, 0.18, 0.08), ROUGH: (0.19, 0.31, 0.11), DEEP: (0.14, 0.23, 0.09),
+    FAIRWAY: (0.37, 0.58, 0.18), TEE: (0.38, 0.60, 0.19), FRINGE: (0.30, 0.50, 0.15),
+    GREEN: (0.42, 0.65, 0.21), SAND: (0.84, 0.72, 0.50), WATER: (0.06, 0.08, 0.08),
+}
+GROUND_PX_PER_M = 5.0
+
+
+def paint_ground(hole, out_path):
+    """Ground color for both Blender and Godot: calm surface colors, soft mowing lanes, darker
+    painted outlines where surfaces meet, broad value variation. No tiling textures."""
+    span = max(hole.x1 - hole.x0, hole.y1 - hole.y0)
+    cell = 1.0 / min(GROUND_PX_PER_M, 2047.0 / span)
+    gx, gy = grid(hole, cell)
+    hh = hole.height(gx, gy)
+    surf = hole.surface(gx, gy, hh)
+    rgb = np.zeros(gx.shape + (3,), np.float32)
+    for k, c in GROUND.items():
+        rgb[surf == k] = c
+    for c in range(3):
+        rgb[..., c] = ndimage.gaussian_filter(rgb[..., c], 0.8)
+    lat, s = hole.lateral(gx, gy)
+    lanes = np.where(np.floor(lat / 5.0) % 2 == 0, 1.07, 0.93)
+    fw = np.isin(surf, [FAIRWAY, TEE])
+    rgb[fw] *= lanes[fw][:, None]
+    gm = surf == GREEN
+    gl = np.where(np.floor((gx * 0.8 + gy * 0.6) / 1.6) % 2 == 0, 1.04, 0.96)
+    rgb[gm] *= gl[gm][:, None]
+    edge = ndimage.binary_dilation(surface_edges(surf), iterations=1) & (surf != WATER)
+    shade = np.where(edge, 0.8, 1.0)
+    shade = ndimage.gaussian_filter(shade, 0.8)
+    broad = 0.88 + 0.12 * hole.noise(gx * 1.7, gy * 1.7) + 0.06 * hole.noise_fine(gx, gy)
+    rgb *= (shade * broad)[..., None]
+    img = Image.fromarray(np.clip(rgb[::-1] * 255, 0, 255).astype(np.uint8))
+    img.save(out_path, quality=90)
+    return list(img.size)
+
+
 def build(spec_path, out_dir, preview_dir=None):
     spec = json.load(open(spec_path))
     os.makedirs(out_dir, exist_ok=True)
@@ -390,6 +428,7 @@ def build(spec_path, out_dir, preview_dir=None):
     slope_report(hole, px, py, heights, spec)
     surface.tofile(os.path.join(out_dir, "surface.bin"))
     splat_size = paint_splat(hole, out_dir)
+    ground_size = paint_ground(hole, os.path.join(out_dir, "ground.jpg"))
     if preview_dir:
         os.makedirs(preview_dir, exist_ok=True)
         paint_albedo(hole, os.path.join(preview_dir, "albedo.png"))
@@ -404,6 +443,7 @@ def build(spec_path, out_dir, preview_dir=None):
         "surf": {"cell": SURF_CELL, "nx": int(sx.shape[1]), "ny": int(sx.shape[0]), "file": "surface.bin",
                  "names": SURFACE_NAMES},
         "splat": {"file": "splat.png", "detail": "detail.png", "size": splat_size},
+        "ground": {"file": "ground.jpg", "size": ground_size},
         "theme": spec.get("theme", {}),
         "tee": [0.0, 0.0, tee_h], "pin": [pin[0], pin[1], pin_h],
         "green": gp, "length": round(hole.length, 1),
