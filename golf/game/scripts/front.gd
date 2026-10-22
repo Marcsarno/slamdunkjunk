@@ -43,6 +43,8 @@ func _ready() -> void:
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	Music.set_in_play(false)
+	Music.start()
 	var noise := FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.frequency = 0.09
@@ -171,14 +173,25 @@ func _build_clubhouse() -> void:
 			row.pressed.connect(_soon.bind(name, right))
 		y += 72.0
 	list.add_child(_chalk_line(y + 6, 0.08, 0.92))
-	var how := _invisible_button(Rect2(BOARD.position.x, y + 22, BOARD.size.x, 64))
+	var half := BOARD.size.x * 0.5
+	var how := _invisible_button(Rect2(BOARD.position.x, y + 22, half, 64))
 	list.add_child(how)
-	var how_l := _chalk_label("How to play  ?", hand_font, 38, CHALK)
+	var how_l := _chalk_label("How to play ?", hand_font, 36, CHALK)
 	how_l.position = Vector2(BOARD.position.x, y + 26)
-	how_l.size = Vector2(BOARD.size.x, 58)
+	how_l.size = Vector2(half, 58)
 	how_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	list.add_child(how_l)
 	how.pressed.connect(_show_help.bind(true))
+	var mus := _invisible_button(Rect2(BOARD.position.x + half, y + 22, half, 64))
+	list.add_child(mus)
+	var mus_l := _chalk_label(_music_text(), hand_font, 36, CHALK)
+	mus_l.position = Vector2(BOARD.position.x + half, y + 26)
+	mus_l.size = Vector2(half, 58)
+	mus_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	list.add_child(mus_l)
+	mus.pressed.connect(func():
+		Music.toggle()
+		mus_l.text = _music_text())
 
 	help.size = ART
 	help.visible = false
@@ -239,6 +252,10 @@ func _play_hole(_row: Button, label: Label) -> void:
 	tw.tween_interval(0.15)
 	tw.tween_property(fade, "color:a", 1.0, 0.3)
 	tw.tween_callback(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
+
+
+func _music_text() -> String:
+	return "Music: on" if Music.on else "Music: off"
 
 
 # ---------------------------------------------------------------- helpers

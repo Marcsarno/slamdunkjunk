@@ -66,6 +66,8 @@ func _ready() -> void:
 	view.camera = cam
 	_make_ball_visuals()
 	add_child(hud)
+	Music.set_in_play(true)
+	Music.start()
 	hud.club_pressed.connect(_cycle_club)
 	hud.next_pressed.connect(_start_hole)
 	hud.menu_pressed.connect(func():
