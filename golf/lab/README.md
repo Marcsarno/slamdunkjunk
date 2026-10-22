@@ -10,12 +10,31 @@ cdn.jsdelivr.net). The published copy is a claude.ai artifact.
 - **Retarget, live:** each of her bones takes the reference bone's world-space change from its rest
   pose (BVH frame 0 is the added T-pose; FBX uses the bind pose), after lining the two rigs up on their
   limb lines at rest (hips and chest also on their side lines). Hip travel is scaled by leg length.
-- **Club:** the lead fist holds the grip end. Fist centre = circle through the curled middle-finger
-  joints. The club's line comes from the reference's two hands (default) or from her own two fists.
-  The face turns with the back of the lead hand.
-- **Trail hand:** onto its spot on the club (below the lead fist by the reference's hand spacing,
-  scaled by arm length), two-bone arm in the source's elbow plane, the hand keeps its retargeted turn.
-- **Views:** face-on, down the line, above, and four hand close-ups (support side, below, above, 3/4);
+- **CMU wrists:** in the CMU conversion `<Side>Hand` is only forearm twist and `<Side>FingerBase` is the
+  palm, so her ForeArm takes `<Side>Hand` and her Hand takes `<Side>FingerBase`. Torso, collarbones,
+  head and feet take the reference's change on her own rest (copying CMU's lines shrugged her shoulders).
+- **Posture:** her arms are shorter and her torso longer than the mocap golfer's, so she bends more at
+  the hips (pelvis, spine and collarbones tip about her hip joints; arms keep their hang), with shoulders
+  rolled forward a little and arms swung forward; full to impact, easing to a share by the finish.
+- **Grip, club first:** the club is placed as golf and the face-on video have it at address (sole flat at
+  the club's lie, face square, hands 4 cm ahead; the club gets longer if she can't reach the ball), and its
+  shaft is turned to the video's at the top (level, at the target), impact (back on the ball) and finish
+  (down her back). Both hands hold it in a fixed grip (handle diagonal across the fingers, thumbs down the
+  shaft, back of the lead hand and the trail palm to the target). The lead hand's correction is keyed at
+  those four frames and eased between, so it still moves with the mocap between them.
+- **The arm adapts:** the lead wrist is held at the video's angle for the phase, its forearm points where
+  that wrist puts it, and the elbow (a hinge, forearm roll within 75 deg) is found so the hand lands nearest
+  the mocap's. The trail hand is pinned on the grip; its elbow swing is searched for a natural trail wrist.
+  If the trail arm can't reach, the hands move toward the trail shoulder (96% reach at most). Twist lives
+  in the forearms, never the wrists.
+- **Collision:** her torso, chest, pelvis and thigh skin (skinned on the CPU each frame) against arm and
+  hand capsules sized from her own arm vertices along their length; arm against arm. Red points mark skin
+  inside an arm.
+- **Video reference:** your face-on video, cut by `tools/video_ref.py` into `assets/video/` (look and
+  spacing only, never game art), beside her or traced over her, pinned to her feet at her height and synced
+  at address, top, impact and finish.
+- **Views:** face-on, down the line, from the target, above, four close upper-body views, and four hand
+  close-ups (support side, below, above, 3/4);
   the reference camera mirrors hers relative to each golfer. Close-ups clip anything nearer than 16 cm.
 - **Numbers:** trail fist to its grip spot in the club frame (along / face / toe), grip axis vs shaft,
   wrists in the forearm's frame against human limits, arm straightness and reach, clubhead height,
@@ -30,4 +49,6 @@ Mixamo golf clips arrive: put X Bot FBX files in `assets/mixamo/` and add entrie
 - `tools/slim_character.py` (Blender, headless): the lab's copy of the character, skin and skeleton only,
   lighter textures. `assets/brittany.glb.b64.txt` is the same file as base64 for hosts that don't serve
   .glb (`base64 -w0 assets/brittany.glb > assets/brittany.glb.b64.txt`).
-- `tools/shoot.mjs` (Playwright): screenshots and key-frame / hand sheets through `window.lab`.
+- `tools/shoot.mjs` (Playwright): screenshots and key-frame / hand / video sheets through `window.lab`.
+- `tools/video_ref.py`: the face-on video reference frames and their keys (`python3 -I tools/video_ref.py
+  <video> assets/video`).

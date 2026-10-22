@@ -1,8 +1,9 @@
 // Drive the Swing Lab headless and save pictures.
-// usage: node tools/shoot.mjs <url> <outdir> [page|sheet|hands]
+// usage: node tools/shoot.mjs <url> <outdir> [page|sheet|hands|video]
 //   page   a screenshot of the whole lab (desktop and phone width)
 //   sheet  address / top / impact / finish x face-on, down the line, above (Brittany | reference)
 //   hands  the four hand close-ups at the key frames and the worst trail-hand frame, worst first
+//   video  face-on at the key frames: video | Brittany | reference, and the video's outline traced over her
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,6 +34,11 @@ await page.waitForFunction(() => window.lab && window.lab.ready === true, null, 
 const ready = await page.evaluate(() => !!(window.lab && window.lab.ready));
 console.log('ready', ready);
 if (logs.length) console.log(logs.slice(0, 20).join('\n'));
+// CLUB=driver|iron|putter: that club, grip solved at address, before any pictures
+if (process.env.CLUB) {
+  await page.evaluate((k) => window.lab.setClub(k), process.env.CLUB);
+  console.log('solve', JSON.stringify(await page.evaluate(() => window.lab.solve())));
+}
 const save = async (name, dataUrl) => fs.writeFileSync(path.join(out, name), Buffer.from(dataUrl.split(',')[1], 'base64'));
 
 if (mode === 'page') {
@@ -59,6 +65,22 @@ if (mode === 'sheet' || mode === 'hands') {
         `wrists L ${nums.leadFlex.toFixed(0)}/${nums.leadDev.toFixed(0)} T ${nums.trailFlex.toFixed(0)}/${nums.trailDev.toFixed(0)}`,
         `head ${nums.headY.toFixed(1)}cm`);
     }
+  }
+}
+if (mode === 'video') {
+  const keys = await page.evaluate(() => window.lab.keys());
+  console.log('keys', JSON.stringify(keys));
+  for (const [label, f] of Object.entries(keys)) {
+    await page.evaluate(() => window.lab.setVideo({ mode: 'beside', scale: 100, dx: 0, dy: 0, nudge: 0 }));
+    await save(`video_${label}_beside.png`, await page.evaluate((f2) => window.lab.shot(f2, 'face', 960, 620), f));
+    const vf = await page.evaluate(() => window.lab.videoFrame());
+    await page.evaluate(() => { window.lab.set('split', false); return window.lab.setVideo({ mode: 'over', line: true, opacity: 100 }); });
+    await save(`video_${label}_over.png`, await page.evaluate((f2) => window.lab.shot(f2, 'face', 420, 620), f));
+    await page.evaluate(() => { window.lab.set('split', true); return window.lab.setVideo({ mode: 'off' }); });
+    const nums = await page.evaluate(() => window.lab.measure());
+    console.log(label, 'clip frame', f, 'video frame', vf, `sole ${nums.soleY.toFixed(1)}cm`, `shaft ${nums.shaftDown.toFixed(0)}° below level`,
+      `hands ahead ${nums.handsAhead.toFixed(1)}cm`, `trail fist ${Math.hypot(nums.trailAlong, nums.trailFace, nums.trailToe).toFixed(0)}mm`,
+      `wrists L ${nums.leadFlex.toFixed(0)}/${nums.leadDev.toFixed(0)} T ${nums.trailFlex.toFixed(0)}/${nums.trailDev.toFixed(0)}`);
   }
 }
 await browser.close();

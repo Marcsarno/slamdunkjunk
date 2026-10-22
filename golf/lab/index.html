@@ -18,7 +18,7 @@
   #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   .vlabel { position: absolute; top: 8px; font: 600 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
             color: var(--mute); background: rgba(21,17,28,.7); padding: 5px 7px; border-radius: 4px; pointer-events: none; }
-  #labA { left: 8px; } #labB { left: calc(50% + 8px); }
+  #labA { left: 8px; } #labB { left: calc(50% + 8px); } #labV { left: 8px; display: none; }
   #hud { position: absolute; left: 8px; bottom: 8px; right: 8px; font: 12px/1.35 var(--mono); color: var(--fg);
          pointer-events: none; text-shadow: 0 1px 2px #000; white-space: pre-wrap; }
   #panel { width: 360px; flex: none; overflow-y: auto; background: var(--panel); border-left: 1px solid var(--line);
@@ -54,6 +54,7 @@
 <div id="app">
   <div id="views">
     <canvas id="c"></canvas>
+    <div class="vlabel" id="labV">Video, face-on</div>
     <div class="vlabel" id="labA">Brittany</div>
     <div class="vlabel" id="labB">Reference rig</div>
     <div id="hud"></div>
@@ -84,21 +85,40 @@
       <div class="row" id="handbtns"></div>
       <div class="row">
         <label class="ck"><input type="checkbox" id="split" checked> side by side</label>
-        <label class="ck"><input type="checkbox" id="skel"> skeleton</label>
+        <label class="ck"><input type="checkbox" id="skel" checked> skeleton</label>
         <label class="ck"><input type="checkbox" id="fingers" checked> finger bones</label>
         <label class="ck"><input type="checkbox" id="mesh" checked> her mesh</label>
+        <label class="ck"><input type="checkbox" id="colmarks" checked> red: skin inside an arm</label>
       </div>
+      <div class="row"><label class="ck"><input type="checkbox" id="ownrest" checked> torso, collarbones, head and feet: the reference's change on her own rest</label></div>
+    </section>
+
+    <section>
+      <h2>Posture</h2>
+      <div id="posturectl"></div>
+      <div class="row"><button id="bendsolve">Bend until the arms hang clear</button></div>
+      <div class="note">Her arms are shorter and her torso longer than the mocap golfer's, so the same angles leave her hands at her belt. The bend tips her pelvis, spine and collarbones forward about her hip joints (legs and feet stay put); her arms keep the reference's hang, so her hands come forward and down. Full from address to impact, easing to the finish share as she stands up.</div>
+    </section>
+
+    <section>
+      <h2>Video reference</h2>
+      <div class="row">
+        <select id="vidmode"><option value="off">Video: off</option><option value="beside">Video: beside her</option><option value="over">Video: traced over her</option></select>
+        <label class="ck"><input type="checkbox" id="vidline" checked> outline only</label>
+      </div>
+      <div id="vidctl"></div>
+      <div class="note">Your face-on video of Brittany, for her arms, her hands and the space between them and her body. It is pinned to her feet at her own height, shows from the face-on camera only, and is synced at address, top, impact and finish. The motion still comes from the clip; nothing is taken from the video. The video skips its own impact (the club jumps past the ball between two frames), so judge impact on the reference rig.</div>
     </section>
 
     <section>
       <h2>Club</h2>
       <div class="row">
-        <select id="clubkind"><option value="iron">Iron</option><option value="driver">Driver</option><option value="putter">Putter</option></select>
+        <select id="clubkind"><option value="driver">Driver</option><option value="iron">Iron</option><option value="putter">Putter</option></select>
         <select id="lead"><option value="Left">Lead hand: left</option><option value="Right">Lead hand: right</option></select>
-        <button id="solve">Square the face at address</button>
+        <button id="solve">Solve the grip at address</button>
       </div>
-      <div class="row"><select id="linefrom"><option value="ref">Club line: the reference's hands</option><option value="fists">Club line: her own fists</option></select></div>
-      <div class="note">The lead fist holds the grip end. The club's line comes from the reference skeleton's hands (the line through its two hands, as captured), or from her own two fists. The face turns with the back of the lead hand.</div>
+      <div class="row"><select id="linefrom"><option value="grip">Club line: fixed in the lead hand</option><option value="ref">Club line: the reference's hands</option><option value="fists">Club line: her own fists</option></select></div>
+      <div class="note">The lead fist holds the grip end. Fixed in the lead hand (the held-weapon rule): the club turns with her lead hand like a held weapon; the grip is two angles in that hand (from the thumb line toward the fingers, and out of the palm), solved once at address so the clubhead sole rests on the ground with the hands the set distance ahead of the head (face-on), then the face is squared. The same grip rides in the reference's lead hand. The other two lines are kept for comparison: through the reference skeleton's two hands as captured, or through her own two fists.</div>
       <div id="fit"></div>
     </section>
 
@@ -107,8 +127,13 @@
       <div id="handctl"></div>
       <div class="row">
         <label class="ck"><input type="checkbox" id="trailfit" checked> trail hand onto the club</label>
+        <label class="ck"><input type="checkbox" id="trailgrip" checked> turned by its grip</label>
+        <label class="ck"><input type="checkbox" id="reach" checked> hands where both arms reach</label>
+        <label class="ck"><input type="checkbox" id="handbyclub" checked> lead hand set by the club at the keys</label>
+        <label class="ck"><input type="checkbox" id="armadapt" checked> lead arm adapts (wrist as in the video)</label>
       </div>
-      <div class="note">On: her trail fist goes to its spot on the club (below the lead fist by the reference's own hand spacing); her arm reaches it in the source's elbow plane and the hand keeps its retargeted turn. Off: plain retarget.</div>
+      <div id="wristctl"></div>
+      <div class="note">The grip, both hands: the handle runs diagonally across the fingers (lead: from under the heel pad to the middle of the index finger), the thumbs lie down the shaft, the back of the lead hand and the trail palm face the target. Each grip is two angles in that hand. The trail fist sits the set distance down the grip; her trail arm reaches it in the source's elbow plane. The lead wrist keeps the mocap's motion with a correction set at address, top, impact and finish (solved by the button above: clubhead on the ground with the hands ahead at address and impact, shaft level and pointing at the target at the top, behind her head at the finish).</div>
     </section>
 
     <section>
@@ -151,11 +176,15 @@ const DEG = 180 / Math.PI;
 
 // ------------------------------------------------------------------ bone naming
 const key = (name) => name.replace(/^mixamorig:?/, '');
-// CMU/MotionBuilder BVH names -> Mixamo names (strip "mixamorig")
+// CMU/MotionBuilder BVH names -> Mixamo names (strip "mixamorig"). In the CMU conversion the wrist is
+// two bones at the same point: <Side>Hand turns only about the forearm's own axis (pronation, the
+// ASF "wrist" twist) and <Side>FingerBase turns the palm (wrist flex and side bend). So her ForeArm
+// takes <Side>Hand (the forearm's direction plus its twist, the Mixamo way of carrying forearm twist)
+// and her Hand takes <Side>FingerBase.
 const BVH_MAP = {
   Hips: 'Hips', LowerBack: 'Spine', Spine: 'Spine1', Spine1: 'Spine2', Neck: 'Neck', Head: 'Head',
-  LeftShoulder: 'LeftShoulder', LeftArm: 'LeftArm', LeftForeArm: 'LeftForeArm', LeftHand: 'LeftHand',
-  RightShoulder: 'RightShoulder', RightArm: 'RightArm', RightForeArm: 'RightForeArm', RightHand: 'RightHand',
+  LeftShoulder: 'LeftShoulder', LeftArm: 'LeftArm', LeftHand: 'LeftForeArm', LeftFingerBase: 'LeftHand',
+  RightShoulder: 'RightShoulder', RightArm: 'RightArm', RightHand: 'RightForeArm', RightFingerBase: 'RightHand',
   LeftUpLeg: 'LeftUpLeg', LeftLeg: 'LeftLeg', LeftFoot: 'LeftFoot', LeftToeBase: 'LeftToeBase',
   RightUpLeg: 'RightUpLeg', RightLeg: 'RightLeg', RightFoot: 'RightFoot', RightToeBase: 'RightToeBase',
 };
@@ -175,8 +204,8 @@ const LINES_BVH = {
   Spine: [['LowerBack', ['Spine1', 'Neck']]], Spine1: [['Spine', ['Neck', 'Neck1', 'Head']]],
   Spine2: [['Spine1', ['Neck', 'Neck1', 'Head']], ['RightArm', ['LeftArm']]],
   Neck: [['Neck', ['Head', 'Neck1']]], Head: [['Neck1', ['Head']]],
-  LeftShoulder: [['LeftShoulder', ['LeftArm']]], LeftArm: [['LeftArm', ['LeftForeArm']]], LeftForeArm: [['LeftForeArm', ['LeftHand']]], LeftHand: [['LeftHand', ['LeftFingerBase', 'LeftHandIndex1']]],
-  RightShoulder: [['RightShoulder', ['RightArm']]], RightArm: [['RightArm', ['RightForeArm']]], RightForeArm: [['RightForeArm', ['RightHand']]], RightHand: [['RightHand', ['RightFingerBase', 'RightHandIndex1']]],
+  LeftShoulder: [['LeftShoulder', ['LeftArm']]], LeftArm: [['LeftArm', ['LeftForeArm']]], LeftHand: [['LeftForeArm', ['LeftHand']]], LeftFingerBase: [['LeftFingerBase', ['LeftHandIndex1']]],
+  RightShoulder: [['RightShoulder', ['RightArm']]], RightArm: [['RightArm', ['RightForeArm']]], RightHand: [['RightForeArm', ['RightHand']]], RightFingerBase: [['RightFingerBase', ['RightHandIndex1']]],
   LeftUpLeg: [['LeftUpLeg', ['LeftLeg']]], LeftLeg: [['LeftLeg', ['LeftFoot']]], LeftFoot: [['LeftFoot', ['LeftToeBase']]], LeftToeBase: null,
   RightUpLeg: [['RightUpLeg', ['RightLeg']]], RightLeg: [['RightLeg', ['RightFoot']]], RightFoot: [['RightFoot', ['RightToeBase']]], RightToeBase: null,
 };
@@ -218,12 +247,16 @@ const controls = new OrbitControls(camA, canvas);
 controls.enableDamping = true;
 
 // ------------------------------------------------------------------ state
+const DEFAULT_VID = { mode: 'off', line: true, opacity: 80, scale: 100, dx: 0, dy: 0, nudge: 0 };
 const S = {
   clips: [], clip: null, frame: 0, playing: false, speed: 1, t0: 0,
-  view: 'face', follow: false, split: true, lead: 'Left', kind: 'iron',
-  fit: null, keys: {}, scan: null, ready: false,
+  view: 'face', follow: false, split: true, lead: 'Left', kind: 'driver',
+  fit: null, keys: {}, scan: null, ready: false, vid: { ...DEFAULT_VID }, addrG: null,
 };
-const DEFAULT_FIT = { along: 0, roll: 0, curl: 70, thumb: 45, length: 0 };
+const DEFAULT_FIT = {
+  along: 0, roll: 0, curl: 70, thumb: 45, length: 0, diag: 58, tilt: 0, tdiag: 58, ttilt: 0, gap: 70, lean: 4, impLean: 4,
+  bend: 20, bendFinish: 40, armsFwd: 10, shRoll: 15, lie: 0, topTilt: 0, finDown: 35, wc: null,
+};
 const CLUB = { iron: 0.93, driver: 1.10, putter: 0.86 };
 
 // ------------------------------------------------------------------ character
@@ -255,9 +288,17 @@ async function loadCharacter() {
   }
   hips.parent.getWorldQuaternion(char.hipParentWQ);
   char.hipRestW = hips.getWorldPosition(V());
-  char.ground = new THREE.Box3().setFromObject(char.mesh).min.y;
+  const box = new THREE.Box3().setFromObject(char.mesh);
+  char.ground = box.min.y;
+  char.height = box.max.y - box.min.y;
   char.legLen = legLength((n) => char.bones[n].getWorldPosition(V()));
   char.palm = palmFrames(char);
+  char.rest = {};
+  for (const side of ['Left', 'Right']) {
+    const ua = char.bones[side + 'ForeArm'].getWorldPosition(V()).sub(char.bones[side + 'Arm'].getWorldPosition(V())).normalize();
+    char.rest[side] = { ua, h: V().crossVectors(ua, V(0, 0, 1)).normalize() };
+  }
+  buildCollision();
 }
 function legLength(pos) {
   return pos('LeftUpLeg').distanceTo(pos('LeftLeg')) + pos('LeftLeg').distanceTo(pos('LeftFoot'));
@@ -289,7 +330,9 @@ function palmFrames(c) {
 const ref = { root: null, bones: {}, mixer: null, clip: null, restWQ: {}, kind: '', segs: [], frames: 0, fps: 120 };
 function clearRef() {
   if (ref.root) sceneB.remove(ref.root);
-  Object.assign(ref, { root: null, bones: {}, mixer: null, clip: null, restWQ: {}, segs: [] });
+  for (const s of ref.segs) sceneB.remove(s.m);
+  for (const p of ref.palms || []) sceneB.remove(p.g);
+  Object.assign(ref, { root: null, bones: {}, mixer: null, clip: null, restWQ: {}, segs: [], palms: [] });
 }
 async function loadBVH(file, scale) {
   const text = await (await fetch(file)).text();
@@ -313,6 +356,7 @@ async function loadBVH(file, scale) {
   // frame 0 of the cgspeed conversion is an added T-pose: that is the reference's rest
   setRefFrame(0);
   for (const n of Object.keys(ref.bones)) ref.restWQ[n] = ref.bones[n].getWorldQuaternion(Q());
+  buildPalms();
 }
 async function loadFBX(file) {
   const fbx = await new FBXLoader().loadAsync(file);
@@ -343,7 +387,7 @@ function buildMannequin() {
   for (const b of Object.values(ref.bones)) {
     for (const c of b.children) {
       if (!c.isBone || c.position.lengthSq() < 1e-6) continue;
-      const hand = /Hand|Finger|Thumb/.test(c.name) || /Hand/.test(b.name);
+      const hand = /FingerBase|Index|Thumb/.test(b.name);           // past the wrist (the forearm ends at <Side>Hand)
       const r = /Head/.test(c.name) ? 0.06 : hand ? 0.012 : /UpLeg|Leg$/.test(c.name) || /UpLeg/.test(b.name) ? 0.045 : 0.032;
       const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, 1, 4, 8), hand ? handMat : mat);
       m.castShadow = true;
@@ -352,7 +396,35 @@ function buildMannequin() {
     }
   }
 }
+// a flat palm on each mocap hand, so the hand's turn reads beside hers: back of the hand light, palm
+// side dark, a nub on the thumb side. It turns with <Side>FingerBase (the palm bone).
+function buildPalms() {
+  ref.palms = [];
+  for (const side of ['Left', 'Right']) {
+    const fb = ref.bones[side + 'FingerBase'], ix = ref.bones[side + 'HandIndex1'], th = ref.bones[(side === 'Left' ? 'L' : 'R') + 'Thumb'];
+    if (!fb || !ix || !th || !th.children[0]) continue;
+    const w = fb.getWorldPosition(V());
+    const x = ix.getWorldPosition(V()).sub(w).normalize();
+    const thumb = th.children[0].getWorldPosition(V()).sub(w);
+    thumb.addScaledVector(x, -thumb.dot(x)).normalize();
+    // palms down in the T-pose: the back of the hand is the side away from the floor
+    const y = V(0, 1, 0).addScaledVector(x, -x.y).normalize();
+    const z = V().crossVectors(x, y);
+    const g = new THREE.Group();
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.012, 0.07).translate(0.0425, 0.002, 0), new THREE.MeshStandardMaterial({ color: 0xffd0a8, roughness: 0.6 }));
+    const palm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.004, 0.064).translate(0.0425, -0.006, 0), new THREE.MeshStandardMaterial({ color: 0x8a3b1e, roughness: 0.8 }));
+    const nub = new THREE.Mesh(new THREE.CapsuleGeometry(0.009, 0.035, 4, 8).rotateZ(Math.PI / 2).translate(0.03, -0.004, 0.045 * Math.sign(thumb.dot(z))), new THREE.MeshStandardMaterial({ color: 0xffb27a, roughness: 0.6 }));
+    g.add(back, palm, nub);
+    for (const m of g.children) m.castShadow = true;
+    sceneB.add(g);
+    ref.palms.push({ g, bone: fb, rest: Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z)), restWQ: fb.getWorldQuaternion(Q()) });
+  }
+}
 function updateMannequin() {
+  for (const p of ref.palms || []) {
+    p.g.position.copy(p.bone.getWorldPosition(V()));
+    p.g.quaternion.copy(p.bone.getWorldQuaternion(Q()).multiply(p.restWQ.clone().invert()).multiply(p.rest));
+  }
   const pa = V(), pb = V();
   for (const s of ref.segs) {
     s.a.getWorldPosition(pa); s.b.getWorldPosition(pb);
@@ -382,6 +454,7 @@ function frameQ(primary, side) {
   const z = V().crossVectors(x, y);
   return Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
 }
+const OWN_REST = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'LeftShoulder', 'RightShoulder', 'LeftFoot', 'RightFoot', 'LeftToeBase', 'RightToeBase'];
 function buildCorrections() {
   const refPos = (n) => ref.bones[n] ? ref.bones[n].getWorldPosition(V()) : null;
   const tgtPos = (n) => char.bones[n] ? char.bones[n].getWorldPosition(V()) : null;
@@ -401,6 +474,11 @@ function buildCorrections() {
       ref.corr[tName] = Q().setFromUnitVectors(td, sd);
     }
   }
+  // Where the two skeletons are built differently (CMU's collarbone runs steeply up from a low chest
+  // joint, its spine and feet lines sit 8-37 deg off hers), copying the reference's absolute line
+  // imports its build: her shoulders shrug and tilt the wrong way. These bones take the reference's
+  // change from rest on top of her own rest instead; the limbs keep the line match.
+  if ($('ownrest').checked) for (const n of OWN_REST) if (ref.corr[n]) ref.corr[n] = Q();
   ref.hipT = refPos(ref.kind === 'bvh' ? 'Hips' : 'Hips');
   ref.legLen = legLength(refPos);
   // both rigs face +Z at rest; if the reference's left leg is on the other side, turn it round
@@ -424,24 +502,64 @@ function poseCharacter(f) {
     // D = change from the reference's rest, in world space
     inv[tName] = b.getWorldQuaternion(Q()).multiply(_q1.copy(ref.restWQ[sName]).invert());
   }
-  for (const b of char.order) {
-    const k = key(b.name);
-    const parentWQ = b === char.bones.Hips ? char.hipParentWQ : wq[key(b.parent.name)];
-    let local;
-    if (inv[k]) {
-      const want = inv[k].clone().multiply(ref.corr[k]).multiply(char.restWQ[k]);
-      local = _q2.copy(parentWQ).invert().multiply(want);
-    } else {
-      local = char.restLocal[k];
-    }
-    b.quaternion.copy(local);
-    wq[k] = parentWQ.clone().multiply(b.quaternion);
-  }
+  setWorld(inv, null);
   const hip = ref.bones.Hips.getWorldPosition(V());
   const off = hip.sub(ref.hipT).multiplyScalar(char.legLen / ref.legLen);
   char.bones.Hips.position.copy(char.bones.Hips.parent.worldToLocal(char.hipRestW.clone().add(off)));
+  char.root.updateMatrixWorld(true);
+  // the hip bend: pelvis, spine and collarbones tip forward about the line through her two hip joints
+  // (so the legs and feet don't move); arms, neck and head keep their world turn, so the arms still hang
+  // like the reference's and the hands come forward and down with the shoulders
+  const share = hipBendAt(f, true);
+  const bend = hipBendAt(f), fwd = (S.fit.armsFwd || 0) * share, roll = (S.fit.shRoll || 0) * share;
+  S.bendNow = bend; S.armsNow = fwd;
+  if (bend || fwd || roll) {
+    const l = char.bones.LeftUpLeg.getWorldPosition(V()), r = char.bones.RightUpLeg.getWorldPosition(V());
+    const pivot = l.clone().add(r).multiplyScalar(0.5);
+    const R = Q().setFromAxisAngle(l.sub(r).normalize(), bend / DEG);
+    const hp = char.bones.Hips.getWorldPosition(V());
+    // arms forward: both arms swing together about the line between her shoulders (after the bend)
+    let A = null, C = null;
+    if (fwd) {
+      const ls = char.bones.LeftArm.getWorldPosition(V()).sub(pivot).applyQuaternion(R), rs = char.bones.RightArm.getWorldPosition(V()).sub(pivot).applyQuaternion(R);
+      A = Q().setFromAxisAngle(ls.sub(rs).normalize(), -fwd / DEG);
+    }
+    // shoulders rolled forward: each collarbone swings forward about the chest's own up axis
+    if (roll) {
+      const up = V(0, 1, 0).applyQuaternion(char.bones.Spine2.getWorldQuaternion(Q())).applyQuaternion(R);
+      C = { LeftShoulder: Q().setFromAxisAngle(up, -roll / DEG), RightShoulder: Q().setFromAxisAngle(up, roll / DEG) };
+    }
+    setWorld(inv, R, A, C);
+    char.bones.Hips.position.copy(char.bones.Hips.parent.worldToLocal(pivot.clone().add(hp.sub(pivot).applyQuaternion(R))));
+  }
   applyCurl();
   char.root.updateMatrixWorld(true);
+}
+const BEND = new Set(['Hips', 'Spine', 'Spine1', 'Spine2', 'LeftShoulder', 'RightShoulder']);
+const ARMS = new Set(['LeftArm', 'LeftForeArm', 'LeftHand', 'RightArm', 'RightForeArm', 'RightHand']);
+// every bone's world turn: the reference's change from rest (lined up), or its parent's plus its own rest;
+// R = the hip bend on the trunk, A = the arms' forward swing
+function setWorld(inv, R, A, C) {
+  const wq = {};
+  for (const b of char.order) {
+    const k = key(b.name);
+    const parentWQ = b === char.bones.Hips ? char.hipParentWQ : wq[key(b.parent.name)];
+    const want = inv[k] ? inv[k].clone().multiply(ref.corr[k]).multiply(char.restWQ[k]) : parentWQ.clone().multiply(char.restLocal[k]);
+    if (C && C[k]) want.premultiply(C[k]);
+    if (R && BEND.has(k)) want.premultiply(R);
+    if (A && ARMS.has(k) && inv[k]) want.premultiply(A);
+    b.quaternion.copy(_q2.copy(parentWQ).invert().multiply(want));
+    wq[k] = want;
+  }
+}
+// the extra bend over the clip: full from the start to impact, easing to its finish share by the finish
+function hipBendAt(f, share) {
+  const b = share ? 1 : S.fit.bend || 0;
+  if (!b || !S.keys.impact) return b;
+  if (f <= S.keys.impact) return b;
+  const t = Math.min(1, (f - S.keys.impact) / Math.max(1, S.keys.finish - S.keys.impact));
+  const e = t * t * (3 - 2 * t);
+  return b * (1 - e * (1 - S.fit.bendFinish / 100));
 }
 
 // ------------------------------------------------------------------ fingers: curl the middle finger and thumb
@@ -493,6 +611,207 @@ function fistLocal(side) {
   return hand.worldToLocal(w);
 }
 
+// ------------------------------------------------------------------ the lead hand, set by the club
+// The mocap's wrists are not human (CMU's lead hand sits 60-70 deg toward the little finger and rolled
+// about 90 deg at address). The club comes first: at address it is placed as golf and the video have it
+// (sole flat at the club's lie, face square to the target, hands a little ahead), and at the top, impact
+// and finish its shaft is turned to the video's (level at the target; back to the ball; down her back),
+// keeping the turn the hand had carried from address. Her lead hand holds it in the fixed grip. The
+// hand's correction is keyed at those four frames (a turn in the hand's own frame) and eased between them,
+// so between the keys the hand still moves with the mocap. Twist goes to the forearm, never the wrist.
+const KEYS4 = ['address', 'top', 'impact', 'finish'];
+const qToVec = (q) => { const w = Math.min(1, Math.max(-1, q.w)), a = 2 * Math.acos(w), s = Math.sqrt(Math.max(0, 1 - w * w)); return s < 1e-6 ? V() : V(q.x / s, q.y / s, q.z / s).multiplyScalar(a > Math.PI ? a - 2 * Math.PI : a); };
+const vecToQ = (v) => { const a = v.length(); return a < 1e-9 ? Q() : Q().setFromAxisAngle(v.clone().divideScalar(a), a); };
+// the keyed correction at frame f, as a turn vector in the hand's frame (cubic between keys, held outside)
+function handCorrAt(f) {
+  const wc = S.fit.wc;
+  if (!wc || !KEYS4.every((k) => wc[k] && S.keys[k] != null)) return null;
+  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => V(...wc[k]));
+  if (f <= ks[0]) return vs[0];
+  if (f >= ks[3]) return vs[3];
+  let i = 0; while (i < 2 && f > ks[i + 1]) i++;
+  const t = (f - ks[i]) / Math.max(1, ks[i + 1] - ks[i]), t2 = t * t, t3 = t2 * t;
+  const span = ks[i + 1] - ks[i];
+  const tan = (j) => (j <= 0 || j >= 3 ? V() : vs[j + 1].clone().sub(vs[j - 1]).multiplyScalar(0.5 * span / (ks[j + 1] - ks[j - 1])));
+  return vs[i].clone().multiplyScalar(2 * t3 - 3 * t2 + 1).add(tan(i).multiplyScalar(t3 - 2 * t2 + t))
+    .add(vs[i + 1].clone().multiplyScalar(-2 * t3 + 3 * t2)).add(tan(i + 1).multiplyScalar(t3 - t2));
+}
+function leadWrist(f) {
+  if (!$('handbyclub').checked) return;
+  const c = handCorrAt(f);
+  if (!c) return;
+  const hand = char.bones[S.lead + 'Hand'];
+  const near = hand.getWorldPosition(V());
+  hand.quaternion.multiply(vecToQ(c));
+  hand.updateMatrixWorld(true);
+  if ($('armadapt').checked) leadArmAdapt(f, near);
+  else absorbTwist(S.lead);
+}
+// the hand's twist about the forearm's own line moves into the forearm (the hand keeps its world turn)
+function absorbTwist(side) {
+  const fore = char.bones[side + 'ForeArm'], hand = char.bones[side + 'Hand'];
+  const Fw = fore.getWorldQuaternion(Q()), Hw = hand.getWorldQuaternion(Q());
+  const W = Hw.clone().multiply(char.restWQ[side + 'Hand'].clone().invert()).multiply(Fw.clone().multiply(char.restWQ[side + 'ForeArm'].clone().invert()).invert());
+  const a = hand.getWorldPosition(V()).sub(fore.getWorldPosition(V())).normalize();
+  const p = a.clone().multiplyScalar(V(W.x, W.y, W.z).dot(a));
+  const T = new THREE.Quaternion(p.x, p.y, p.z, W.w);
+  if (T.lengthSq() < 1e-10) return;
+  T.normalize();
+  setWorldQ(fore, T.multiply(Fw));
+  setWorldQ(hand, Hw);
+}
+// forearm twist against the upper arm, from rest (deg): within 85 each way
+function forearmTwist(side) {
+  const arm = char.bones[side + 'Arm'], fore = char.bones[side + 'ForeArm'], hand = char.bones[side + 'Hand'];
+  const Da = arm.getWorldQuaternion(Q()).multiply(char.restWQ[side + 'Arm'].clone().invert());
+  const Df = fore.getWorldQuaternion(Q()).multiply(char.restWQ[side + 'ForeArm'].clone().invert());
+  const W = Df.multiply(Da.invert());
+  const a = hand.getWorldPosition(V()).sub(fore.getWorldPosition(V())).normalize();
+  const s = V(W.x, W.y, W.z).dot(a);
+  return 2 * Math.atan2(s, W.w) * DEG;
+}
+// the club's turn in the lead hand (the grip), in the hand's own space
+function gripLocalQ() {
+  const pf = char.palm[S.lead], d = gripDirLocal();
+  const x = pf.palm.clone().multiplyScalar(-1);
+  x.addScaledVector(d, -x.dot(d)).normalize();
+  return Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, V().crossVectors(d, x), d)).multiply(Q().setFromAxisAngle(V(0, 0, 1), S.fit.roll / DEG));
+}
+// a club turn from its shaft (grip to head) and face directions
+function clubQ(shaft, face) {
+  const s = shaft.clone().normalize(), x = face.clone().addScaledVector(s, -face.dot(s)).normalize();
+  return Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, V().crossVectors(s, x), s));
+}
+
+// ------------------------------------------------------------------ the arm adapts to the club
+// The hand's turn is the club's (through the grip). Its wrist is held at the video's angle for the phase
+// (eased between keys), so the forearm points where that wrist puts it; the upper arm reaches that
+// forearm's elbow as a true hinge, and the hand lands as near the mocap's hand as her arm allows.
+const WRIST_KEYS = { address: [-20, 0], top: [-5, 20], impact: [8, -20], finish: [-30, 15] };
+function wristTargetAt(f) {
+  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => WRIST_KEYS[k]);
+  if (f <= ks[0]) return vs[0];
+  if (f >= ks[3]) return vs[3];
+  let i = 0; while (i < 2 && f > ks[i + 1]) i++;
+  const t = (f - ks[i]) / Math.max(1, ks[i + 1] - ks[i]), e = t * t * (3 - 2 * t);
+  return [vs[i][0] + (vs[i + 1][0] - vs[i][0]) * e, vs[i][1] + (vs[i + 1][1] - vs[i][1]) * e];
+}
+// the wrist's turn in the hand's frame for a flex (toward the palm) and side bend (toward the thumb)
+function wristLocalQ(side, flex, dev) {
+  const pf = char.palm[side];
+  const flexAxis = V().crossVectors(pf.finger, pf.palm).normalize(), devAxis = V().crossVectors(pf.finger, pf.thumb).normalize();
+  return Q().setFromAxisAngle(devAxis, dev / DEG).multiply(Q().setFromAxisAngle(flexAxis, flex / DEG));
+}
+// the upper arm turned so its axis runs shoulder -> elbow, its elbow hinge on h
+function setUpperArm(side, s, e, h) {
+  const ua = e.clone().sub(s).normalize(), r = char.rest[side];
+  const hh = h.clone().addScaledVector(ua, -h.dot(ua)).normalize();
+  const want = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(ua, hh, V().crossVectors(ua, hh)))
+    .multiply(Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(r.ua, r.h, V().crossVectors(r.ua, r.h))).invert())
+    .multiply(char.restWQ[side + 'Arm']);
+  setWorldQ(char.bones[side + 'Arm'], want);
+}
+// the forearm's elbow hinge (no twist) for a forearm turned Fw
+const foreHinge = (side, Fw) => char.rest[side].h.clone().applyQuaternion(Fw.clone().multiply(char.restWQ[side + 'ForeArm'].clone().invert()));
+const segLens = (side) => {
+  const p = (n) => char.bones[side + n].getWorldPosition(V());
+  return { Lu: p('Arm').distanceTo(p('ForeArm')), Lf: p('ForeArm').distanceTo(p('Hand')) };
+};
+const PRON = 75;   // forearm roll against the elbow hinge, each way (deg)
+// The lead arm: its wrist exactly at (flex, dev), so the forearm's line and roll are fixed by the hand.
+// The elbow's bend and the forearm's roll against the hinge (within PRON) are searched for the hand
+// landing nearest `near`.
+function armToWrist(side, near, flex, dev) {
+  const arm = char.bones[side + 'Arm'], fore = char.bones[side + 'ForeArm'], hand = char.bones[side + 'Hand'];
+  const H = hand.getWorldQuaternion(Q());
+  const Fw = H.clone().multiply(wristLocalQ(side, flex, dev).invert()).multiply(char.restLocal[side + 'Hand'].clone().invert());
+  const a = hand.position.clone().normalize().applyQuaternion(Fw);
+  const s = arm.getWorldPosition(V()), { Lu, Lf } = segLens(side);
+  const b1 = foreHinge(side, Fw); b1.addScaledVector(a, -b1.dot(a)).normalize();
+  const b2 = V().crossVectors(a, b1);
+  const at = (phi, p) => {
+    const h = b1.clone().multiplyScalar(Math.cos(p)).addScaledVector(b2, Math.sin(p));
+    const ua = a.clone().applyAxisAngle(h, -phi);
+    return { h, ua, w: s.clone().addScaledVector(ua, Lu).addScaledVector(a, Lf) };
+  };
+  let best = null;
+  const tryAt = (phi, p) => { if (phi < 0.02 || phi > 145 / DEG || Math.abs(p) > PRON / DEG) return; const r = at(phi, p), c = r.w.distanceTo(near); if (!best || c < best.c) best = { c, phi, p }; };
+  for (let phi = 2; phi <= 140; phi += 4) for (let p = -PRON; p <= PRON; p += 5) tryAt(phi / DEG, p / DEG);
+  for (const step of [2, 0.5]) { const b = { ...best }; for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) tryAt(b.phi + i * step / DEG, b.p + j * step / DEG); }
+  const r = at(best.phi, best.p);
+  setUpperArm(side, s, s.clone().addScaledVector(r.ua, Lu), r.h);
+  char.root.updateMatrixWorld(true);
+  setWorldQ(fore, Fw);
+  setWorldQ(hand, H);
+  char.root.updateMatrixWorld(true);
+  return best.c;
+}
+// The trail arm: its hand pinned on the club in its grip. The elbow swings about the shoulder-wrist line;
+// the swing is searched for her trail wrist nearest its target with the forearm's roll within PRON.
+const TRAIL_WRIST = { address: [-25, 5], top: [-70, 15], impact: [-30, -5], finish: [15, -10] };
+function trailTargetAt(f) {
+  const ks = KEYS4.map((k) => S.keys[k]), vs = KEYS4.map((k) => TRAIL_WRIST[k]);
+  if (f <= ks[0]) return vs[0];
+  if (f >= ks[3]) return vs[3];
+  let i = 0; while (i < 2 && f > ks[i + 1]) i++;
+  const t = (f - ks[i]) / Math.max(1, ks[i + 1] - ks[i]), e = t * t * (3 - 2 * t);
+  return [vs[i][0] + (vs[i + 1][0] - vs[i][0]) * e, vs[i][1] + (vs[i + 1][1] - vs[i][1]) * e];
+}
+// the wrist's swing from a forearm line to a hand turn: (flex, dev) and the forearm turn with no wrist twist
+function swingFor(side, H, a) {
+  const pf = char.palm[side];
+  const f = pf.finger.clone().applyQuaternion(H), n = pf.palm.clone().applyQuaternion(H), t = pf.thumb.clone().applyQuaternion(H);
+  // forearm line in the hand's frame -> flex / dev of the hand against it
+  const fl = Math.atan2(-a.dot(n), a.dot(f)) * DEG, dv = Math.atan2(-a.dot(t), a.dot(f)) * DEG;
+  return { flex: fl, dev: dv };
+}
+function trailArmSwivel(f, goal, H) {
+  const side = S.lead === 'Left' ? 'Right' : 'Left';
+  const arm = char.bones[side + 'Arm'], fore = char.bones[side + 'ForeArm'], hand = char.bones[side + 'Hand'];
+  const s = arm.getWorldPosition(V()), { Lu, Lf } = segLens(side);
+  const toW = goal.clone().sub(s);
+  let d = toW.length();
+  S.trailReach = d / (Lu + Lf);
+  d = Math.min(d, (Lu + Lf) * 0.995);
+  const axis = toW.normalize();
+  const cosA = (Lu * Lu + d * d - Lf * Lf) / (2 * Lu * d), r = Lu * Math.sqrt(Math.max(0, 1 - cosA * cosA));
+  const c0 = s.clone().addScaledVector(axis, Lu * cosA);
+  const w = s.clone().addScaledVector(axis, d);
+  let p1 = Math.abs(axis.y) < 0.9 ? V(0, 1, 0) : V(1, 0, 0); p1.addScaledVector(axis, -p1.dot(axis)).normalize();
+  const p2 = V().crossVectors(axis, p1);
+  const [tf, td] = trailTargetAt(f);
+  let best = null;
+  for (let k = 0; k < 72; k++) {
+    const ang = (k / 72) * Math.PI * 2;
+    const e = c0.clone().addScaledVector(p1, r * Math.cos(ang)).addScaledVector(p2, r * Math.sin(ang));
+    const a = w.clone().sub(e).normalize(), ua = e.clone().sub(s).normalize();
+    const sw = swingFor(side, H, a);
+    // the forearm's turn: the hand's, less the wrist's swing; its roll against the elbow hinge
+    const Fw = H.clone().multiply(wristLocalQ(side, sw.flex, sw.dev).invert()).multiply(char.restLocal[side + 'Hand'].clone().invert());
+    let hinge = V().crossVectors(ua, a);
+    const bent = hinge.length() > 0.05;
+    hinge.normalize();
+    const hf = foreHinge(side, Fw); hf.addScaledVector(a, -hf.dot(a)).normalize();
+    const pron = bent ? Math.acos(Math.max(-1, Math.min(1, hinge.dot(hf)))) * DEG : 0;
+    const past = Math.max(0, sw.flex - LIMITS.flex) + Math.max(0, -sw.flex - LIMITS.ext) + Math.max(0, sw.dev - LIMITS.radial) + Math.max(0, -sw.dev - LIMITS.ulnar);
+    const cost = (sw.flex - tf) ** 2 + (sw.dev - td) ** 2 + 30 * past * past + 10 * Math.max(0, pron - PRON) ** 2;
+    if (!best || cost < best.cost) best = { cost, e, a, Fw, hinge: bent ? hinge : hf, sw, pron };
+  }
+  setUpperArm(side, s, best.e, best.hinge);
+  char.root.updateMatrixWorld(true);
+  setWorldQ(fore, best.Fw);
+  setWorldQ(hand, H);
+  char.root.updateMatrixWorld(true);
+  S.trailPron = best.pron;
+}
+
+function leadArmAdapt(f, near) {
+  if (!$('armadapt').checked) return 0;
+  const [fl, dv] = wristTargetAt(f);
+  S.leadMoved = armToWrist(S.lead, near || char.bones[S.lead + 'Hand'].getWorldPosition(V()), fl, dv);
+  return S.leadMoved;
+}
+
 // ------------------------------------------------------------------ the club
 const club = { group: new THREE.Group(), head: new THREE.Object3D(), ball: null, len: 0.93 };
 function buildClub() {
@@ -521,6 +840,7 @@ function buildClub() {
   }
   head.castShadow = true;
   club.group.add(head);
+  club.headMesh = head;
   const face = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.04, 6), new THREE.MeshBasicMaterial({ color: 0xff9a3c }));
   face.rotation.z = -Math.PI / 2; face.position.set(0.04, 0.03, len);   // a small marker on the face side
   club.group.add(face);
@@ -536,15 +856,24 @@ function buildClub() {
 // The club's line runs from the lead fist through the trail fist (the fists define the handle;
 // the reference only tells which end is the head). The face turns with the back of the lead hand.
 function fistWorld(side) { return char.bones[side + 'Hand'].localToWorld(fistLocal(side)); }
+// the club's direction in the lead hand's own frame: from the thumb line toward the finger line by
+// diag, then out of the palm by tilt
+function gripDirLocal() {
+  const pf = char.palm[S.lead], a = S.fit.diag / DEG, b = S.fit.tilt / DEG;
+  return pf.thumb.clone().multiplyScalar(Math.cos(a)).addScaledVector(pf.finger, Math.sin(a)).multiplyScalar(Math.cos(b))
+    .addScaledVector(pf.palm, Math.sin(b)).normalize();
+}
 function placeClub() {
   const trail = S.lead === 'Left' ? 'Right' : 'Left';
   const lf = fistWorld(S.lead), tf = fistWorld(trail);
   S.fistGap = tf.distanceTo(lf);
-  placeRefClub();
-  let shaft;
-  if ($('linefrom').value === 'ref' && S.refShaft) shaft = S.refShaft.clone();
-  else { shaft = tf.clone().sub(lf); if (shaft.lengthSq() < 1e-8) shaft.set(0, -1, 0); shaft.normalize(); }
+  refHands();
+  const mode = $('linefrom').value;
   const hq = char.bones[S.lead + 'Hand'].getWorldQuaternion(Q());
+  let shaft;
+  if (mode === 'grip') shaft = gripDirLocal().applyQuaternion(hq);
+  else if (mode === 'ref' && S.refShaft) shaft = S.refShaft.clone();
+  else { shaft = tf.clone().sub(lf); if (shaft.lengthSq() < 1e-8) shaft.set(0, -1, 0); shaft.normalize(); }
   const back = char.palm[S.lead].palm.clone().applyQuaternion(hq).multiplyScalar(-1);   // back of the lead hand
   const x = back.addScaledVector(shaft, -back.dot(shaft)).normalize();
   const rot = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, V().crossVectors(shaft, x), shaft));
@@ -552,6 +881,7 @@ function placeClub() {
   club.group.quaternion.copy(rot);
   club.group.position.copy(lf).addScaledVector(shaft, -S.fit.along / 1000);
   club.group.updateMatrixWorld(true);
+  placeRefClub();
 }
 
 // the same club in the reference's hands, by the same rule (fists from its hand and index bones)
@@ -562,6 +892,14 @@ function refFist(side) {
   const hp = h.getWorldPosition(V());
   return i ? hp.lerp(i.getWorldPosition(V()), 0.6) : hp;
 }
+// the line through the reference's two hands as captured, and their spacing (the trail hand's gap)
+function refHands() {
+  if (!ref.root) return;
+  const trail = S.lead === 'Left' ? 'Right' : 'Left';
+  const lf = refFist(S.lead), tf = refFist(trail);
+  S.refGap = tf.distanceTo(lf);
+  S.refShaft = tf.clone().sub(lf).normalize();
+}
 function placeRefClub() {
   if (!ref.root) return;
   if (!refClub.group) {
@@ -569,11 +907,15 @@ function placeRefClub() {
     refClub.group.children = refClub.group.children.filter((c) => c.isMesh);
     sceneB.add(refClub.group);
   }
-  const trail = S.lead === 'Left' ? 'Right' : 'Left';
-  const lf = refFist(S.lead), tf = refFist(trail);
-  S.refGap = tf.distanceTo(lf);
-  const shaft = tf.clone().sub(lf).normalize();
-  S.refShaft = shaft.clone();
+  const lf = refFist(S.lead);
+  if ($('linefrom').value === 'grip') {
+    // her lead hand is the reference's lead hand retargeted (world change from rest), and the IK never
+    // moves it, so the same grip held in the reference's hand points the same way in the world
+    refClub.group.quaternion.copy(club.group.quaternion);
+    refClub.group.position.copy(lf).addScaledVector(V(0, 0, 1).applyQuaternion(club.group.quaternion), -S.fit.along / 1000);
+    return;
+  }
+  const shaft = S.refShaft.clone();
   const hq = ref.bones[S.lead + 'Hand'].getWorldQuaternion(Q()).multiply(ref.restWQ[S.lead + 'Hand'].clone().invert());
   const back = char.palm[S.lead].palmWorldRest.clone().applyQuaternion(hq).multiplyScalar(-1);
   const x = back.addScaledVector(shaft, -back.dot(shaft)).normalize();
@@ -597,20 +939,61 @@ function aimBone(bone, childPos, target) {
 function handLen(get, side, tip) { return get(side + 'Hand').distanceTo(get(tip)); }
 function trailSpot() {
   // the trail fist's spot: down the shaft from the lead fist by the reference's own hand spacing
-  const gap = Math.min(0.12, Math.max(0.07, (S.refGap || 0.09) * (S.handScale || 1)));
+  const gap = S.fit.gap / 1000;                  // fist centre to fist centre along the grip
   const cq = club.group.getWorldQuaternion(Q());
   return club.group.getWorldPosition(V()).addScaledVector(V(0, 0, 1).applyQuaternion(cq), gap + S.fit.along / 1000);
 }
-function fitTrailHand() {
+// the trail hand's world turn from its grip: its grip line along the shaft (thumb down the shaft), its
+// palm toward the club face (the target at address)
+function trailGripQ() {
+  const trail = S.lead === 'Left' ? 'Right' : 'Left', pf = char.palm[trail];
+  const a = S.fit.tdiag / DEG, b = S.fit.ttilt / DEG;
+  const d = pf.thumb.clone().multiplyScalar(Math.cos(a)).addScaledVector(pf.finger, Math.sin(a)).multiplyScalar(Math.cos(b)).addScaledVector(pf.palm, Math.sin(b)).normalize();
+  const n = pf.palm.clone().addScaledVector(d, -pf.palm.dot(d)).normalize();
+  const cq = club.group.getWorldQuaternion(Q());
+  const shaft = V(0, 0, 1).applyQuaternion(cq), face = V(1, 0, 0).applyQuaternion(cq);
+  face.addScaledVector(shaft, -face.dot(shaft)).normalize();
+  const loc = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(d, n, V().crossVectors(d, n)));
+  const wor = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(shaft, face, V().crossVectors(shaft, face)));
+  return wor.multiply(loc.invert());
+}
+// the trail wrist's goal: its fist on its spot down the grip, the hand turned by its grip
+function trailWristGoal() {
   const trail = S.lead === 'Left' ? 'Right' : 'Left';
-  const arm = char.bones[trail + 'Arm'], fore = char.bones[trail + 'ForeArm'], hand = char.bones[trail + 'Hand'];
-  const keepHand = hand.getWorldQuaternion(Q());               // the retargeted turn of the hand stays
-  const wristGoal = trailSpot().sub(fistLocal(trail).applyQuaternion(keepHand));
+  const keepHand = $('trailgrip').checked ? trailGripQ() : char.bones[trail + 'Hand'].getWorldQuaternion(Q());
+  return { goal: trailSpot().sub(fistLocal(trail).applyQuaternion(keepHand)), keepHand };
+}
+const armLen = (side) => { const p = (n) => char.bones[side + n].getWorldPosition(V()); return p('Arm').distanceTo(p('ForeArm')) + p('ForeArm').distanceTo(p('Hand')); };
+// Two hands on one club with her short arms: when the trail arm can't reach its spot comfortably, the
+// hands (lead hand and club together) move toward the trail shoulder until it can, and the lead arm
+// reaches its new place in its own elbow plane. Never stretches an arm past 96% for this.
+function handsWithinReach() {
+  const trail = S.lead === 'Left' ? 'Right' : 'Left';
+  const ts = char.bones[trail + 'Arm'].getWorldPosition(V()), Lt = armLen(trail);
+  const start = char.bones[S.lead + 'Hand'].getWorldPosition(V());
+  for (let it = 0; it < 4; it++) {
+    const { goal } = trailWristGoal();
+    const d = goal.distanceTo(ts);
+    if (d <= Lt * 0.96 + 1e-4) break;
+    const step = ts.clone().sub(goal).normalize().multiplyScalar(d - Lt * 0.96);
+    const hand = char.bones[S.lead + 'Hand'];
+    const before = hand.getWorldPosition(V());
+    const hq = hand.getWorldQuaternion(Q());
+    if ($('armadapt').checked && $('handbyclub').checked && S.fit.wc) leadArmAdapt(S.poseF, hand.getWorldPosition(V()).add(step));
+    else { armIK(S.lead, hand.getWorldPosition(V()).add(step), hq); absorbTwist(S.lead); }
+    char.root.updateMatrixWorld(true);
+    placeClub();
+    if (hand.getWorldPosition(V()).distanceTo(before) < 0.002) break;   // her lead arm can't bring them nearer
+  }
+  S.handsMoved = char.bones[S.lead + 'Hand'].getWorldPosition(V()).distanceTo(start);
+}
+function armIK(side, wristGoal, keepHand) {
+  const arm = char.bones[side + 'Arm'], fore = char.bones[side + 'ForeArm'], hand = char.bones[side + 'Hand'];
   const sp = arm.getWorldPosition(V()), ep = fore.getWorldPosition(V()), wp = hand.getWorldPosition(V());
   const a = sp.distanceTo(ep), b = ep.distanceTo(wp);
   const toGoal = wristGoal.clone().sub(sp);
   let d = toGoal.length();
-  S.trailReach = d / (a + b);
+  const reach = d / (a + b);
   const maxR = (a + b) * 0.995;
   if (d > maxR * 0.94) d = maxR * 0.94 + (maxR * 0.06) * (1 - Math.exp(-(d - maxR * 0.94) / (maxR * 0.06)));   // soft reach
   d = Math.max(d, Math.abs(a - b) + 1e-3);
@@ -625,6 +1008,113 @@ function fitTrailHand() {
   aimBone(arm, ep, elbow);
   aimBone(fore, hand.getWorldPosition(V()), goal);
   setWorldQ(hand, keepHand);
+  return reach;
+}
+function fitTrailHand() {
+  const trail = S.lead === 'Left' ? 'Right' : 'Left';
+  const { goal, keepHand } = trailWristGoal();
+  if ($('armadapt').checked) { trailArmSwivel(S.poseF, goal, keepHand); return; }
+  S.trailReach = armIK(trail, goal, keepHand);
+  absorbTwist(trail);
+}
+
+// ------------------------------------------------------------------ collision: her own skin against her arms
+// Arm and hand capsules sized from her own vertices (the bone's vertices, median distance to the bone
+// at rest). Each frame her torso, chest, pelvis and thigh skin is skinned on the CPU and measured
+// against them: gap = distance to the capsule surface (negative = skin inside the arm). The shoulder
+// end of the upper arm (its first quarter) touches the chest by nature and is not counted.
+const COL = { segs: [], body: [], pos: null };
+const COL_BODY = new Set(['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'LeftUpLeg', 'RightUpLeg']);
+function buildCollision() {
+  const m = char.mesh, geo = m.geometry, n = geo.attributes.position.count;
+  const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight;
+  const names = m.skeleton.bones.map((b) => key(b.name));
+  const dom = new Array(n);
+  for (let i = 0; i < n; i++) {
+    let best = 0, bw = -1;
+    for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w > bw) { bw = w; best = si.getComponent(i, k); } }
+    dom[i] = names[best];
+  }
+  COL.body = [];
+  for (let i = 0; i < n; i++) if (COL_BODY.has(dom[i])) COL.body.push(i);
+  COL.pos = new Float32Array(COL.body.length * 3);
+  restCharacter();
+  const v = V();
+  const segs = [];
+  for (const side of ['Left', 'Right']) {
+    segs.push({ side, name: 'upper arm', a: side + 'Arm', b: side + 'ForeArm', bone: side + 'Arm', from: 0.25 });
+    segs.push({ side, name: 'forearm', a: side + 'ForeArm', b: side + 'Hand', bone: side + 'ForeArm', from: 0 });
+    segs.push({ side, name: 'hand', a: side + 'Hand', b: side + 'HandMiddle2', bone: side + 'Hand', from: 0 });
+  }
+  // the arm's own thickness along its length: median distance of its vertices in 8 slices
+  for (const sg of segs) {
+    const a = char.bones[sg.a].getWorldPosition(V()), b = char.bones[sg.b].getWorldPosition(V());
+    const bins = Array.from({ length: 8 }, () => []);
+    for (let i = 0; i < n; i++) {
+      if (dom[i] !== sg.bone) continue;
+      v.fromBufferAttribute(geo.attributes.position, i);
+      m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld);
+      const r = segDist(v, a, b);
+      bins[Math.min(7, Math.floor(r.t * 8))].push(r.d);
+    }
+    const med = (d) => (d.length ? d.sort((x, y) => x - y)[Math.floor(d.length * 0.5)] : null);
+    sg.rad = bins.map(med);
+    const any = sg.rad.filter((x) => x != null);
+    for (let k = 0; k < 8; k++) if (sg.rad[k] == null) sg.rad[k] = any.length ? Math.min(...any) : 0.03;
+    sg.r = Math.min(...sg.rad);
+  }
+  COL.segs = segs;
+}
+const radAt = (sg, t) => { const x = Math.min(7, Math.max(0, t * 8 - 0.5)), i = Math.floor(x), f = x - i; return sg.rad[i] * (1 - f) + sg.rad[Math.min(7, i + 1)] * f; };
+function segDist(p, a, b) {
+  const ab = b.clone().sub(a), t = Math.max(0, Math.min(1, p.clone().sub(a).dot(ab) / ab.lengthSq()));
+  return { d: p.distanceTo(a.clone().addScaledVector(ab, t)), t };
+}
+function segSeg(p1, q1, p2, q2) {
+  // closest distance between two segments (sampled finely enough for arms)
+  let best = 1e9;
+  for (let i = 0; i <= 12; i++) { const p = p1.clone().lerp(q1, i / 12); best = Math.min(best, segDist(p, p2, q2).d); }
+  for (let i = 0; i <= 12; i++) { const p = p2.clone().lerp(q2, i / 12); best = Math.min(best, segDist(p, p1, q1).d); }
+  return best;
+}
+function collide() {
+  const m = char.mesh, pa = m.geometry.attributes.position, v = V();
+  m.updateMatrixWorld(true);
+  for (let j = 0; j < COL.body.length; j++) {
+    const i = COL.body[j];
+    v.fromBufferAttribute(pa, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld);
+    COL.pos[j * 3] = v.x; COL.pos[j * 3 + 1] = v.y; COL.pos[j * 3 + 2] = v.z;
+  }
+  const out = {};
+  COL.marks = $('colmarks') && $('colmarks').checked ? [] : null;
+  const P = (n) => char.bones[n].getWorldPosition(V());
+  for (const sg of COL.segs) {
+    const a = P(sg.a), b = P(sg.b);
+    let gap = 1e9, at = -1, inside = 0;
+    for (let j = 0; j < COL.body.length; j++) {
+      v.set(COL.pos[j * 3], COL.pos[j * 3 + 1], COL.pos[j * 3 + 2]);
+      const r = segDist(v, a, b);
+      if (r.t < sg.from) continue;
+      const g = r.d - radAt(sg, r.t);
+      if (g < -0.005) { inside++; if (COL.marks) COL.marks.push(j); }
+      if (g < gap) { gap = g; at = j; }
+    }
+    out[sg.side + ' ' + sg.name] = gap;
+    out.where = out.where || {};
+    out.where[sg.side + ' ' + sg.name] = { vertex: COL.body[at], inside, t: at >= 0 ? +segDist(V(COL.pos[at * 3], COL.pos[at * 3 + 1], COL.pos[at * 3 + 2]), a, b).t.toFixed(2) : null };
+  }
+  // arm against arm: each forearm against the other arm's upper arm and forearm (hands touch on the grip by design)
+  const sg = (side, name) => COL.segs.find((x) => x.side === side && x.name === name);
+  let aa = 1e9;
+  for (const [s1, n1, s2, n2] of [['Left', 'forearm', 'Right', 'forearm'], ['Left', 'forearm', 'Right', 'upper arm'], ['Right', 'forearm', 'Left', 'upper arm'], ['Left', 'upper arm', 'Right', 'upper arm']]) {
+    const x = sg(s1, n1), y = sg(s2, n2);
+    const end = (g) => (g.name === 'forearm' ? P(g.a).lerp(P(g.b), 0.75) : P(g.b));
+    aa = Math.min(aa, segSeg(P(x.a), end(x), P(y.a), end(y)) - x.r - y.r);
+  }
+  out.armArm = aa;
+  out.worstArm = Math.min(...COL.segs.filter((x) => x.name !== 'hand').map((x) => out[x.side + ' ' + x.name]));
+  out.hands = Math.min(out['Left hand'], out['Right hand']);
+  return out;
 }
 
 // ------------------------------------------------------------------ numbers
@@ -662,21 +1152,29 @@ function measure() {
     trailAlong: rel.z * 1000, trailFace: rel.x * 1000, trailToe: rel.y * 1000, fistGap: (S.fistGap || 0) * 1000,
     leadFlex: wl.flex, leadDev: wl.dev, trailFlex: wt.flex, trailDev: wt.dev,
     leadElbow: elbowStraight(S.lead), trailElbow: elbowStraight(trail),
+    leadTwist: forearmTwist(S.lead), trailTwist: forearmTwist(trail),
     leadAxis: gripAxisAngle(S.lead), trailAxis: gripAxisAngle(trail),
     headY: (head.y - char.ground) * 100,
+    soleY: (new THREE.Box3().setFromObject(club.headMesh).min.y - char.ground) * 100,
+    shaftDown: Math.asin(Math.min(1, Math.max(-1, -V(0, 0, 1).applyQuaternion(cq).y))) * DEG,
+    handsAhead: S.addrG ? fistWorld(S.lead).sub(club.headMesh.getWorldPosition(V())).dot(S.addrG.target) * 100 : 0,
     lfoot: char.bones.LeftFoot.getWorldPosition(V()), rfoot: char.bones.RightFoot.getWorldPosition(V()),
+    col: COL.segs.length ? collide() : null, bend: S.bendNow || 0,
   };
 }
 const wristBad = (flex, dev) => flex > LIMITS.flex || -flex > LIMITS.ext || dev > LIMITS.radial || -dev > LIMITS.ulnar;
 
 // ------------------------------------------------------------------ one full frame
 function poseFrame(f) {
-  poseCharacter(f);                            // 1 body (retarget)
+  S.poseF = f;
+  poseCharacter(f);                            // 1 body (retarget, posture)
+  leadWrist(f);                                // 1b the lead wrist: the mocap's, corrected at the four keys
   placeClub();                                 // 2 the club, held from the lead fist
   if ($('trailfit').checked) {                 // 3 the trail hand onto the club
+    if ($('reach').checked) handsWithinReach(); // 2b hands where both arms reach
     fitTrailHand();
     char.root.updateMatrixWorld(true);
-    if ($('linefrom').value !== 'ref') placeClub();
+    if ($('linefrom').value === 'fists') placeClub();
   }
 }
 
@@ -695,9 +1193,10 @@ function findKeys() {
   pts.forEach((x, i) => { if (ys[i] < lo + 0.25 && sp[i] > sp[imp]) imp = i; });
   let top = 0;
   for (let i = 0; i < imp; i++) if (ys[i] > ys[top]) top = i;
-  // address: walk back from the top through the takeaway to the last still frame
-  let addr = top;
-  while (addr > 0 && sp[addr] > 0.003) addr--;
+  // address: the last still frame before the top with the hands down low (the hands also pause near the top)
+  const loPre = Math.min(...ys.slice(0, top + 1));
+  let addr = 0;
+  for (let i = 0; i < top; i++) if (sp[i] < 0.003 && ys[i] < loPre + 0.1) addr = i;
   let fin = pts.length - 1;
   for (let i = imp + 5; i < pts.length; i++) if (sp[i] < 0.004) { fin = i; break; }
   return { address: pts[addr].f, top: pts[top].f, impact: pts[imp].f, finish: pts[fin].f };
@@ -705,6 +1204,7 @@ function findKeys() {
 
 // whole-clip scan: worst frames per check
 function scanClip() {
+  if (!ref.mixer) return;
   const step = Math.max(1, Math.round(ref.fps / 30));
   const rows = [];
   let prev = null;
@@ -757,10 +1257,20 @@ function golferFrame(get) {
   return { mid: mid.setY(0), target, fwd, up: V(0, 1, 0) };
 }
 function handsCenter(get) { return get('LeftHand').add(get('RightHand')).multiplyScalar(0.5); }
+// what a following camera looks at: the hands, or for the body views the middle of the chest and hands
+function viewCenter(get, chest) { return BODY_VIEWS[S.view] ? handsCenter(get).add(get(chest)).multiplyScalar(0.5) : handsCenter(get); }
 const VIEWS = {
   face: (g) => ({ pos: g.mid.clone().addScaledVector(g.fwd, 3.4).setY(1.0), at: g.mid.clone().setY(0.85) }),
   dtl: (g) => ({ pos: g.mid.clone().addScaledVector(g.target, -3.6).addScaledVector(g.fwd, 0.5).setY(1.15), at: g.mid.clone().addScaledVector(g.fwd, 0.3).setY(0.8) }),
   above: (g) => ({ pos: g.mid.clone().addScaledVector(g.fwd, 0.35).setY(4.4), at: g.mid.clone().addScaledVector(g.fwd, 0.35).setY(0), up: g.fwd.clone() }),
+  target: (g) => ({ pos: g.mid.clone().addScaledVector(g.target, 3.6).addScaledVector(g.fwd, 0.5).setY(1.15), at: g.mid.clone().addScaledVector(g.fwd, 0.3).setY(0.8) }),
+};
+// close views of her upper body (chest, arms, hands), for checking the arms against her body
+const BODY_VIEWS = {
+  'body: front': (g, c) => ({ pos: c.clone().addScaledVector(g.fwd, 1.1).add(V(0, 0.1, 0)), at: c }),
+  'body: trail side': (g, c) => ({ pos: c.clone().addScaledVector(g.target, -1.1).addScaledVector(g.fwd, 0.15), at: c }),
+  'body: target side': (g, c) => ({ pos: c.clone().addScaledVector(g.target, 1.1).addScaledVector(g.fwd, 0.15), at: c }),
+  'body: above front': (g, c) => ({ pos: c.clone().addScaledVector(g.fwd, 0.7).add(V(0, 0.8, 0)), at: c }),
 };
 const HAND_VIEWS = {
   'hands: support side': (g, h) => ({ pos: h.clone().addScaledVector(g.target, -0.5).setY(h.y + 0.05), at: h }),
@@ -776,12 +1286,12 @@ function refGet(n) {
 }
 function placeCamera(cam, get, view, keepUser) {
   const g = golferFrame(get);
-  const fn = VIEWS[view] || HAND_VIEWS[view];
-  const v = HAND_VIEWS[view] ? fn(g, handsCenter(get)) : fn(g);
+  const fn = VIEWS[view] || HAND_VIEWS[view] || BODY_VIEWS[view];
+  const v = HAND_VIEWS[view] ? fn(g, handsCenter(get)) : BODY_VIEWS[view] ? fn(g, handsCenter(get).add(get('Spine2')).multiplyScalar(0.5)) : fn(g);
   cam.up.copy(v.up || V(0, 1, 0));
   cam.position.copy(v.pos);
   cam.lookAt(v.at);
-  cam.fov = HAND_VIEWS[view] ? 40 : 35;
+  cam.fov = HAND_VIEWS[view] ? 40 : BODY_VIEWS[view] ? 38 : 35;
   // close-ups see through whatever is nearer than 16 cm in front of the hands
   cam.near = HAND_VIEWS[view] ? Math.max(0.02, v.pos.distanceTo(v.at) - 0.16) : 0.02;
   cam.updateProjectionMatrix();
@@ -789,12 +1299,12 @@ function placeCamera(cam, get, view, keepUser) {
 }
 function setView(view) {
   S.view = view;
-  document.querySelectorAll('#viewbtns button, #handbtns button').forEach((b) => b.classList.toggle('on', b.dataset.v === view));
+  document.querySelectorAll('#viewbtns button, #handbtns button, #bodybtns button').forEach((b) => b.classList.toggle('on', b.dataset.v === view));
   const v = placeCamera(camA, charGet, view);
   controls.target.copy(v.at);
   camA.up.copy(v.up || V(0, 1, 0));
   controls.update();
-  S.follow = !!HAND_VIEWS[view];
+  S.follow = !!(HAND_VIEWS[view] || BODY_VIEWS[view]);
 }
 // the reference camera copies the user's camera relative to each golfer's frame
 function syncRefCamera() {
@@ -802,7 +1312,7 @@ function syncRefCamera() {
   const toLocal = (p, g) => { const d = p.clone().sub(g.mid); return V(d.dot(g.target), d.y, d.dot(g.fwd)); };
   const toWorld = (l, g) => g.mid.clone().addScaledVector(g.target, l.x).setY(l.y).addScaledVector(g.fwd, l.z).add(V(0, 0, 0));
   let ca = ga, cb = gb, aOrigin = ga.mid, bOrigin = gb.mid;
-  if (S.follow) { aOrigin = handsCenter(charGet); bOrigin = handsCenter(refGet); }
+  if (S.follow) { aOrigin = viewCenter(charGet, 'Spine2'); bOrigin = viewCenter(refGet, ref.bones.Spine2 ? 'Spine2' : 'Spine1'); }
   const pl = toLocal(camA.position.clone().sub(aOrigin).add(ga.mid), ga);
   const tl = toLocal(controls.target.clone().sub(aOrigin).add(ga.mid), ga);
   camB.position.copy(toWorld(pl, gb).sub(gb.mid).add(bOrigin));
@@ -821,6 +1331,18 @@ const overlay = new THREE.Group();
 sceneA.add(overlay);
 function drawSkeleton() {
   overlay.clear();
+  if ($('colmarks').checked && COL.segs.length) {
+    collide();
+    if (COL.marks && COL.marks.length) {
+      const pts = [];
+      for (const j of COL.marks) pts.push(COL.pos[j * 3], COL.pos[j * 3 + 1], COL.pos[j * 3 + 2]);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xff2a2a, size: 6, sizeAttenuation: false, depthTest: false }));
+      p.renderOrder = 11;
+      overlay.add(p);
+    }
+  }
   if (!$('skel').checked && !$('fingers').checked) return;
   const pts = [], cols = [];
   for (const b of char.order) {
@@ -844,6 +1366,75 @@ function drawSkeleton() {
   overlay.add(l);
 }
 
+// ------------------------------------------------------------------ video reference (face-on picture, look and spacing only)
+// The picture stands in the plane of her feet, facing the face-on camera, at her own height (the
+// video's opening T-pose is her full height), its shoes pinned to her feet and its sole line to the
+// ground. Its frame follows the clip's frame through the four keys of each.
+const VID = { meta: null, imgs: {}, tex: null, fill: null, line: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(35, 1, 0.02, 100), shown: -1 };
+VID.scene.background = new THREE.Color(0x231c2d);
+async function loadVideo() {
+  if (VID.meta) return;
+  const m = await (await fetch('assets/video/video.json')).json();
+  const jobs = [];
+  for (let i = m.first; i <= m.last; i++) {
+    const im = new Image();
+    jobs.push(new Promise((res) => { im.onload = res; im.onerror = res; }));
+    im.src = `assets/video/v_${String(i).padStart(3, '0')}.webp`;
+    VID.imgs[i] = im;
+  }
+  await Promise.all(jobs);
+  VID.tex = new THREE.Texture(VID.imgs[m.keys.address]);
+  VID.tex.colorSpace = THREE.SRGBColorSpace;
+  VID.tex.needsUpdate = true;
+  const geo = new THREE.PlaneGeometry(1, 1);
+  VID.fill = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: VID.tex, transparent: true, toneMapped: false, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+  // outline: where the picture's alpha crosses one half within 1.5 px
+  VID.line = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+    uniforms: { map: { value: VID.tex }, texel: { value: new THREE.Vector2(1 / m.size[0], 1 / m.size[1]) }, opacity: { value: 1 }, tint: { value: new THREE.Color(0.25, 0.95, 1.0) } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D map; uniform vec2 texel; uniform float opacity; uniform vec3 tint; varying vec2 vUv;
+      void main() {
+        float lo = 1.0, hi = 0.0;
+        for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) {
+          float a = texture2D(map, vUv + vec2(float(i), float(j)) * texel * 1.5).a;
+          lo = min(lo, a); hi = max(hi, a);
+        }
+        float e = step(0.5, hi) * (1.0 - step(0.5, lo));
+        gl_FragColor = vec4(tint, e * opacity);
+      }`,
+    transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+  }));
+  VID.scene.add(VID.fill, VID.line);
+  VID.meta = m;
+}
+// the clip's frame -> the video's frame, piecewise through address, top, impact, finish
+function videoFrameFor(f) {
+  const m = VID.meta, ks = ['address', 'top', 'impact', 'finish'];
+  const c = ks.map((k) => S.keys[k]), v = ks.map((k) => m.keys[k]);
+  let vf;
+  if (f <= c[0]) vf = v[0] - (c[0] - f) / ref.fps * m.fps;
+  else if (f >= c[3]) vf = v[3] + (f - c[3]) / ref.fps * m.fps;
+  else { let i = 0; while (f > c[i + 1]) i++; vf = v[i] + (v[i + 1] - v[i]) * (f - c[i]) / (c[i + 1] - c[i]); }
+  return Math.max(m.first, Math.min(m.last, Math.round(vf + S.vid.nudge)));
+}
+function placeVideo() {
+  const m = VID.meta, g = S.addrG;
+  const mpp = (char.height / m.tpose_px) * S.vid.scale / 100;        // metres per picture pixel
+  const [W, H] = m.size;
+  const right = (W / 2 - m.feet_x) * mpp + S.vid.dx / 100, up = (m.sole_y - H / 2) * mpp + S.vid.dy / 100;
+  const rot = Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(g.target, V(0, 1, 0), g.fwd));
+  for (const o of [VID.fill, VID.line]) {
+    o.position.copy(g.mid).setY(char.ground + up).addScaledVector(g.target, right);
+    o.quaternion.copy(rot);
+    o.scale.set(W * mpp, H * mpp, 1);
+  }
+  const vf = videoFrameFor(S.frame);
+  if (vf !== VID.shown) { VID.tex.image = VID.imgs[vf]; VID.tex.needsUpdate = true; VID.shown = vf; }
+  VID.line.material.uniforms.opacity.value = S.vid.opacity / 100;
+  VID.fill.material.opacity = S.vid.mode === 'over' ? S.vid.opacity / 100 : 1;
+}
+const videoOn = () => !!VID.meta && S.vid.mode !== 'off' && !!S.addrG;
+
 // ------------------------------------------------------------------ render
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -854,22 +1445,47 @@ function render(target) {
   renderer.setScissorTest(true);
   renderer.setClearColor(0x15111c, 1);
   renderer.setViewport(0, 0, W, H); renderer.setScissor(0, 0, W, H); renderer.clear();
-  const half = S.split ? W / 2 : W;
-  camA.aspect = half / H; camA.updateProjectionMatrix();
-  camB.aspect = half / H; camB.updateProjectionMatrix();
+  const vid = videoOn(), beside = vid && S.vid.mode === 'beside', faceOn = S.view === 'face';
+  const n = 1 + (S.split ? 1 : 0) + (beside ? 1 : 0);
+  const pw = W / n;
+  camA.aspect = pw / H; camA.updateProjectionMatrix();
+  camB.aspect = pw / H; camB.updateProjectionMatrix();
   syncRefCamera();
-  renderer.setViewport(0, 0, half, H); renderer.setScissor(0, 0, half, H);
-  renderer.render(sceneA, camA);
-  if (S.split) {
-    renderer.setViewport(half, 0, W - half, H); renderer.setScissor(half, 0, W - half, H);
-    renderer.render(sceneB, camB);
+  if (vid) placeVideo();
+  let x = 0;
+  const panel = (scene, cam) => { renderer.setViewport(x, 0, pw, H); renderer.setScissor(x, 0, pw, H); renderer.render(scene, cam); };
+  if (beside) {
+    // the picture only reads from the front: the user's camera when it is face-on, else the face-on camera
+    VID.line.visible = false; VID.fill.visible = true;
+    let cam = camA;
+    if (!faceOn) { const v = VIEWS.face(S.addrG); VID.cam.position.copy(v.pos); VID.cam.up.set(0, 1, 0); VID.cam.lookAt(v.at); VID.cam.aspect = pw / H; VID.cam.updateProjectionMatrix(); cam = VID.cam; }
+    panel(VID.scene, cam);
+    x += pw;
   }
+  panel(sceneA, camA);
+  if (vid && S.vid.mode === 'over' && faceOn) {
+    VID.line.visible = S.vid.line; VID.fill.visible = !S.vid.line;
+    const bg = VID.scene.background;             // drawn over her render, so no clear
+    VID.scene.background = null;
+    renderer.render(VID.scene, camA);
+    VID.scene.background = bg;
+  }
+  x += pw;
+  if (S.split) panel(sceneB, camB);
   renderer.setScissorTest(false);
-  $('labB').style.display = S.split ? '' : 'none';
+  if (!target) {
+    const cw = canvas.clientWidth / n;
+    $('labV').style.display = beside ? '' : 'none';
+    $('labA').style.left = `${(beside ? cw : 0) + 8}px`;
+    $('labB').style.left = `${(beside ? 2 * cw : cw) + 8}px`;
+    $('labB').style.display = S.split ? '' : 'none';
+    $('labV').textContent = vid ? `Video, face-on · f${VID.shown}` : 'Video, face-on';
+  }
 }
 
 // ------------------------------------------------------------------ UI
 function setFrame(f) {
+  if (!ref.mixer) return;                      // a clip is loading
   S.frame = Math.max(1, Math.min(ref.frames - 1, Math.round(f)));
   $('frame').value = S.frame;
   poseFrame(S.frame);
@@ -877,6 +1493,7 @@ function setFrame(f) {
   drawSkeleton();
   showNumbers();
 }
+const mm = (x) => (x * 1000).toFixed(0);
 function showNumbers() {
   const m = measure();
   const lim = (v, a, b) => (v > a || -v > b ? 'bad' : '');
@@ -887,14 +1504,21 @@ function showNumbers() {
     ['Fist centres apart (along the grip)', `${m.fistGap.toFixed(0)} mm`, m.fistGap < 50 || m.fistGap > 140 ? 'warn' : ''],
     ['Grip axis vs shaft, lead / trail', `${m.leadAxis.toFixed(0)}° / ${m.trailAxis.toFixed(0)}°`, (m.leadAxis > 10 || m.trailAxis > 10) ? 'warn' : 'good'],
     ['Lead wrist flex / side', `${m.leadFlex.toFixed(0)}° / ${m.leadDev.toFixed(0)}°`, wristBad(m.leadFlex, m.leadDev) ? 'bad' : 'good'],
+    ['Forearm twist, lead / trail', `${m.leadTwist.toFixed(0)}° / ${m.trailTwist.toFixed(0)}°`, Math.abs(m.leadTwist) > 85 || Math.abs(m.trailTwist) > 85 ? 'bad' : ''],
     ['Trail wrist flex / side', `${m.trailFlex.toFixed(0)}° / ${m.trailDev.toFixed(0)}°`, wristBad(m.trailFlex, m.trailDev) ? 'bad' : 'good'],
     ['Arm straightness, lead / trail', `${(m.leadElbow * 100).toFixed(0)}% / ${(m.trailElbow * 100).toFixed(0)}%`, (m.leadElbow > 0.985 || m.trailElbow > 0.985) ? 'warn' : ''],
     ['Trail arm reach asked (of full length)', `${((S.trailReach || 0) * 100).toFixed(0)}%`, (S.trailReach || 0) > 0.985 ? 'bad' : ''],
-    ['Clubhead above ground', `${m.headY.toFixed(1)} cm`, ''],
+    ['Arms vs her body, closest gap (− = into her)', m.col ? `L ${mm(m.col['Left upper arm'])} / ${mm(m.col['Left forearm'])}  R ${mm(m.col['Right upper arm'])} / ${mm(m.col['Right forearm'])} mm` : '', m.col && m.col.worstArm < -0.005 ? 'bad' : 'good'],
+    ['Arm against arm / hands clear of her body', m.col ? `${mm(m.col.armArm)} mm / ${(m.col.hands * 100).toFixed(1)} cm` : '', m.col && (m.col.armArm < -0.005 || m.col.hands < 0) ? 'bad' : ''],
+    ['Hip bend added here', `${m.bend.toFixed(1)}°`, ''],
+    ['Clubhead sole above ground', `${m.soleY.toFixed(1)} cm`, m.soleY < -0.5 ? 'bad' : ''],
+    ['Shaft below level / hands ahead of head', `${m.shaftDown.toFixed(0)}° / ${m.handsAhead.toFixed(1)} cm`, ''],
+    ['Grip in the lead hand (thumb line → fingers / out of palm)', `${S.fit.diag.toFixed(0)}° / ${S.fit.tilt.toFixed(0)}°`, Math.abs(S.fit.diag) > 60 || Math.abs(S.fit.tilt) > 35 ? 'warn' : ''],
   ];
   $('nums').innerHTML = rows.map(([a, b, c]) => `<tr><td>${a}</td><td class="${c}">${b}</td></tr>`).join('');
   const k = Object.entries(S.keys).find(([, v]) => v === S.frame);
-  $('hud').textContent = `${S.clip.label} · frame ${S.frame}/${ref.frames - 1} · ${(S.frame / ref.fps).toFixed(2)} s${k ? ' · ' + k[0] : ''}`;
+  $('hud').textContent = `${S.clip.label} · frame ${S.frame}/${ref.frames - 1} · ${(S.frame / ref.fps).toFixed(2)} s${k ? ' · ' + k[0] : ''}` +
+    (videoOn() ? ` · video frame ${videoFrameFor(S.frame)}${S.vid.mode === 'over' && S.view !== 'face' ? ' (traced in face-on only)' : ''}` : '');
 }
 function buildUI() {
   const sel = $('clip');
@@ -906,23 +1530,43 @@ function buildUI() {
   $('step+').onclick = () => setFrame(S.frame + Math.max(1, Math.round(ref.fps / 30)));
   $('frame').oninput = () => setFrame(+$('frame').value);
   const vb = $('viewbtns');
-  for (const [v, l] of [['face', 'Face-on'], ['dtl', 'Down the line'], ['above', 'Above']]) {
+  for (const [v, l] of [['face', 'Face-on'], ['dtl', 'Down the line'], ['target', 'From the target'], ['above', 'Above']]) {
     const b = document.createElement('button'); b.textContent = l; b.dataset.v = v; b.onclick = () => setView(v); vb.appendChild(b);
+  }
+  const bb = document.createElement('div'); bb.className = 'row'; bb.id = 'bodybtns'; $('handbtns').before(bb);
+  for (const v of Object.keys(BODY_VIEWS)) {
+    const b = document.createElement('button'); b.textContent = v.replace('body: ', 'Body, '); b.dataset.v = v; b.onclick = () => setView(v); bb.appendChild(b);
   }
   const hb = $('handbtns');
   for (const v of Object.keys(HAND_VIEWS)) {
     const b = document.createElement('button'); b.textContent = v.replace('hands: ', 'Hands, '); b.dataset.v = v; b.onclick = () => setView(v); hb.appendChild(b);
   }
   $('split').onchange = () => { S.split = $('split').checked; };
-  for (const id of ['skel', 'fingers']) $(id).onchange = drawSkeleton;
+  for (const id of ['skel', 'fingers', 'colmarks']) $(id).onchange = drawSkeleton;
   $('mesh').onchange = () => { char.mesh.visible = $('mesh').checked; };
-  $('clubkind').onchange = () => { S.kind = $('clubkind').value; buildClub(); if (refClub.group) { sceneB.remove(refClub.group); refClub.group = null; } refresh(true); };
+  $('clubkind').onchange = () => {
+    S.kind = $('clubkind').value; S.fit.length = 0; buildClub();
+    if (refClub.group) { sceneB.remove(refClub.group); refClub.group = null; }
+    if (S.ready && $('linefrom').value === 'grip') solveAtAddress(); else refresh(true);   // the hold is solved per club
+  };
   $('lead').onchange = () => { S.lead = $('lead').value; refresh(true); };
   $('trailfit').onchange = () => refresh(true);
+  $('trailgrip').onchange = () => refresh(true);
+  $('reach').onchange = () => refresh(true);
+  $('handbyclub').onchange = () => refresh(true);
+  $('armadapt').onchange = () => refresh(true);
+  $('ownrest').onchange = () => { buildCorrections(); refresh(true); };
   $('linefrom').onchange = () => refresh(true);
   $('solve').onclick = solveAtAddress;
   const sliders = [
     ['fit', 'along', 'grip end above lead fist (mm)', -20, 120, 1], ['fit', 'roll', 'face roll (°)', -180, 180, 1], ['fit', 'length', 'length (mm)', -150, 150, 5],
+    ['fit', 'diag', 'lead grip: thumb line → fingers (°)', -90, 90, 0.5], ['fit', 'tilt', 'lead grip: out of the palm (°)', -60, 60, 0.5],
+    ['fit', 'tdiag', 'trail grip: thumb line → fingers (°)', -90, 90, 0.5], ['fit', 'ttilt', 'trail grip: out of the palm (°)', -60, 60, 0.5],
+    ['fit', 'gap', 'trail fist below lead fist (mm)', 50, 110, 1],
+    ['wristctl', 'lie', 'address: shaft lie (°, 0 = the club\'s own)', 0, 75, 0.5], ['wristctl', 'topTilt', 'top: shaft below level (°)', -30, 45, 0.5],
+    ['wristctl', 'finDown', 'finish: shaft below level (°)', 0, 80, 0.5],
+    ['fit', 'lean', 'address: hands ahead of head (cm)', -10, 15, 0.5],
+    ['posturectl', 'bend', 'extra hip bend (°)', 0, 45, 0.5], ['posturectl', 'armsFwd', 'arms forward at the shoulders (°)', 0, 40, 0.5], ['posturectl', 'shRoll', 'shoulders rolled forward (°)', 0, 40, 0.5], ['posturectl', 'bendFinish', 'kept at the finish (%)', 0, 100, 5],
     ['handctl', 'curl', 'finger curl (°)', 0, 110, 1], ['handctl', 'thumb', 'thumb curl (°)', 0, 90, 1],
   ];
   for (const [host, k, label, lo, hi, step] of sliders) {
@@ -937,6 +1581,27 @@ function buildUI() {
     setTimeout(() => ($('copyfit').textContent = 'Copy fit'), 1500);
   };
   $('resetfit').onclick = () => { S.fit = { ...DEFAULT_FIT }; syncSliders(); buildClub(); refresh(true); };
+  // video reference
+  const vsl = [['opacity', 'trace opacity (%)', 0, 100, 5], ['scale', 'size (% of her height)', 80, 120, 1], ['dx', 'shift sideways (cm)', -30, 30, 1],
+    ['dy', 'shift up (cm)', -20, 20, 1], ['nudge', 'sync nudge (video frames)', -8, 8, 1]];
+  for (const [k, label, lo, hi, step] of vsl) {
+    const l = document.createElement('label'); l.className = 'sl';
+    l.innerHTML = `<span>${label}</span><input type="range" id="vid_${k}" min="${lo}" max="${hi}" step="${step}"><span id="vidv_${k}"></span>`;
+    $('vidctl').appendChild(l);
+    $('vid_' + k).oninput = () => { S.vid[k] = +$('vid_' + k).value; videoChanged(); };
+  }
+  $('vidmode').onchange = async () => { S.vid.mode = $('vidmode').value; if (S.vid.mode !== 'off') await loadVideo(); videoChanged(); };
+  $('vidline').onchange = () => { S.vid.line = $('vidline').checked; videoChanged(); };
+  syncVideoUI();
+}
+function syncVideoUI() {
+  $('vidmode').value = S.vid.mode; $('vidline').checked = S.vid.line;
+  for (const k of ['opacity', 'scale', 'dx', 'dy', 'nudge']) { $('vid_' + k).value = S.vid[k]; $('vidv_' + k).textContent = S.vid[k]; }
+}
+function videoChanged() {
+  syncVideoUI();
+  try { localStorage.setItem('swinglab.video', JSON.stringify(S.vid)); } catch {}
+  if (S.ready) setFrame(S.frame);
 }
 function syncSliders() {
   for (const k of Object.keys(DEFAULT_FIT)) {
@@ -954,18 +1619,160 @@ function refresh(rescan) {
   clearTimeout(scanTimer);
   scanTimer = setTimeout(scanClip, rescan ? 50 : 400);
 }
-// face square to the target line at address: the only thing solved for the user (roll about the shaft)
-function solveAtAddress() {
-  setFrame(S.keys.address);
-  const g = golferFrame(charGet);
+// Solved once per clip, never per frame. Gauss-Newton on a few named fit values so the residuals go to
+// zero at one key frame (numeric derivatives).
+function solveFit(f, vars, resid, iters = 40) {
+  const ev = () => { poseCharacter(f); leadWrist(f); placeClub(); if ($('trailfit').checked && $('reach').checked) handsWithinReach(); return resid(); };
+  let e = ev();
+  const norm = (r) => Math.hypot(...r);
+  for (let it = 0; it < iters && norm(e) > 3e-4; it++) {
+    const J = vars.map(([k, h]) => {
+      S.fit[k] += h; if (k === 'length') buildClub();
+      const eh = ev(); S.fit[k] -= h; if (k === 'length') buildClub();
+      return eh.map((x, i) => (x - e[i]) / h);
+    });
+    // normal equations (J^T J) d = -J^T e, with a little damping
+    const n = vars.length, A = [], bb = [];
+    for (let i = 0; i < n; i++) {
+      A.push([]);
+      for (let j = 0; j < n; j++) A[i].push(J[i].reduce((acc, x, r) => acc + x * J[j][r], 0) + (i === j ? 1e-9 : 0));
+      bb.push(-J[i].reduce((acc, x, r) => acc + x * e[r], 0));
+    }
+    const d = gauss(A, bb);
+    if (!d) break;
+    const sc = Math.min(1, ...vars.map(([, h], i) => (h * 40) / Math.max(1e-9, Math.abs(d[i]))));   // at most 40 steps of h at once
+    vars.forEach(([k], i) => { S.fit[k] += d[i] * sc; });
+    if (vars.some(([k]) => k === 'length')) buildClub();
+    e = ev();
+  }
+  for (const [k] of vars) S.fit[k] = Math.round(S.fit[k] * 10) / 10;
+  if (vars.some(([k]) => k === 'length')) buildClub();
+  return ev();
+}
+function gauss(A, b) {
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-14) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const k = M[r][c] / M[c][c]; for (let j = c; j <= n; j++) M[r][j] -= k * M[c][j]; }
+  }
+  return M.map((r, i) => r[n] / r[i]);
+}
+const CLUB_LIE = { iron: 62, driver: 58, putter: 71 };
+const shaftDir = () => V(0, 0, 1).applyQuaternion(club.group.getWorldQuaternion(Q()));
+const soleY = () => new THREE.Box3().setFromObject(club.headMesh).min.y - char.ground;
+const handsAheadOf = (g) => fistWorld(S.lead).sub(club.headMesh.getWorldPosition(V())).dot(g.target);
+// the shaft's angle above the ground seen down the line (its lie at address)
+const lieOf = (g) => { const d = shaftDir(); return Math.atan2(-d.y, Math.abs(d.dot(g.fwd))) * DEG; };
+// the lead wrist past its human limits, as residuals (radians, steep): the solves keep the wrist human and
+// let the club length (and the posture) do the reaching
+function wristPast() {
+  const w = wrist(S.lead), k = 3 / DEG;
+  return [Math.max(0, w.flex - LIMITS.flex) * k, Math.max(0, -w.flex - LIMITS.ext) * k, Math.max(0, w.dev - LIMITS.radial) * k, Math.max(0, -w.dev - LIMITS.ulnar) * k];
+}
+// her lead wrist at each phase, from the video (face-on forearm-to-shaft angle) and golf's usual ranges:
+// [toward the palm, toward the thumb]; negative = bent back / toward the little finger
+const WRIST_TARGET = { address: [-20, 0], top: [-5, 20], impact: [8, -20], finish: [-30, 15] };
+const wristErr = (key, k) => { const w = wrist(S.lead), t = WRIST_TARGET[key]; return [(w.flex - t[0]) / DEG * k, (w.dev - t[1]) / DEG * k]; };
+// the hand correction at one key that turns the hand to hold a club turned Ct (world)
+function corrFor(f, Ct) {
+  const save = S.fit.wc; S.fit.wc = null;
+  poseCharacter(f);
+  S.fit.wc = save;
+  const hand = char.bones[S.lead + 'Hand'], Fw = char.bones[S.lead + 'ForeArm'].getWorldQuaternion(Q());
+  const Ht = Ct.clone().multiply(gripLocalQ().invert());
+  const Lt = Fw.invert().multiply(Ht);
+  return qToVec(hand.quaternion.clone().invert().multiply(Lt)).toArray().map((x) => +x.toFixed(5));
+}
+// pose one frame as the clip will play it (body, hand, club, hands within reach)
+function poseLead(f) {
+  S.poseF = f;
+  poseCharacter(f); leadWrist(f); placeClub();
+  if ($('trailfit').checked && $('reach').checked) handsWithinReach();
+}
+function solveWrists(g) {
+  const up = V(0, 1, 0), lie = (S.fit.lie || CLUB_LIE[S.kind]) / DEG;
+  S.fit.wc = { address: [0, 0, 0], top: [0, 0, 0], impact: [0, 0, 0], finish: [0, 0, 0] };
+  // address: the club as golf and the video have it; then the length so its sole rests on the ground
+  const fa = S.keys.address;
+  for (let it = 0; it < 4; it++) {
+    poseLead(fa);
+    const h = Math.max(0.2, fistWorld(S.lead).y - char.ground);
+    const d = g.fwd.clone().multiplyScalar(Math.cos(lie)).addScaledVector(up, -Math.sin(lie)).addScaledVector(g.target, -(S.fit.lean / 100 / h) * Math.sin(lie)).normalize();
+    const wc = corrFor(fa, clubQ(d, g.target));
+    for (const k of KEYS4) S.fit.wc[k] = wc;
+    poseLead(fa);
+    S.fit.length += Math.round((soleY() / Math.sin(lie)) * 1000);
+    buildClub();
+  }
+  poseLead(fa);
+  S.addrHead = club.headMesh.getWorldPosition(V());
+  // the other keys: the turn carried from address, the shaft turned to the video's
+  const fin = g.target.clone().multiplyScalar(-Math.cos(S.fit.finDown / DEG)).addScaledVector(up, -Math.sin(S.fit.finDown / DEG));
+  const topDir = g.target.clone().multiplyScalar(Math.cos(S.fit.topTilt / DEG)).addScaledVector(up, -Math.sin(S.fit.topTilt / DEG));
+  for (const k of ['top', 'impact', 'finish']) {
+    const f = S.keys[k];
+    for (let it = 0; it < (k === 'impact' ? 3 : 1); it++) {
+      poseLead(f);
+      const C0 = club.group.getWorldQuaternion(Q()), s0 = V(0, 0, 1).applyQuaternion(C0);
+      let s1;
+      if (k === 'top') s1 = topDir;
+      else if (k === 'finish') s1 = fin;
+      else {
+        // back to the ball: the head at its address height and on the ball's line, out in front of her
+        const F = club.group.getWorldPosition(V()), Lh = club.headMesh.getWorldPosition(V()).distanceTo(F);
+        const dy = (S.addrHead.y - F.y) / Lh, dt = S.addrHead.clone().sub(F).dot(g.target) / Lh;
+        const rest = 1 - dy * dy - dt * dt;
+        s1 = rest > 0 ? g.target.clone().multiplyScalar(dt).add(V(0, dy, 0)).addScaledVector(g.fwd, Math.sqrt(rest)) : S.addrHead.clone().sub(F).normalize();
+        S.impactReach = rest > 0;
+      }
+      const Ct = Q().setFromUnitVectors(s0, s1.clone().normalize()).multiply(C0);
+      S.fit.wc[k] = corrFor(f, Ct);
+    }
+  }
+  const res = {};
+  for (const k of KEYS4) { poseFrame(S.keys[k]); const m = measure(); res[k] = { sole: +m.soleY.toFixed(1), wrist: [+m.leadFlex.toFixed(0), +m.leadDev.toFixed(0)], twist: +forearmTwist(S.lead).toFixed(0) }; }
+  S.wristSolve = res;
+}
+function squareFace(g) {
   let best = null;
-  for (let roll = -180; roll < 180; roll += 2) {
+  for (let roll = -180; roll < 180; roll += 1) {
     S.fit.roll = roll; placeClub();
     const n = V(1, 0, 0).applyQuaternion(club.group.getWorldQuaternion(Q())).setY(0).normalize();
     const e = 1 - n.dot(g.target);
     if (!best || e < best.e) best = { e, roll };
   }
   S.fit.roll = best.roll;
+}
+// impact: the lead fist's lowest point between the top and the finish (the hands' fastest frame comes a
+// few frames early: the shaft is still level then)
+function refineImpact() {
+  let best = null;
+  for (let f = S.keys.top; f <= S.keys.finish; f++) {
+    poseCharacter(f);
+    const y = fistWorld(S.lead).y;
+    if (!best || y < best.y) best = { y, f };
+  }
+  if (best) S.keys.impact = best.f;
+  keyButtons();
+}
+function keyButtons() {
+  const kb = $('keys'); kb.innerHTML = '';
+  for (const [k, f] of Object.entries(S.keys)) {
+    const b = document.createElement('button'); b.textContent = `${k[0].toUpperCase() + k.slice(1)} (${f})`; b.onclick = () => setFrame(f); kb.appendChild(b);
+  }
+}
+function solveAtAddress() {
+  refineImpact();
+  setFrame(S.keys.address);
+  const g = S.addrG || golferFrame(charGet);
+  if ($('linefrom').value === 'grip') {
+    // the club is built square at address; the grip's strength (its roll in the lead hand) stays as set
+    solveWrists(g);
+    if (refClub.group) { sceneB.remove(refClub.group); refClub.group = null; }
+  } else squareFace(g);
+  poseFrame(S.keys.address);
   const head = club.head.getWorldPosition(V());
   club.ball.position.set(head.x, char.ground + 0.0214, head.z).addScaledVector(g.target, 0.03);
   syncSliders();
@@ -973,6 +1780,7 @@ function solveAtAddress() {
 }
 
 async function loadClip(c) {
+  clearTimeout(scanTimer);
   S.clip = c;
   clearRef();
   if (c.kind === 'bvh') await loadBVH(c.file, c.scale || 0.056444); else await loadFBX(c.file);
@@ -989,13 +1797,11 @@ async function loadClip(c) {
   if (ref.flip) { buildCorrections(); }
   $('frame').max = ref.frames - 1;
   S.keys = findKeys();
-  const kb = $('keys'); kb.innerHTML = '';
-  for (const [k, f] of Object.entries(S.keys)) {
-    const b = document.createElement('button'); b.textContent = `${k[0].toUpperCase() + k.slice(1)} (${f})`; b.onclick = () => setFrame(f); kb.appendChild(b);
-  }
+  keyButtons();
   setFrame(S.keys.address);
+  S.addrG = golferFrame(charGet);              // the video's fixed camera stands in this frame
   if (!S.fitLoaded) { solveAtAddress(); S.fitLoaded = true; }
-  else refresh(true);
+  else { refineImpact(); refresh(true); }
   // the ball sits just in front of the clubhead at address
   const head = club.head.getWorldPosition(V()), g = golferFrame(charGet);
   club.ball.position.set(head.x, char.ground + 0.0214, head.z).addScaledVector(g.target, 0.03);
@@ -1017,12 +1823,16 @@ function loop(now) {
 
 // ------------------------------------------------------------------ automation API (sheets, tests)
 window.lab = {
-  get state() { return S; },
+  get state() { return S; }, get ref() { return ref; }, get char() { return char; }, get club() { return club; }, THREE, poseFrame,
   setClip: async (i) => { $('clip').value = i; await loadClip(S.clips[i]); },
   setFrame, setView,
   setFit: (f) => { Object.assign(S.fit, f); syncSliders(); buildClub(); refresh(true); },
   set: (id, v) => { $(id).checked = v; $(id).dispatchEvent(new Event('change')); },
-  measure, keys: () => S.keys, scan: () => S.scan,
+  measure, keys: () => S.keys, scan: () => S.scan, COL, collide, restCharacter, solve: () => { solveAtAddress(); return { fit: { ...S.fit }, solve: S.wristSolve }; },
+  setClub: (kind) => { $('clubkind').value = kind; $('clubkind').dispatchEvent(new Event('change')); },
+  setLine: (v) => { $('linefrom').value = v; $('linefrom').dispatchEvent(new Event('change')); },
+  setVideo: async (v) => { Object.assign(S.vid, v); if (S.vid.mode !== 'off') await loadVideo(); videoChanged(); },
+  videoFrame: () => (videoOn() ? videoFrameFor(S.frame) : null),
   // one picture: Brittany | reference, at a frame and view
   shot(frame, view, w = 520, h = 600) {
     const prev = [canvas.style.width, canvas.style.height];
@@ -1041,8 +1851,10 @@ window.lab = {
 (async function boot() {
   S.clips = await (await fetch('assets/clips.json')).json();
   S.fit = { ...DEFAULT_FIT };
-  try { const saved = JSON.parse(localStorage.getItem('swinglab.fit.iron') || 'null'); if (saved) { S.fit = { ...DEFAULT_FIT, ...saved }; S.fitLoaded = true; } } catch {}
+  try { const saved = JSON.parse(localStorage.getItem('swinglab.fit.driver') || 'null'); if (saved) { S.fit = { ...DEFAULT_FIT, ...saved }; S.fitLoaded = !!saved.wc; } } catch {}   // fits from before the club-first hand get solved
+  try { const sv = JSON.parse(localStorage.getItem('swinglab.video') || 'null'); if (sv) S.vid = { ...DEFAULT_VID, ...sv }; } catch {}
   buildUI();
+  if (S.vid.mode !== 'off') await loadVideo().catch(() => { S.vid.mode = 'off'; syncVideoUI(); });
   await loadCharacter();
   buildClub();
   syncSliders();
