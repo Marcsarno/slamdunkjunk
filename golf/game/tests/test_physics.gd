@@ -43,7 +43,7 @@ func _init() -> void:
 		print("    %-7s carry %5.1f m  total %5.1f m  apex %4.1f m  time %4.1f s" % [club.id, carry, total, r.apex, r.time])
 		check(absf(carry - club.carry_m) < club.carry_m * 0.05, "%s full carry near %d m" % [club.id, club.carry_m])
 		# a driver runs out, an iron a little, a wedge checks up (shares of carry)
-		var run: Array = {"driver": [0.06, 0.15], "iron": [0.02, 0.08], "wedge": [0.0, 0.03]}[club.id]
+		var run: Array = {"wood": [0.05, 0.15], "iron": [0.02, 0.08], "wedge": [0.0, 0.04], "chip": [0.08, 0.3]}[club.kind]
 		var share := (total - carry) / carry
 		check(share >= run[0] and share <= run[1], "%s rolls out %.0f m (%.0f%% of carry)" % [club.id, total - carry, share * 100])
 		var half := BallSim.simulate(fair, null, far_pin, Vector2.ZERO, Vector3(0, 0, BallSim.RADIUS),
@@ -66,7 +66,7 @@ func _init() -> void:
 	check(s.end.x < -0.5, "putt across a 3%% slope breaks downhill (x = %.2f)" % s.end.x)
 
 	print("wind:")
-	var iron := Clubs.by_id("iron")
+	var iron := Clubs.by_id("iron7")
 	var headwind := BallSim.simulate(fair, null, far_pin, Vector2(0, -6), Vector3(0, 0, BallSim.RADIUS),
 		Clubs.launch_velocity(iron, 1.0, Vector2(0, 1)), iron.lift)
 	var cross := BallSim.simulate(fair, null, far_pin, Vector2(6, 0), Vector3(0, 0, BallSim.RADIUS),

@@ -26,6 +26,9 @@ var _down_ms: Array = []
 var _down_i := -1
 var _down_t := 0.0
 var _contact_i := -1
+## Every frame's texture, kept for the whole visit (each hole's scene has its own golfer, but her
+## frames are the same): loaded once, never mid-swing.
+static var _textures := {}
 
 
 func _ready() -> void:
@@ -66,9 +69,23 @@ func _quad(set_name: String, frame: int) -> Array:
 	var q := QuadMesh.new()
 	q.size = Vector2(w, h)
 	q.center_offset = Vector3(w * 0.5 - f.anchor[0] * ps, f.anchor[1] * ps - h * 0.5, 0)
-	var tex: Texture2D = load(DIR + f.file)
-	_quads[key] = [q, tex]
+	_quads[key] = [q, _texture(f.file)]
 	return _quads[key]
+
+
+func _texture(file: String) -> Texture2D:
+	if not _textures.has(file):
+		_textures[file] = load(DIR + file)
+	return _textures[file]
+
+
+## Load every frame the game plays (behind the title card before a hole), so none loads while she
+## swings or while the pull draws her back.
+func preload_frames() -> void:
+	for set_name: String in sets:
+		if SPRITE_STYLE == "" or set_name.begins_with(SPRITE_STYLE):
+			for f: Dictionary in sets[set_name].frames.values():
+				_texture(f.file)
 
 
 func show_frame(set_name: String, frame: int) -> void:

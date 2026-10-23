@@ -34,15 +34,17 @@ const SPREAD_NEAR := 0.045      # how far off a shot may land, as a share of its
 const SPREAD_FAR := 0.10        # ... up to this for a full drive of SPREAD_AT meters
 const SPREAD_AT := 220.0
 const SPREAD_LONG := 0.75       # the margin is shorter along the line than across it
-## Slingshot aim: the band's tilt from straight down turns the shot the other way, scaled down (a 30
-## degree tilt turns it about 10), past a little dead zone so a slightly crooked pull still goes
-## straight. The tilt only counts once the band is stretched a little: the first pixels of a touch
-## point anywhere.
-const SLING_AIM := 0.35
-const SLING_DEAD := deg_to_rad(4.0)
-const SLING_TILT_MAX := deg_to_rad(60.0)
-const SLING_AIM_FROM := 0.04    # share of a full pull where the tilt starts to count ...
-const SLING_AIM_FULL := 0.14    # ... and where it counts fully
+## Slingshot aim: how far the finger has slid sideways (not the band's angle, which also changes as
+## the pull grows) turns the shot the other way, evenly, up to SLING_AIM_MAX at SLING_SPAN of the
+## screen's width; putts turn less, for fine lines. A soft dead zone in the middle lets a slightly
+## crooked pull go straight without a step where the aim starts to move.
+const SLING_SPAN := 0.4
+const SLING_AIM_MAX := deg_to_rad(18.0)
+const SLING_AIM_PUTT := deg_to_rad(8.0)
+const SLING_DEAD := 0.06        # share of SLING_SPAN
+const SIDE_EASE := 12.0         # the aim follows the finger at this rate (1/s): smooth, not laggy
+const BALL_FOLLOW := 0.5        # the slingshot ball moves this share of the finger's travel ...
+const BALL_ABOVE := 2.8         # ... and keeps at least this many radii above it, clear of the thumb
 const PANIC_PULL := 0.9         # the ball's face goes from worried to panic past this share of the pull
 const HINT := "Drag the target to aim · pull the ball back to shoot"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
@@ -60,13 +62,6 @@ var obstacles: ObstacleGrid
 var view := HoleView.new()
 var fx := Fx.new()
 var golfer := Golfer.new()
-## The caddie and his cat stand to her left on every shot, changing poses as the game goes.
-var caddie := Pal.new("skelly_", {"idle": 1.2, "wave": 1.2, "tip": 1.2, "club": 1.2, "point": 1.25,
-	"read": 1.25, "cheer": 1.3, "lean": 1.25, "card": 1.25, "bow": 1.05}, ["lean", "idle"], "lean")
-var cat := Pal.new("cat_", {"ball": 0.8, "sit": 0.8, "happy": 0.8, "groom": 0.74, "crouch": 0.58,
-	"pounce": 0.67, "sleep": 0.45, "stretch": 0.64, "walk": 0.77, "walk2": 0.72},
-	["sit", "sit", "groom", "happy", "sleep", "stretch"], "sit")
-var cart := Cart.new()            # their golf cart, parked behind them
 var lantern := HeroLantern.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
@@ -140,7 +135,6 @@ func _ready() -> void:
 		set_process(true)
 		set_process_unhandled_input(true)
 	terrain = Terrain.load_hole(Round.dir())
-	Quality.watching = true
 	tree_exiting.connect(func(): Quality.watching = false)
 	view.build(Round.dir(), terrain)
 	add_child(view)
@@ -150,9 +144,6 @@ func _ready() -> void:
 		Sfx.play_after(randf_range(0.4, 1.8), "thunder", lerpf(-12.0, -3.0, k), randf_range(0.85, 1.1)))
 	par = int(terrain.meta.par)
 	add_child(golfer)
-	add_child(caddie)
-	add_child(cat)
-	add_child(cart)
 	add_child(lantern)
 	cam.keep_aspect = Camera3D.KEEP_WIDTH
 	cam.near = 0.05
@@ -175,6 +166,7 @@ func _ready() -> void:
 	var w: Dictionary = terrain.meta.wind
 	wind = Vector2.from_angle(randf() * TAU) * randf_range(float(w.min), float(w.max))
 	_start_hole()
+	await _prewarm()
 	if Round.has_next():
 		Holes.prefetch(Round.HOLES[Round.index + 1].id)     # fetched while this hole is played
 	for a in OS.get_cmdline_user_args():
@@ -182,6 +174,63 @@ func _ready() -> void:
 			add_child(load("res://tests/capture.gd").new())
 		elif a.begins_with("--capture-hole="):
 			add_child(load("res://tests/capture_hole.gd").new())
+
+
+var _intro_id := 0              # the current opening, so a restarted one's title timer is the only one shown
+
+
+## Every material, texture and effect is drawn once behind a dark title card before the hole is
+## shown: a phone's browser builds each shader (and uploads each texture) the first time it's
+## drawn, and doing that during the flyover is what made the opening stutter.
+func _prewarm() -> void:
+	set_process(false)
+	set_process_unhandled_input(false)
+	var card := _waiting_note("Hole %d\n%s" % [int(terrain.meta.number), terrain.meta.name])
+	var cover := card.get_parent().get_parent() as CanvasLayer
+	cover.layer = 100
+	golfer.preload_frames()
+	# the whole hole from straight above
+	var span := Vector2(terrain.nx, terrain.ny) * terrain.cell
+	var mid := terrain.origin + span * 0.5
+	var top := Terrain.to_world(Vector3(mid.x, mid.y, terrain.height(mid.x, mid.y) + 400.0))
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.size = maxf(span.x, span.y)
+	cam.look_at_from_position(top, top + Vector3.DOWN, Terrain.to_world(Vector3(0, 1, 0)) - Terrain.to_world(Vector3.ZERO))
+	await _drawn(2)
+	cam.projection = Camera3D.PROJECTION_PERSPECTIVE
+	# the opening, close on the lantern
+	_intro_cam()
+	_apply_cam(0.0)
+	await _drawn(1)
+	# the aiming view with its markers, a ball trail, and every landing effect (out of sight underground)
+	phase = Phase.AIM
+	_target_cam()
+	cam_pos = _want_pos
+	cam_target = _want_target
+	cam_fov = _want_fov
+	_apply_cam(0.0)
+	_update_preview()
+	var under := Terrain.to_world(ball) + Vector3(0, -4, 0)
+	for surf in [Terrain.Surface.FAIRWAY, Terrain.Surface.SAND, Terrain.Surface.WATER, Terrain.Surface.PATH, Terrain.Surface.GREEN]:
+		fx.land(under, surf)
+	fx.holed(under, Color(1.0, 0.6, 0.25))
+	for i in 8:
+		trail_pts.append(under + Vector3(i, 0, 0))
+	_update_ball_visual()
+	await _drawn(2)
+	trail_pts.clear()
+	_show_preview(false)
+	# then the opening for real
+	_start_hole()
+	cover.queue_free()
+	hud.fade_in()
+	set_process(true)
+	set_process_unhandled_input(true)
+
+
+func _drawn(frames: int) -> void:
+	for i in frames:
+		await RenderingServer.frame_post_draw
 
 
 ## A line of text on a dark screen while a hole is fetched.
@@ -231,14 +280,13 @@ func _start_hole() -> void:
 	phase_t = 0.0
 	hud.sling.visible = false
 	hud.hint.text = "Tap to skip"
-	caddie.pose("bow", INTRO_TIME)
-	_place_pals()
-	cat.pose("ball", INTRO_TIME + 3.0)
 	_place_lantern()
 	# the hole's name once the camera has swung round the lantern and starts down the hole
 	var title := "Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)]
+	_intro_id += 1
+	var this_intro := _intro_id
 	get_tree().create_timer(INTRO_SWING * 0.8).timeout.connect(func():
-		if phase == Phase.INTRO:
+		if phase == Phase.INTRO and _intro_id == this_intro:
 			hud.flash(title, INTRO_TIME - INTRO_SWING * 0.8))
 
 
@@ -263,8 +311,6 @@ func _setup_shot() -> void:
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
-	if phase != Phase.INTRO:
-		caddie.rest()
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
@@ -310,7 +356,7 @@ func _default_target() -> Vector2:
 			start_i = i
 	for i in range(start_i, path.size()):
 		var v := Vector2(path[i][0], path[i][1]) - b
-		var err := absf(v.length() - reach * 0.97)
+		var err := absf(v.length() - reach * Clubs.PICK_SHARE)
 		if err < best_err:
 			best_err = err
 			best = v
@@ -425,7 +471,6 @@ func _set_target(t: Vector2, exact := true) -> void:
 	aim = v.normalized()
 	_place_golfer_back(phase != Phase.PULL)       # mid-pull she keeps her backswing
 	if exact:
-		_place_pals()
 		full_power = _power_for(v.length(), aim)
 		if full_power > 1.0:
 			# uphill or blocked: a full swing doesn't get there, so the target comes back to where it does
@@ -444,12 +489,10 @@ func _set_target(t: Vector2, exact := true) -> void:
 func _cycle_club() -> void:
 	if phase != Phase.AIM:
 		return
-	var ids := ["driver", "iron", "wedge", "putter"]
-	club = Clubs.by_id(ids[(ids.find(club.id) + 1) % ids.size()])
+	club = Clubs.next(club)
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	_set_target(_default_target())
-	caddie.pose("club", 1.6)       # handing over the new club
 
 
 func _right() -> Vector2:
@@ -468,51 +511,6 @@ func _place_golfer_back(pose := true) -> void:
 	golfer.position = Terrain.to_world(Vector3(g2.x, g2.y, terrain.height(g2.x, g2.y)))
 	if pose:
 		golfer.address(set_name)
-
-
-## On the tee the caddie and the cat stand to her left a few steps up the line, in sight from behind her and in
-## the swing shot (moved when the aim settles, while the view is up high and they're too small to see).
-func _place_pals() -> void:
-	# they see her off from the tee and wait there; the rest of the hole is hers alone
-	caddie.visible = strokes == 0
-	cat.visible = strokes == 0
-	cart.visible = strokes == 0      # their cart stays parked by the tee with them
-	# to her left, or her right if the left is water or sand (by a green, say)
-	var side := 1.0 if _dry(Vector2(ball.x, ball.y) - _right() * 2.4 + aim * 1.7) else -1.0
-	for p in [[caddie, Vector2(2.4, 1.7)], [cat, Vector2(1.7, 1.1)]]:
-		var c2: Vector2 = Vector2(ball.x, ball.y) - _right() * p[1].x * side + aim * p[1].y
-		p[0].position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
-	# the cart: parked on the cart path when it runs close by, nosed on toward the green; otherwise up
-	# the line behind the caddie, angled in toward the line (never in sand or water)
-	var b2 := Vector2(ball.x, ball.y)
-	var k2 := b2 - _right() * 3.4 * side + aim * 5.2
-	var heading := aim.rotated(-0.35 * side)
-	var cp: Array = terrain.meta.get("cart_path", [])
-	var best := INF
-	for i in range(1, cp.size() - 1):
-		var q := Vector2(cp[i][0], cp[i][1])
-		var d := q.distance_to(b2)
-		if d < best and d > 4.0 and (q - b2).dot(aim) > -2.0:
-			best = d
-			k2 = q
-			heading = (Vector2(cp[i + 1][0], cp[i + 1][1]) - Vector2(cp[i - 1][0], cp[i - 1][1])).normalized()
-	if best > 16.0:
-		k2 = b2 - _right() * 3.4 * side + aim * 5.2
-		heading = aim.rotated(-0.35 * side)
-		for tries in 6:
-			if _dry(k2):
-				break
-			k2 -= aim * 2.0
-	var kw := Terrain.to_world(Vector3(k2.x, k2.y, terrain.height(k2.x, k2.y)))
-	var hw := Terrain.to_world(Vector3(heading.x, heading.y, 0)) - Terrain.to_world(Vector3.ZERO)
-	cart.position = kw
-	cart.look_at(kw + hw, Vector3.UP)
-
-
-## Somewhere a cart, a caddie or a cat can stand: not water, sand, the green or out of bounds.
-func _dry(p: Vector2) -> bool:
-	var s := terrain.surface_at(p.x, p.y)
-	return s not in [Terrain.Surface.WATER, Terrain.Surface.SAND, Terrain.Surface.GREEN, Terrain.Surface.OOB]
 
 
 ## The giant jack-o'-lantern sits off the right of the tee, its face turned back across the tee box.
@@ -556,15 +554,10 @@ func _shoot() -> void:
 		_shot_offset = spread_test if spread_test != Vector2.INF else Vector2.from_angle(randf() * TAU) * randf()
 		if _shot_offset.length() < 0.2:
 			hud.flash("Perfect!", 1.0)
-			caddie.pose("cheer", 2.0)
 			Sfx.play("perfect", -6.0)
 	if club.id != "putter":
 		Sfx.play_after(0.08, "swing", -4.0, randf_range(0.95, 1.05))
 	_show_preview(false)
-	if caddie.current() == "point":
-		caddie.rest()
-	cat.pose("crouch", 0.7)
-	get_tree().create_timer(0.7).timeout.connect(func(): cat.pose("pounce", 2.5))
 	phase = Phase.SWING
 	phase_t = 0.0
 	if golfer.contact.is_connected(_on_contact):
@@ -596,7 +589,7 @@ func _on_contact() -> void:
 	var dir := (land - b).normalized()
 	var stretch := land.distance_to(b) / maxf(d, 0.01)
 	sim.launch(ball, Clubs.launch_velocity(club, power * stretch, dir), club.lift)
-	var hit: String = {"driver": "hit_driver", "putter": "putt"}.get(club.id, "hit_iron")
+	var hit: String = {"wood": "hit_driver", "putter": "putt"}.get(club.kind, "hit_iron")
 	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(power, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
 	trail_pts.clear()
@@ -614,7 +607,6 @@ func _shot_done() -> void:
 			phase = Phase.HOLED
 			ball = sim.pos
 			hud.flash(_score_name(strokes - par), 3.0)
-			caddie.pose("cheer" if strokes <= par else "tip")
 			Sfx.play("cup")
 			Sfx.play_after(0.3, "holed", -3.0)
 			fx.holed(Terrain.to_world(terrain.pin()), HoleView._col(view.theme.get("wisp_color"), Color(1.0, 0.6, 0.25)))
@@ -623,20 +615,15 @@ func _shot_done() -> void:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Splash! +1 stroke")
-			caddie.pose("read", 2.8)      # checking the rule book
 		BallSim.State.OOB:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Out of bounds! +1 stroke")
-			caddie.pose("read", 2.8)
 		_:
 			ball = sim.pos
 			if club.id == "putter":
 				hud.flash("%s to go" % _dist_text(_to_pin(), true))
 			else:
-				var s := terrain.surface_at(ball.x, ball.y)
-				if s == Terrain.Surface.FAIRWAY or s == Terrain.Surface.GREEN:
-					caddie.pose("tip", 1.8)
 				hud.flash("%s · %s" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
 
 
@@ -693,8 +680,8 @@ func _press(p: Vector2) -> void:
 				hud.hint.text = ""
 				hud.sling.hint = false
 				_pull_quarter = 0
+				_sling_follow(p)
 				Input.vibrate_handheld(10)
-				caddie.pose("point")
 			else:
 				var hit: Variant = _ground_at(p)
 				if hit != null:
@@ -719,10 +706,18 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 				Sfx.play("click", -6.0)
 			g = m
 		pull_goal = g
-		var tilt := clampf(atan2(v.x, maxf(v.y, 0.001)), -SLING_TILT_MAX, SLING_TILT_MAX)
-		var counts := smoothstep(SLING_AIM_FROM, SLING_AIM_FULL, v.length() / _pull_len)
-		_side_goal = signf(tilt) * maxf(0.0, absf(tilt) - SLING_DEAD) * SLING_AIM * counts
-		hud.sling.offset = v.limit_length(_pull_len * 1.04)
+		var u := clampf(v.x / (get_viewport().get_visible_rect().size.x * SLING_SPAN), -1.0, 1.0)
+		u *= smoothstep(0.0, 2.0 * SLING_DEAD, absf(u))
+		_side_goal = u * (SLING_AIM_PUTT if club.id == "putter" else SLING_AIM_MAX)
+		_sling_follow(p)
+
+
+## The slingshot ball follows the finger part of the way, always riding clear above the thumb.
+func _sling_follow(p: Vector2) -> void:
+	var s := hud.sling
+	var o := (p - pull_start) * BALL_FOLLOW
+	o.y = minf(o.y, p.y - s.radius() * BALL_ABOVE - s.rest().y)
+	s.offset = o
 
 
 ## The power of a full pull: the club's full power, or for a putt PUTT_HEADROOM times this putt.
@@ -776,7 +771,7 @@ func _ease_toward_finger(delta: float) -> void:
 	if absf(pull - pull_goal) < 0.002:
 		pull = pull_goal
 	if _side != _side_goal:
-		_side = lerpf(_side, _side_goal, k)
+		_side = lerpf(_side, _side_goal, 1.0 - exp(-delta * SIDE_EASE))
 		if absf(_side - _side_goal) < 0.0005:
 			_side = _side_goal
 		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull, false)
@@ -818,7 +813,6 @@ func _release() -> void:
 			hud.hide_gauge()
 			hud.sling.cancel()
 			golfer.address(_sprite_set("back"))
-			caddie.rest()
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
 			if _side != 0.0 or _side_goal != 0.0:
@@ -882,7 +876,6 @@ func _process(delta: float) -> void:
 				var detail := "%d strokes on a par %d" % [strokes, par]
 				if Round.scores.size() > 1:
 					detail += "\nRound: %s after %d" % [Round.to_par_text(), Round.scores.size()]
-				caddie.pose("card")
 				hud.show_card(_score_name(strokes - par), detail, "Next hole" if Round.has_next() else ("New round" if Round.scores.size() > 1 else "Play again"))
 	_apply_cam(delta)
 	_update_ball_visual()   # after the camera moves: the ball's size is set from its distance to the camera
@@ -895,7 +888,7 @@ func _process(delta: float) -> void:
 
 func _end_intro() -> void:
 	phase = Phase.AIM
-	caddie.rest()
+	Quality.watching = true          # the scene's sharpness adapts from here on, never mid-flyover
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
 	hud.sling.appear()

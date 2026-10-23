@@ -241,6 +241,10 @@ func _pumpkin_material() -> StandardMaterial3D:
 	return m
 
 
+const SMALL_PROP := 2.5          # meters: props smaller than this ...
+const SMALL_PROP_RANGE := 90.0   # ... aren't drawn past this far from the camera
+
+
 func _apply_materials(root: Node) -> void:
 	var terrain_mat := _terrain_material()
 	_terrain_mat = terrain_mat
@@ -270,6 +274,11 @@ func _apply_materials(root: Node) -> void:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		# small props (tombstones, pumpkins, fences) stop being drawn where they'd be a few pixels: a
+		# phone draws fewer things each frame, and the builder needs no change
+		var e := mi.get_aabb().size
+		if maxf(e.x, maxf(e.y, e.z)) < SMALL_PROP:
+			mi.visibility_range_end = SMALL_PROP_RANGE
 		for i in mi.mesh.get_surface_count():
 			var src := mi.mesh.surface_get_material(i)
 			var name := src.resource_name if src else ""

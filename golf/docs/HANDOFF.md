@@ -55,30 +55,39 @@ project's convention), then `--import` again.
   are separate packs the `Holes` autoload fetches as the round reaches them (next one prefetched).
 - Black night sky on every hole (`shaders/night_sky.gdshader`): painted star, cloud and moon layers; the
   moon is round in screen space. Painted backdrops are no longer used (left out of the export).
-- Cast: the golfer (video-cut sprites: driver/iron swings, and putting from `tools/prep_video_putt.py` with
-  a 40% backswing), the skeleton caddie, the cat and the golf cart (8 views) beside her; a modelled
-  jack-o'-lantern by every tee that the opening camera swings round.
+- Cast: the golfer alone (video-cut sprites: driver/iron swings, and putting from `tools/prep_video_putt.py`
+  with a 40% backswing; fitted to their drawn size by `tools/shrink_golfer.py`), and a modelled
+  jack-o'-lantern by every tee that the opening camera swings round. (The skeleton caddie, cat and cart
+  were removed: "failed experiment".)
 - Courses: winding layouts, cart paths (a real, bouncy surface) with plank bridges at water, painted trees
   (04-18) and glowing light props (01-15) per hole theme.
+- Clubs (`scripts/clubs.gd`): Driver 205 m, 3 Wood 185, 5/7/9 Iron 165/145/125, P/S/L Wedge 105/82/58,
+  Chip 32 (skips and runs), Putter. Auto-picked: the shortest club whose full swing covers the shot
+  with 10% in hand (`PICK_SHARE`), so most shots want 80-90% of a full pull. The club button steps down
+  the bag. `tests/tune_clubs.gd` finds each club's launch speed for its carry.
 - Aiming: target auto-placed (lays up short of trouble), drag to move it. **Slingshot:** a Halloween ball
-  button (`hud.gd` `Sling`, an on-screen control, not the golf ball) rests low in the middle; pull it
-  back. The band's length is the power (a full stretch, 21% of the screen height, is the club's full
-  power; the target is a mark part way, with a click), its tilt aims the other way (down-right sends it
-  left, `SLING_AIM` 0.35 of the tilt past a 4 degree dead zone). Its face goes still -> launch -> panic
-  (past 90%). The view stays up on the course while pulling (no zoom down; the corner map is off,
-  `AIM_MAP`), cuts to her swing on release. Putts: a full pull is 2x the putt. Past 90% power the
-  margin of error widens. Marc's seven balls (pumpkin, ghost, skull, mummy, vampire, frank, bat; still +
-  launch faces; no panic face yet, it falls back to launch) are cut from `art_src/balls/balls_sheet*.png`
-  by `tools/prep_balls.py` (usage in its docstring) into `assets/balls/<name>/<pose>.png`; picked on a
-  turntable on the clubhouse bar (`front.gd`, names in `Sling.NAMES`, remembered in `user://settings.cfg`).
-  Putts: the default target is read for break (`_read_putt`: a foot past, moved across the slope until
-  the roll runs over the cup). The caddie, cat and cart appear on the tee only.
+  button (`hud.gd` `Sling`, an on-screen control, not the golf ball) rests low in the middle; pull down
+  from it. How far down is the power (21% of the screen height is the club's full power; the target is a
+  mark part way, with a click); how far the finger slides sideways aims the other way (down-right sends
+  it left; `SLING_SPAN` 40% of the screen width = `SLING_AIM_MAX` 18 degrees, putts 8, soft dead zone,
+  eased). The ball follows the finger half way and rides 2.8 radii above it, clear of the thumb. Its face
+  goes still -> launch -> panic (past 90%). The view stays up on the course while pulling (corner map off,
+  `AIM_MAP`), cuts to her swing on release. Putts: a full pull is 2x the putt. Past 90% power the margin of
+  error widens. Marc's seven balls (pumpkin, ghost, skull, mummy, vampire, frank, bat; still + launch
+  faces; no panic face yet) are cut from `art_src/balls/balls_sheet*.png` by `tools/prep_balls.py` into
+  `assets/balls/<name>/<pose>.png`; picked on a turntable on the clubhouse bar (`front.gd`, names in
+  `Sling.NAMES`, remembered in `user://settings.cfg`). Putts: the default target is read for break
+  (`_read_putt`: a foot past, moved across the slope until the roll runs over the cup).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,
   wedge stops; tuned in `scripts/ball_sim.gd` SURF table).
 - Performance: `Quality` autoload draws 3D at 75% on the web (HUD sharp), adapts 85/75/65/55% to the
-  frame rate; shadows 40 m on a 1024 map; shot preview recomputed 10x a second while pulling.
+  frame rate (never during the opening flyover; the step a phone settles on is remembered); shadows 40 m
+  on a 1024 map; shot preview recomputed 10x a second while pulling. Before each hole `main._prewarm()`
+  draws everything once behind a title card (the whole hole from above, the lantern, the aiming view,
+  every landing effect underground, a trail) and loads all her frames, so no shader compiles and no
+  texture loads mid-flyover or mid-swing. Props under 2.5 m aren't drawn past 90 m (`hole_view.gd`).
 
 ## What's next (in Marc's order of interest)
 

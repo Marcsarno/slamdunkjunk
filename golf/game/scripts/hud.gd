@@ -266,7 +266,8 @@ class Sling extends Control:
 	const ART_FILL := 0.8           # the ball's share of its art's square
 	var size_share := 0.15          # the ball's width, as a share of the screen's (about 58 pt on a phone)
 	var ball_name := "pumpkin"
-	var offset := Vector2.ZERO      # where the finger has drawn it from its rest (px)
+	var offset := Vector2.ZERO      # where the finger has drawn it from its rest (px) ...
+	var _shown := Vector2.ZERO      # ... and where it's drawn, gliding after it (no jump as a thumb lands)
 	var stretch := 0.0              # 0 .. 1: share of a full pull
 	var pose := "still"
 	var hint := false               # a nudge under it to pull, on the first shot
@@ -320,6 +321,7 @@ class Sling extends Control:
 	## In for a new shot, with a little pop.
 	func appear() -> void:
 		offset = Vector2.ZERO
+		_shown = Vector2.ZERO
 		stretch = 0.0
 		pose = "still"
 		_snap_t = -1.0
@@ -329,14 +331,15 @@ class Sling extends Control:
 
 	## Let go with a shot: it snaps up and away along the band.
 	func release() -> void:
-		_snap_from = offset
+		_snap_from = _shown
 		_snap_t = 0.0
 
 	## Let go without a shot: it springs back to rest.
 	func cancel() -> void:
-		_back_from = offset
+		_back_from = _shown
 		_back_t = 0.0
 		offset = Vector2.ZERO
+		_shown = Vector2.ZERO
 		stretch = 0.0
 		pose = "still"
 
@@ -344,6 +347,7 @@ class Sling extends Control:
 		if not visible:
 			return
 		_t += delta
+		_shown = _shown.lerp(offset, 1.0 - exp(-delta * 30.0))
 		_pop_t += delta
 		_back_t += delta
 		if _snap_t >= 0.0:
@@ -355,7 +359,7 @@ class Sling extends Control:
 
 	func _draw() -> void:
 		var r := radius()
-		var at := offset
+		var at := _shown
 		var alpha := 1.0
 		var grow := 1.0
 		var bob := 0.0

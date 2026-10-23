@@ -5,7 +5,9 @@ extends Node
 ##
 ## On the web it adapts: it starts at a middle step and watches the frame rate while a hole is
 ## played. Running slow for a couple of seconds steps the scene down; running smooth for a good while
-## steps it back up (slowly, so it doesn't flip back and forth). Desktop and the tests draw at full
+## steps it back up (slowly, so it doesn't flip back and forth). It never changes during a hole's
+## opening flyover (main turns watching on after it), and the step a phone settles on is remembered
+## for its next visit, so it starts where it runs smoothly. Desktop and the tests draw at full
 ## size with anti-aliasing. --quality=<scale> (0.5 .. 1) fixes the scale anywhere, for checking how a
 ## step looks.
 
@@ -16,6 +18,7 @@ const SLOW_FOR := 2.0                          # ... after this many seconds
 const FAST_MS := 17.5                          # averaging faster than this (about 57 fps) steps up ...
 const FAST_FOR := 12.0                         # ... after this many seconds
 const FAST_FOR_AFTER_DROP := 40.0              # ... or this long once it has had to step down
+const SETTINGS := "user://settings.cfg"
 
 var step := START
 var adaptive := false
@@ -30,6 +33,10 @@ func _ready() -> void:
 	adaptive = OS.has_feature("web")
 	if not adaptive:
 		step = 0
+	else:
+		var cfg := ConfigFile.new()
+		if cfg.load(SETTINGS) == OK:
+			step = clampi(int(cfg.get_value("video", "step", START)), 1, STEPS.size() - 1)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--quality="):
 			adaptive = false
@@ -45,6 +52,13 @@ func scale() -> float:
 
 func _apply() -> void:
 	_apply_scale(STEPS[step])
+
+
+func _remember() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS)
+	cfg.set_value("video", "step", step)
+	cfg.save(SETTINGS)
 
 
 func _apply_scale(s: float) -> void:
@@ -71,6 +85,7 @@ func _process(delta: float) -> void:
 			_slow_t = 0.0
 			_avg_ms = 16.7
 			_apply()
+			_remember()
 	elif _avg_ms < FAST_MS:
 		_fast_t += delta
 		_slow_t = 0.0
@@ -78,6 +93,7 @@ func _process(delta: float) -> void:
 			step -= 1
 			_fast_t = 0.0
 			_apply()
+			_remember()
 	else:
 		_slow_t = maxf(0.0, _slow_t - delta)
 		_fast_t = maxf(0.0, _fast_t - delta)
