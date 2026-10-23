@@ -83,7 +83,7 @@
   ],
   "sky_style": "night",
   "moon_azimuth": -14,
-  "moon_elevation": 24,
+  "moon_elevation": 13,
   "moon_scale": 0.75,
   "backdrop_haze": 0.15,
   "light_azimuth": 200,
@@ -99,19 +99,19 @@
   "fog_density": 0.003,
   "leaf_amount": 0.3,
   "sky_top": [
-   0.015,
-   0.025,
-   0.1
+   0.004,
+   0.006,
+   0.025
   ],
   "sky_horizon": [
-   0.12,
-   0.13,
-   0.3
+   0.04,
+   0.05,
+   0.13
   ],
   "fog": [
-   0.14,
-   0.14,
-   0.28
+   0.09,
+   0.09,
+   0.18
   ]
  },
  "tee": [

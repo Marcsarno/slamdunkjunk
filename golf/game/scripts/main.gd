@@ -5,9 +5,10 @@ extends Node3D
 ##
 ## Aiming works like the phone golf games: each shot starts with a target on the best landing spot
 ## (where the roll ends at the pin, when it's in reach); drag it anywhere in the club's range. Pulling
-## back to the gauge's mark lands on the target (no wind); past it is extra power at a risk. While
-## pulling, a needle sweeps: let go in its middle for a perfect strike, off it and the shot starts off
-## line and bends. The wind is the aiming game: a faint ring shows where it carries a perfect shot.
+## back to the gauge's mark lands on the target (no wind); past it is extra power at a risk. Sliding
+## sideways while pulling swings the aim left or right. No shot is exact: it lands somewhere in a
+## margin of error that grows with its length (the white circle on the ground). The wind is the
+## aiming game: a mint ring shows where it carries the shot.
 
 enum Phase { INTRO, AIM, PULL, SWING, FLIGHT, RESULT, HOLED }
 
@@ -15,15 +16,17 @@ const YD := 1.0936
 const PULL_ZONE := 0.62         # touches starting below this share of the screen height pull back to
                                 # swing; above it they drag the target
 const PULL_FULL := 0.26         # pull distance (share of screen height) to the target mark: a full shot
-const OVERPOWER := 1.1          # pulling past the mark adds up to this much power, and speeds the needle
+const OVERPOWER := 1.1          # pulling past the mark adds up to this much power, and widens the spread
 const MAGNET := 0.04            # within this of the mark, the pull settles exactly on it
 const EASE := 20.0              # power follows the finger at this rate (1/s), smoothing touch jitter
 const MIN_PULL := 0.06
-const PERFECT := 0.12           # half-width of the needle's perfect middle (the needle runs -1..1)
-const MISS_AIM := 0.035         # radians a shot starts off line with the needle at its end ...
-const MISS_CURVE := 0.0004      # ... and the side spin it gets (BallSim curve), less toward the middle
-const NEEDLE_PERIOD := {"driver": 1.0, "iron": 1.2, "wedge": 1.4}   # seconds per sweep and back
-const HINT := "Drag the target · pull down from the bottom to swing"
+const SPREAD_NEAR := 0.045      # how far off a shot may land, as a share of its length: short shots ...
+const SPREAD_FAR := 0.10        # ... up to this for a full drive of SPREAD_AT meters
+const SPREAD_AT := 220.0
+const SPREAD_LONG := 0.75       # the margin is shorter along the line than across it
+const SIDE_AIM := 0.5           # radians of aim per screen-width the finger slides sideways while pulling ...
+const SIDE_DEAD := 0.04         # ... once it has drifted this share of the width
+const HINT := "Drag the target · pull down from the bottom to swing, sideways to aim"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 5.0
 const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
@@ -43,6 +46,7 @@ var trail_mesh := ImmediateMesh.new()
 var ring := MeshInstance3D.new()           # where the wind carries a perfect full shot: flat, mint
 var dots := MultiMeshInstance3D.new()      # the flight arc and the roll after it
 var target_ring := MeshInstance3D.new()    # the target, flat on the ground
+var spread_ring := MeshInstance3D.new()    # the margin of error round where this pull lands
 var target_label := Label3D.new()
 
 var phase := Phase.INTRO
@@ -59,10 +63,12 @@ var full_power := 1.0           # club power (as Clubs.launch_velocity takes it)
 var pull := 0.0                 # 0 .. OVERPOWER: 1 is the target mark
 var pull_goal := 0.0            # where the finger says the pull should be; pull eases toward it
 var pull_start := Vector2.ZERO
-var needle := 0.0               # accuracy needle while pulling, -1..1 (0: perfect)
-var needle_test := INF          # a test can fix the needle at this value on release
-var _needle_t := 0.0
-var _shot_needle := 0.0
+var spread_test := Vector2.INF  # a test can fix where in the margin a shot lands (x across, y along, -1..1)
+var _shot_offset := Vector2.ZERO
+var _aim_at_pull := Vector2(0, 1)   # sideways aim while pulling: the aim and target distance when the
+var _dist_at_pull := 0.0            # pull began, and how far the finger says to turn from them (eased)
+var _side_goal := 0.0
+var _side := 0.0
 var target_dragging := false
 var _drag_hit0 := Vector2.ZERO  # target dragging: the ground under the finger at press, and the target then
 var _target0 := Vector2.ZERO
@@ -274,7 +280,7 @@ func _set_target(t: Vector2, exact := true) -> void:
 		v = (v.normalized() if v.length() > 0.001 else aim) * shortest
 	target = b + v
 	aim = v.normalized()
-	_place_golfer_back()
+	_place_golfer_back(phase != Phase.PULL)       # mid-pull she keeps her backswing
 	if exact:
 		full_power = _power_for(v.length(), aim)
 		if full_power > 1.0:
@@ -310,12 +316,22 @@ func _sprite_set(view_name: String) -> String:
 	return golfer.back_set(s) if view_name == "back" else golfer.face_set(s)
 
 
-func _place_golfer_back() -> void:
+func _place_golfer_back(pose := true) -> void:
 	var set_name := _sprite_set("back")
 	var off := golfer.club_offset(set_name)
 	var g2 := Vector2(ball.x, ball.y) - _right() * off.x - aim * 0.12
 	golfer.position = Terrain.to_world(Vector3(g2.x, g2.y, terrain.height(g2.x, g2.y)))
-	golfer.address(set_name)
+	if pose:
+		golfer.address(set_name)
+
+
+## How far off a shot of `d` meters may land (the circle's half-width): a few percent on short shots,
+## more the longer it is, and more again with power past the mark. Putts are exact.
+func _spread(d: float) -> float:
+	if club.id == "putter":
+		return 0.0
+	var share := lerpf(SPREAD_NEAR, SPREAD_FAR, clampf(d / SPREAD_AT, 0.0, 1.0))
+	return d * share * (1.0 + 2.5 * maxf(0.0, pull - 1.0))
 
 
 func _place_golfer_face() -> void:
@@ -330,11 +346,11 @@ func _shoot() -> void:
 	last_ball = ball
 	hud.hint.text = ""
 	hud.hide_gauge()
-	# the strike: where the needle stood when she let go (putts have no needle)
-	_shot_needle = 0.0 if club.id == "putter" else (needle_test if needle_test != INF else needle)
-	if absf(_shot_needle) <= PERFECT:
-		_shot_needle = 0.0
-		if club.id != "putter":
+	# where in its margin this one lands: anywhere in it, more often toward the middle (putts are exact)
+	_shot_offset = Vector2.ZERO
+	if club.id != "putter":
+		_shot_offset = spread_test if spread_test != Vector2.INF else Vector2.from_angle(randf() * TAU) * randf()
+		if _shot_offset.length() < 0.2:
 			hud.flash("Perfect!", 1.0)
 			Sfx.play("perfect", -6.0)
 	if club.id != "putter":
@@ -355,10 +371,14 @@ func _shoot() -> void:
 
 func _on_contact() -> void:
 	sim = BallSim.new(terrain, obstacles, terrain.pin(), wind)
-	# off the needle's middle the shot starts off line and bends the same way (+: right)
-	var miss := signf(_shot_needle) * (absf(_shot_needle) - PERFECT) / (1.0 - PERFECT) if _shot_needle != 0.0 else 0.0
-	var dir := aim.rotated(-miss * MISS_AIM)
-	sim.launch(ball, Clubs.launch_velocity(club, full_power * pull, dir), club.lift, miss * MISS_CURVE)
+	# aim at the spot in the margin it's to land on: across by the circle's width, along by its length
+	var b := Vector2(ball.x, ball.y)
+	var d := Vector2(target.x, target.y).distance_to(b) * pull
+	var r := _spread(d)
+	var land := b + aim * d + _right() * _shot_offset.x * r + aim * _shot_offset.y * r * SPREAD_LONG
+	var dir := (land - b).normalized()
+	var stretch := land.distance_to(b) / maxf(d, 0.01)
+	sim.launch(ball, Clubs.launch_velocity(club, full_power * pull * stretch, dir), club.lift)
 	var hit: String = {"driver": "hit_driver", "putter": "putt"}.get(club.id, "hit_iron")
 	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(full_power * pull, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
@@ -439,7 +459,10 @@ func _press(p: Vector2) -> void:
 				phase = Phase.PULL
 				pull_start = p
 				pull_goal = 0.0
-				_needle_t = randf() * 10.0      # the needle starts anywhere in its sweep
+				_aim_at_pull = aim
+				_dist_at_pull = Vector2(target.x - ball.x, target.y - ball.y).length()
+				_side_goal = 0.0
+				_side = 0.0
 				hud.hint.text = ""
 			else:
 				var hit: Variant = _ground_at(p)
@@ -463,6 +486,9 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 				Sfx.play("click", -6.0)
 			g = 1.0
 		pull_goal = g
+		# sliding sideways swings the aim (past a little drift, which pulling down always has)
+		var dx := (p - pull_start).x / vp.x
+		_side_goal = signf(dx) * maxf(0.0, absf(dx) - SIDE_DEAD) * SIDE_AIM
 
 
 ## The ground point (course xy) under a screen point, by walking the camera ray down to the terrain.
@@ -494,13 +520,20 @@ func _ground_at(p: Vector2) -> Variant:
 	return null
 
 
-## Power follows the finger smoothly (touch reports arrive unevenly), and her backswing with it.
+## Power and the sideways aim follow the finger smoothly (touch reports arrive unevenly), and her
+## backswing with them.
 func _ease_toward_finger(delta: float) -> void:
-	if pull == pull_goal:
+	if pull == pull_goal and _side == _side_goal:
 		return
-	pull = lerpf(pull, pull_goal, 1.0 - exp(-delta * EASE))
+	var k := 1.0 - exp(-delta * EASE)
+	pull = lerpf(pull, pull_goal, k)
 	if absf(pull - pull_goal) < 0.002:
 		pull = pull_goal
+	if _side != _side_goal:
+		_side = lerpf(_side, _side_goal, k)
+		if absf(_side - _side_goal) < 0.0005:
+			_side = _side_goal
+		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(-_side) * _dist_at_pull, false)
 	if phase == Phase.PULL:
 		golfer.set_pull(_sprite_set("back"), minf(pull, 1.0))
 
@@ -512,14 +545,17 @@ func _release() -> void:
 		return
 	if phase == Phase.PULL:
 		if pull_goal < MIN_PULL:
-			# let go without pulling: no shot
+			# let go without pulling: no shot, and the aim goes back to where it was
 			phase = Phase.AIM
 			pull = 0.0
 			pull_goal = 0.0
-			golfer.address(_sprite_set("back"))
+			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
+			if _side != 0.0 or _side_goal != 0.0:
+				_side = _side_goal
+				_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(-_side) * _dist_at_pull)
 			_shoot()
 
 
@@ -535,7 +571,6 @@ func _process(delta: float) -> void:
 			_ease_toward_finger(delta)
 			if phase == Phase.PULL:
 				_aim_cam()
-				_sweep_needle(delta)
 			elif not target_dragging:     # the view holds still under a dragging finger
 				_target_cam()
 			_update_preview()
@@ -593,18 +628,6 @@ func _end_intro() -> void:
 	_target_cam()
 
 
-## The accuracy needle sweeps while she's pulled back: faster for longer clubs, and faster still with
-## power past the mark.
-func _sweep_needle(delta: float) -> void:
-	if club.id == "putter" or pull < MIN_PULL:
-		hud.accuracy.visible = false
-		return
-	var over := maxf(0.0, pull - 1.0) / (OVERPOWER - 1.0)
-	_needle_t += delta * (1.0 + 1.5 * over)
-	needle = sin(_needle_t * TAU / float(NEEDLE_PERIOD.get(club.id, 1.2)))
-	hud.accuracy.show_needle(needle, PERFECT)
-
-
 # ---------------------------------------------------------------- camera
 var _want_pos := Vector3.ZERO
 var _want_target := Vector3.ZERO
@@ -612,15 +635,22 @@ var _want_fov := 64.0
 var _cam_rate := 8.0
 
 
+## While pulling, the view holds the line the pull began on, so sliding sideways visibly swings the
+## target and its flight across the screen.
+func _aim_cam_dir() -> Vector3:
+	var d := _aim_at_pull if phase == Phase.PULL else aim
+	return Vector3(d.x, d.y, 0)
+
+
 func _aim_cam_pos() -> Vector3:
-	var a := Vector3(aim.x, aim.y, 0)
+	var a := _aim_cam_dir()
 	if club.id == "putter":
 		return Terrain.to_world(ball - a * 3.0 + Vector3(0, 0, 1.3))
 	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))   # held still while pulling, so the landing marker can be read
 
 
 func _aim_cam_target() -> Vector3:
-	var a := Vector3(aim.x, aim.y, 0)
+	var a := _aim_cam_dir()
 	if club.id == "putter":
 		var t := ball + a * 5.0
 		return Terrain.to_world(Vector3(t.x, t.y, terrain.height(t.x, t.y)))
@@ -819,6 +849,21 @@ func _make_ball_visuals() -> void:
 	target_ring.material_override = tmat
 	target_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(target_ring)
+	var splane := PlaneMesh.new()
+	splane.size = Vector2.ONE
+	spread_ring.mesh = splane
+	var smat := StandardMaterial3D.new()
+	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smat.albedo_texture = _spread_texture()
+	smat.albedo_color = Color(0.92, 0.95, 1.0, 0.95)
+	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smat.no_depth_test = true
+	smat.disable_fog = true
+	smat.render_priority = 7
+	smat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	spread_ring.material_override = smat
+	spread_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(spread_ring)
 	target_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	target_label.no_depth_test = true
 	target_label.fixed_size = true
@@ -831,6 +876,19 @@ func _make_ball_visuals() -> void:
 	target_label.outline_render_priority = 10
 	add_child(target_label)
 	_show_preview(false)
+
+
+## The margin of error: a soft white rim round a faint fill.
+func _spread_texture() -> ImageTexture:
+	var n := 256
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var d := Vector2(x - n * 0.5 + 0.5, y - n * 0.5 + 0.5).length() / (n * 0.5)
+			var rim := clampf(1.0 - absf(d - 0.92) / 0.08, 0.0, 1.0)
+			var fill := 0.2 if d < 0.92 else 0.0
+			img.set_pixel(x, y, Color(1, 1, 1, maxf(rim, fill)))
+	return ImageTexture.create_from_image(img)
 
 
 ## The target: a bold ring with a softer inner ring and a centre dot, gold.
@@ -889,6 +947,7 @@ func _show_preview(on: bool) -> void:
 	ring.visible = on and full and _wind_land != Vector3.INF
 	target_ring.visible = on
 	target_label.visible = on
+	spread_ring.visible = on and full
 	dots.multimesh.visible_instance_count = dots.multimesh.visible_instance_count if on else 0
 
 
@@ -980,12 +1039,23 @@ func _draw_preview(putt: bool) -> void:
 	mm.visible_instance_count = count
 	# the target ring, flat on the ground and sized to read from the camera, with its distance
 	var tw := Terrain.to_world(Vector3(target.x, target.y, terrain.height(target.x, target.y) + 0.12))
-	var size := clampf(cp.distance_to(tw) * (0.12 if not putt else 0.07), 0.35, 30.0)
+	# smaller on full shots, so the margin-of-error circle round it reads
+	var size := clampf(cp.distance_to(tw) * (0.055 if not putt else 0.07), 0.35, 30.0)
 	var pulse := 1.0 + 0.06 * sin(Time.get_ticks_msec() * 0.006)
 	target_ring.global_transform = Transform3D(Basis().scaled(Vector3(size * pulse, 1.0, size * pulse)), tw)
 	target_ring.visible = true
 	var dist := Vector2(target.x - ball.x, target.y - ball.y).length()
 	target_label.text = _dist_text(dist, putt)
+	# the margin of error, round where this pull comes down: wide across the line, shorter along it
+	var r := _spread(_carry_m)
+	spread_ring.visible = not putt and r > 0.3
+	if spread_ring.visible:
+		var b2 := Vector2(ball.x, ball.y)
+		var c := b2 + aim * _carry_m
+		var cw := Terrain.to_world(Vector3(c.x, c.y, terrain.height(c.x, c.y) + 0.1))
+		var across := Terrain.to_world(Vector3(_right().x, _right().y, 0)) - Terrain.to_world(Vector3.ZERO)
+		var along := Terrain.to_world(Vector3(aim.x, aim.y, 0)) - Terrain.to_world(Vector3.ZERO)
+		spread_ring.global_transform = Transform3D(Basis(across * 2.0 * r, Vector3.UP, along * 2.0 * r * SPREAD_LONG), cw)
 	target_label.global_position = tw + Vector3(0, size * 0.6 + 0.5, 0)
 	target_label.visible = true
 	ring.visible = _wind_land != Vector3.INF and Vector2(_wind_land.x - target.x, _wind_land.y - target.y).length() > 1.0

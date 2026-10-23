@@ -2,8 +2,7 @@ class_name BallSim
 extends RefCounted
 ## Golf ball physics in course coordinates (x right, y down-range, z up, meters).
 ##
-## Flight: gravity, quadratic air drag relative to the wind, backspin lift that decays, and side spin
-## (from an off-centre strike) that bends the flight left or right and decays the same way.
+## Flight: gravity, quadratic air drag relative to the wind, and backspin lift that decays.
 ## Ground: bounce off the terrain normal with per-surface restitution, then roll with
 ## per-surface resistance plus the slope pulling it downhill. Obstacles (tombstones,
 ## lanterns, trunks, canopies) come from props.json. The same code drives the aim preview.
@@ -44,7 +43,6 @@ var wind := Vector2.ZERO
 var pos := Vector3.ZERO
 var vel := Vector3.ZERO
 var lift := 0.0
-var curve := 0.0                 # side spin: > 0 bends the ball to the right of its travel
 var state := State.STOPPED
 var time := 0.0
 var bounces := 0
@@ -62,13 +60,12 @@ func _init(t: Terrain, obs: ObstacleGrid, pin_pos: Vector3, wind_v: Vector2 = Ve
 	wind = wind_v
 
 
-func launch(from: Vector3, velocity: Vector3, lift_coef: float, curve_coef := 0.0) -> void:
+func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	pos = from
 	_prev_pos = from
 	_acc = 0.0
 	vel = velocity
 	lift = lift_coef
-	curve = curve_coef
 	spin_brake = lift_coef * SPIN_BRAKE
 	skid = 0.0
 	time = 0.0
@@ -133,10 +130,6 @@ func _fly(dt: float) -> void:
 		var up_perp := Vector3(-hd.x * vel.z, -hd.y * vel.z, h.length())
 		acc += up_perp * (lift * s)
 		lift *= 1.0 - SPIN_DECAY * dt
-	if h.length() > 0.01 and curve != 0.0:
-		var hd2 := h.normalized()
-		acc += Vector3(hd2.y, -hd2.x, 0.0) * (curve * s * h.length())
-		curve *= 1.0 - SPIN_DECAY * dt
 	vel += acc * dt
 	var prev := pos
 	pos += vel * dt
@@ -236,10 +229,9 @@ func _collide_obstacles(prev: Vector3) -> void:
 ## Run a full shot without touching this instance's live state. Returns a summary used by
 ## the aim preview and the tests.
 static func simulate(t: Terrain, obs: ObstacleGrid, pin_pos: Vector3, wind_v: Vector2, from: Vector3,
-		velocity: Vector3, lift_coef: float, record_every: float = 0.0, max_flight_only := false,
-		curve_coef := 0.0) -> Dictionary:
+		velocity: Vector3, lift_coef: float, record_every: float = 0.0, max_flight_only := false) -> Dictionary:
 	var s := BallSim.new(t, obs, pin_pos, wind_v)
-	s.launch(from, velocity, lift_coef, curve_coef)
+	s.launch(from, velocity, lift_coef)
 	var pts: Array[Vector3] = []
 	var next_rec := 0.0
 	while not s.is_done():

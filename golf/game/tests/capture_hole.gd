@@ -16,7 +16,8 @@ var aim_t := 0.0
 var round := false     # --round: press Next hole on each card and play on to the last hole
 var burst := false     # --burst: a screenshot every frame through each swing, not just one
 var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
-var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, then miss the needle
+var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, land at the margin's edge
+var side_test := false    # --side-test: first shot, slide the pulling finger a fifth of the screen right
 
 
 func _ready() -> void:
@@ -31,6 +32,8 @@ func _ready() -> void:
 			pull_steps = true
 		if a == "--drag-test":
 			drag_test = true
+		if a == "--side-test":
+			side_test = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
 
@@ -85,7 +88,7 @@ func _process(delta: float) -> void:
 				var vp := main.get_viewport().get_visible_rect().size
 				main._press(Vector2(360, vp.y * 0.8))
 				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
-				main.needle_test = 0.0      # a perfect strike
+				main.spread_test = Vector2.ZERO      # dead centre of its margin
 				t = 0.0
 				stage = "pull"
 			elif t > 0.9:
@@ -111,7 +114,7 @@ func _process(delta: float) -> void:
 				var vp := main.get_viewport().get_visible_rect().size
 				main._press(Vector2(360, vp.y * 0.8))
 				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
-				main.needle_test = 0.9      # well off the middle: pushed right and bending right
+				main.spread_test = Vector2(0.95, 0.0)   # at the right edge of its margin
 				drag_test = false
 				t = 0.0
 				stage = "pull"
@@ -129,6 +132,18 @@ func _process(delta: float) -> void:
 					main.pull = goal
 					stage = "pull"
 				await snap("pull")
+				if side_test and shot == 0:
+					side_test = false
+					stage = "side"
+					var vp := main.get_viewport().get_visible_rect().size
+					var aim0: Vector2 = main.aim
+					for k in 10:
+						main._drag(Vector2(360 + 14.4 * (k + 1), vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+						await get_tree().process_frame
+					await get_tree().create_timer(0.5).timeout
+					await snap("side")
+					print("side test: aim turned %.2f degrees" % rad_to_deg(aim0.angle_to(main.aim)))
+					stage = "pull"
 				main._release()
 				t = 0.0
 				stage = "swing"

@@ -16,7 +16,6 @@ var dist := Label.new()
 var wind := Label.new()
 var wind_arrow := WindArrow.new()
 var gauge := Gauge.new()
-var accuracy := Needle.new()
 var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
@@ -155,38 +154,6 @@ class Gauge extends Control:
 			draw_string(font, Vector2(tag.position.x + 12, fy + 41), note, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, note_col)
 
 
-## The accuracy meter shown while pulling: a needle sweeps across a bar; letting go with it in the
-## mint middle is a perfect, straight strike, and the further out it is the more the shot bends.
-class Needle extends Control:
-	var needle := 0.0       # -1 .. 1
-	var perfect := 0.12     # half-width of the mint middle, same units
-
-	func show_needle(n: float, perfect_w: float) -> void:
-		needle = n
-		perfect = perfect_w
-		visible = true
-		queue_redraw()
-
-	func _draw() -> void:
-		var ink := Color(0.06, 0.02, 0.1)
-		var w := size.x
-		var cy := size.y * 0.5
-		var half := w * 0.5 - 14.0
-		var cx := w * 0.5
-		draw_rect(Rect2(cx - half - 6, cy - 16, half * 2 + 12, 32), Color(0.16, 0.08, 0.24, 0.85))
-		# red at the ends, through orange, to mint in the middle
-		var n_seg := 24
-		for k in n_seg:
-			var a := -1.0 + 2.0 * k / n_seg
-			var b := -1.0 + 2.0 * (k + 1) / n_seg
-			var m := absf((a + b) * 0.5)
-			var col := Color(0.45, 1.0, 0.7) if m <= perfect else Color(1.0, 0.62, 0.18).lerp(Color(1.0, 0.3, 0.25), clampf((m - perfect) / (1.0 - perfect), 0.0, 1.0))
-			draw_rect(Rect2(cx + a * half, cy - 10, (b - a) * half + 0.5, 20), col)
-		var nx := cx + needle * half
-		draw_line(Vector2(nx, cy - 24), Vector2(nx, cy + 24), ink, 9.0)
-		draw_line(Vector2(nx, cy - 22), Vector2(nx, cy + 22), Color.WHITE, 4.0)
-
-
 func _label(l: Label, size: int, color := CREAM) -> Label:
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
@@ -245,18 +212,6 @@ func _ready() -> void:
 	gauge.visible = false
 	root.add_child(gauge)
 
-	# the accuracy needle: across the middle, below the horizon and clear of her and the gauge
-	accuracy.anchor_left = 0.5
-	accuracy.anchor_right = 0.5
-	accuracy.anchor_top = 0.47
-	accuracy.anchor_bottom = 0.47
-	accuracy.offset_left = -190
-	accuracy.offset_right = 150
-	accuracy.offset_top = -30
-	accuracy.offset_bottom = 30
-	accuracy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	accuracy.visible = false
-	root.add_child(accuracy)
 
 	# just above the horizon, clear of the moon (which sits a fifth to a third of the way down)
 	message.anchor_left = 0.5
@@ -372,7 +327,6 @@ func set_club(label: String, yards: float) -> void:
 
 func hide_gauge() -> void:
 	gauge.visible = false
-	accuracy.visible = false
 
 
 func flash(text: String, seconds := 2.2) -> void:

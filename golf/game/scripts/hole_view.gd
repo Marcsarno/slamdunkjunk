@@ -27,6 +27,8 @@ var _bat_t := 0.0
 var _terrain_mat: ShaderMaterial
 var ambience := Ambience.new()
 var _fog_base := 0.0045
+var _sky_mat: ShaderMaterial
+var _moon_dir := Vector3(0, 0.5, -1)
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -73,54 +75,48 @@ func _sky_style() -> String:
 func _environment() -> void:
 	var bd: Dictionary = theme.get("backdrop", {})
 	var style := _sky_style()
-	var fog_col := _col(theme.get("fog"), Color(0.30, 0.21, 0.40))
-	var top_col := _col(theme.get("sky_top"), Color(0.07, 0.04, 0.14))
-	var horizon_col := _col(theme.get("sky_horizon"), Color(0.40, 0.28, 0.50))
-	var moon_dir := Vector3(-0.3, 0.55, -0.78).normalized()
+	var fog_col := _col(theme.get("fog"), Color(0.09, 0.09, 0.18))
+	var top_col := _col(theme.get("sky_top"), Color(0.004, 0.006, 0.022))
+	var horizon_col := _col(theme.get("sky_horizon"), Color(0.035, 0.045, 0.11))
 	var moon_col := _col(theme.get("moon_light"), Color(0.72, 0.7, 1.0))
 	var mat := ShaderMaterial.new()
-	mat.shader = load("res://shaders/sky_backdrop.gdshader")
-	mat.set_shader_parameter("paint_mix", 1.0 if style == "painted" else 0.0)
-	mat.set_shader_parameter("haze", float(theme.get("backdrop_haze", 0.45)))
-	mat.set_shader_parameter("star_amount", float(theme.get("stars", 1.0 if style != "painted" else 0.0)))
-	if not bd.is_empty():
+	mat.shader = load("res://shaders/night_sky.gdshader")
+	# the moon hangs where the theme says (degrees round from straight down the hole, and up)
+	var az := deg_to_rad(float(theme.get("moon_azimuth", -14.0)))
+	var el := deg_to_rad(float(theme.get("moon_elevation", 13.0)))
+	var moon_dir := Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
+	if not bd.is_empty() and style == "painted":
+		# the hole's painting, kept only as a skyline under the night sky
 		var all_meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BACKDROP_DIR + "meta.json"))
 		var v: String = bd.get("variant", "a")
 		var info: Dictionary = all_meta[bd.hole][v]
-		var folder: String = BACKDROP_DIR + bd.hole + "/"
-		mat.set_shader_parameter("backdrop", load(folder + v + ".jpg"))
-		var span: float = bd.get("span", 90.0)
-		var aspect: float = float(info.size[0]) / float(info.size[1])
-		var horizon_v: float = bd.get("horizon_v", 0.8)
-		var yaw: float = bd.get("yaw", 0.0)
-		mat.set_shader_parameter("span_deg", span)
-		mat.set_shader_parameter("aspect", aspect)
-		mat.set_shader_parameter("horizon_v", horizon_v)
-		mat.set_shader_parameter("yaw_deg", yaw)
-		if info.has("moon"):
-			var mi: Dictionary = info.moon
-			mat.set_shader_parameter("moon_tex", load(folder + v + "_moon.png"))
-			var box: Array = mi.sprite_box_uv
-			var cu := (float(box[0]) + float(box[2])) * 0.5
-			var cv := (float(box[1]) + float(box[3])) * 0.5
-			var az := deg_to_rad((cu - 0.5) * span + yaw)
-			var el := deg_to_rad((horizon_v - cv) * span / aspect)
-			var half_deg := (float(box[2]) - float(box[0])) * span * 0.5
-			if style != "painted":
-				# plain night sky: a clean moon from the hole's element sheet, low enough to be in view
-				az = deg_to_rad(float(theme.get("moon_azimuth", -14.0)))
-				el = deg_to_rad(float(theme.get("moon_elevation", 24.0)))
-				if ResourceLoader.exists(folder + "moon_clean.png"):   # (exported builds hold the imported image, not the .png)
-					mat.set_shader_parameter("moon_tex", load(folder + "moon_clean.png"))
-					mat.set_shader_parameter("moon_glow", 1.0)
-					half_deg = 8.0
-			moon_dir = Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el))
-			mat.set_shader_parameter("moon_half", tan(deg_to_rad(half_deg)))
-			mat.set_shader_parameter("moon_scale", float(theme.get("moon_scale", 1.0)))
-			mat.set_shader_parameter("moon_dir", moon_dir)
+		mat.set_shader_parameter("backdrop", load(BACKDROP_DIR + bd.hole + "/" + v + ".jpg"))
+		mat.set_shader_parameter("paint_mix", 1.0)
+		mat.set_shader_parameter("span_deg", float(bd.get("span", 90.0)))
+		mat.set_shader_parameter("aspect", float(info.size[0]) / float(info.size[1]))
+		mat.set_shader_parameter("horizon_v", float(bd.get("horizon_v", 0.8)))
+		mat.set_shader_parameter("yaw_deg", float(bd.get("yaw", 0.0)))
+		mat.set_shader_parameter("paint_top_deg", float(theme.get("skyline_top", 14.0)))
+		mat.set_shader_parameter("paint_dark", float(theme.get("skyline_dark", 0.5)))
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.008
+	noise.fractal_octaves = 5
+	var clouds := NoiseTexture2D.new()
+	clouds.width = 512
+	clouds.height = 512
+	clouds.seamless = true
+	clouds.noise = noise
+	mat.set_shader_parameter("cloud_noise", clouds)
+	mat.set_shader_parameter("cloud_amount", float(theme.get("clouds", 0.45)))
+	mat.set_shader_parameter("star_amount", float(theme.get("stars", 1.0)))
+	mat.set_shader_parameter("moon_dir", moon_dir)
+	mat.set_shader_parameter("moon_radius", float(theme.get("moon_size", 0.034)))
 	mat.set_shader_parameter("top_color", top_col)
 	mat.set_shader_parameter("horizon_color", horizon_col)
 	mat.set_shader_parameter("ground_color", fog_col)
+	_sky_mat = mat
+	_moon_dir = moon_dir
 	var sky := Sky.new()
 	sky.radiance_size = Sky.RADIANCE_SIZE_32
 	sky.sky_material = mat
@@ -492,6 +488,18 @@ func _process(delta: float) -> void:
 		var up := smoothstep(8.0, 45.0, c.z - terrain.height(c.x, c.y))
 		env.fog_density = _fog_base * lerpf(1.0, 0.3, up)
 		ambience.set_height_fade(1.0 - 0.7 * up)
+		# the sky measures the moon on the screen with the camera's own view, so it's always round
+		var vp := camera.get_viewport().get_visible_rect().size
+		var b := camera.global_basis
+		_sky_mat.set_shader_parameter("cam_right", b.x)
+		_sky_mat.set_shader_parameter("cam_up", b.y)
+		_sky_mat.set_shader_parameter("cam_fwd", -b.z)
+		var tx := tan(deg_to_rad(camera.fov) * 0.5)
+		var aspect := vp.x / vp.y
+		# keep_aspect: the camera's fov is across the screen (KEEP_WIDTH) or up it (KEEP_HEIGHT)
+		var t := Vector2(tx, tx / aspect) if camera.keep_aspect == Camera3D.KEEP_WIDTH else Vector2(tx * aspect, tx)
+		_sky_mat.set_shader_parameter("tan_half", t)
+		_sky_mat.set_shader_parameter("screen_aspect", vp.x / vp.y)
 	_bat_t += delta
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed

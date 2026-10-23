@@ -18,9 +18,9 @@ const HOLES := [
 const HELP := [
 	"Drag the gold ring to where you want to land.",
 	"Pull down from the bottom to the gauge's mark.",
-	"Let go with the needle in the middle.",
+	"Slide sideways as you pull to aim.",
+	"The white circle: where it may land.",
 	"Wind blows a shot to the mint ring: aim off.",
-	"Tap the club box to change clubs.",
 ]
 
 var splash := Control.new()
