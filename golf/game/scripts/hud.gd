@@ -258,6 +258,8 @@ class AimMap extends Control:
 ## drawn. --ball-size=<share of the screen's width> tries other sizes.
 class Sling extends Control:
 	const DIR := "res://assets/balls/"
+	const BALLS := ["pumpkin", "ghost", "skull"]     # picked on the clubhouse bar (front.gd)
+	const SETTINGS := "user://settings.cfg"
 	const REST_Y := 0.70            # where it rests, as a share of the screen's height
 	const ART_FILL := 0.8           # the ball's share of its art's square
 	var size_share := 0.15          # the ball's width, as a share of the screen's (about 58 pt on a phone)
@@ -278,7 +280,22 @@ class Sling extends Control:
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--ball-size="):
 				size_share = clampf(float(a.trim_prefix("--ball-size=")), 0.08, 0.3)
-		set_ball(ball_name)
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS    # the art is drawn well under its size
+		set_ball(chosen())
+
+	## The ball picked in the clubhouse (remembered between visits).
+	static func chosen() -> String:
+		var cfg := ConfigFile.new()
+		var b := "pumpkin"
+		if cfg.load(SETTINGS) == OK:
+			b = str(cfg.get_value("play", "ball", b))
+		return b if b in BALLS else "pumpkin"
+
+	static func choose(b: String) -> void:
+		var cfg := ConfigFile.new()
+		cfg.load(SETTINGS)
+		cfg.set_value("play", "ball", b)
+		cfg.save(SETTINGS)
 
 	func set_ball(n: String) -> void:
 		ball_name = n

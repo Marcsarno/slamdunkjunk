@@ -49,7 +49,7 @@ const INTRO_TIME := 6.5
 const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
 const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
-const AIM_BALL_Y := 0.58        # the aiming view tips down until the ball sits this far down the screen,
+const AIM_BALL_Y := 0.62        # the aiming view tips down until the ball sits this far down the screen,
                                 # clear of the slingshot under it
 const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
 
@@ -918,7 +918,7 @@ func _target_cam() -> void:
 	var t2 := Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull if pulling else target
 	var d := maxf(Vector2(t2.x - ball.x, t2.y - ball.y).length(), 5.0)
 	var a := Vector3(a2.x, a2.y, 0)
-	var p := ball - a * (0.24 * d + 6.0) + Vector3(0, 0, 0.2 * d + 4.0)
+	var p := ball - a * (0.24 * d + 6.0) + Vector3(0, 0, 0.16 * d + 4.0)   # 34 degrees down onto the ball, whatever the length
 	p.z = maxf(p.z, terrain.height(p.x, p.y) + 3.0)
 	_want_fov = 50.0 - (4.0 * pull if pulling else 0.0)
 	_want_pos = Terrain.to_world(p)

@@ -17,11 +17,14 @@ const HOLES := [
 ]   # par 0: not built yet (the built ones are Round.HOLES, in the same order)
 const HELP := [
 	"Drag the gold ring to where you want to land.",
-	"Pull down from the bottom to the gauge's mark.",
-	"Slide sideways as you pull to aim.",
+	"Pull the ball back like a slingshot, to the gauge's mark.",
+	"Pull to the right to send it left, to the left to send it right.",
 	"The white circle: where it may land.",
 	"Wind blows a shot to the mint ring: aim off.",
 ]
+const BALL_SPOTS := [Vector2(505, 1262), Vector2(645, 1262), Vector2(785, 1262)]   # on the bar
+const BALL_D := 112.0
+const BALL_GLOW := {"pumpkin": Color(1.0, 0.55, 0.15), "ghost": Color(0.62, 0.55, 1.0), "skull": Color(0.62, 0.55, 1.0)}
 
 var splash := Control.new()
 var clubhouse := Control.new()
@@ -35,6 +38,8 @@ var head_font: Font = Chalk.head_font()
 var hand_font: Font = Chalk.hand_font()
 var _t := 0.0
 var _busy := false
+var _balls := {}            # name -> [its picture, its glow]
+var _ball := Hud.Sling.chosen()
 
 
 func _ready() -> void:
@@ -65,6 +70,15 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	play_art.scale = Vector2.ONE * (1.0 + 0.025 * sin(_t * 3.0)) if not _busy else play_art.scale
+	# the picked ball bobs on the bar in its glow; the others sit still, a little dimmer
+	for n: String in _balls:
+		var pic: TextureRect = _balls[n][0]
+		var glow: TextureRect = _balls[n][1]
+		var on := n == _ball
+		var i := Hud.Sling.BALLS.find(n)
+		pic.position.y = BALL_SPOTS[i].y - BALL_D * 0.5 / Hud.Sling.ART_FILL + (sin(_t * 2.6) * 5.0 - 5.0 if on else 0.0)
+		pic.modulate = Color.WHITE if on else Color(0.72, 0.68, 0.76)
+		glow.modulate.a = (0.75 + 0.2 * sin(_t * 2.6)) if on else 0.0
 
 
 func _fit() -> void:
@@ -206,6 +220,63 @@ func _build_clubhouse() -> void:
 	back_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.add_child(back_l)
 	back.pressed.connect(_show_help.bind(false))
+
+	# the slingshot balls on the bar: tap one to play with it
+	var glow_tex := _glow_texture()
+	for i in Hud.Sling.BALLS.size():
+		var n: String = Hud.Sling.BALLS[i]
+		var c: Vector2 = BALL_SPOTS[i]
+		var glow := TextureRect.new()
+		glow.texture = glow_tex
+		glow.size = Vector2.ONE * BALL_D * 1.9
+		glow.position = c - glow.size * 0.5
+		glow.self_modulate = BALL_GLOW[n]
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		clubhouse.add_child(glow)
+		var pic := TextureRect.new()
+		pic.texture = load("res://assets/balls/%s/still.png" % n)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		pic.size = Vector2.ONE * BALL_D / Hud.Sling.ART_FILL
+		pic.position = c - pic.size * 0.5
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		clubhouse.add_child(pic)
+		_balls[n] = [pic, glow]
+		var hit := _invisible_button(Rect2(c - Vector2.ONE * BALL_D * 0.6, Vector2.ONE * BALL_D * 1.2))
+		hit.pressed.connect(_pick_ball.bind(n))
+		clubhouse.add_child(hit)
+	var pick := _chalk_label("pick your ball", hand_font, 32, CHALK_ORANGE)
+	pick.material = null
+	pick.add_theme_color_override("font_outline_color", Color(0.08, 0.03, 0.1))
+	pick.add_theme_constant_override("outline_size", 8)
+	pick.position = Vector2(BALL_SPOTS[0].x - 70, 1384)
+	pick.size = Vector2(BALL_SPOTS[2].x - BALL_SPOTS[0].x + 140, 50)
+	pick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	clubhouse.add_child(pick)
+
+
+func _pick_ball(n: String) -> void:
+	if n == _ball:
+		return
+	_ball = n
+	Hud.Sling.choose(n)
+	Sfx.play("click", -4.0)
+	var pic: TextureRect = _balls[n][0]
+	pic.pivot_offset = pic.size * 0.5
+	var tw := create_tween()
+	tw.tween_property(pic, "scale", Vector2.ONE * 1.15, 0.08)
+	tw.tween_property(pic, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## A soft round glow, white, to tint.
+func _glow_texture() -> ImageTexture:
+	var n := 128
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var d := Vector2(x - n * 0.5 + 0.5, y - n * 0.5 + 0.5).length() / (n * 0.5)
+			img.set_pixel(x, y, Color(1, 1, 1, pow(clampf(1.0 - d, 0.0, 1.0), 2.0) * 0.8))
+	return ImageTexture.create_from_image(img)
 
 
 func _show_help(on: bool) -> void:
