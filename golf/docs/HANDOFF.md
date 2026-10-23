@@ -103,8 +103,8 @@ project's convention), then `--import` again.
   straight aim line as long as the putt (`scripts/putt_grid.gd`), as PGA 2K / EA PGA show it. The cup
   judges a putt once as it comes over the rim: slow enough for its line drops, else it hops the hole
   and rolls on a little slower (`ball_sim._check_cup`).
-- Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`); the slow motion
-  near the cup eases in and out (`main._time_scale`).
+- Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`). No slow motion
+  near the cup (Marc took it out); flight plays at 1.25x, easing to real time on landing (`main._time_scale`).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,
