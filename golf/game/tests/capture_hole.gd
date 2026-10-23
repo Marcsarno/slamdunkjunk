@@ -75,7 +75,12 @@ func _process(delta: float) -> void:
 				aim_t = 0.0
 			aim_t += delta
 			if main.phase == main.Phase.AIM and aim_t > 0.6:     # the shot's preview has had a few frames
-				if shot == 0 and first_target != Vector2.INF:
+				var fixed := shot == 0 and first_target != Vector2.INF
+				if fixed:
+					# the club for that distance, then the target exactly there (no upwind allowance)
+					var b0 := Vector2(main.ball.x, main.ball.y)
+					main.club = Clubs.pick(b0.distance_to(first_target), false)
+					main._lie = main._lie_at(main.ball)
 					main._set_target(first_target)
 					first_target = Vector2.INF
 					main._update_preview()
@@ -83,7 +88,7 @@ func _process(delta: float) -> void:
 				var b2 := Vector2(main.ball.x, main.ball.y)
 				var pin2 := Vector2(main.terrain.pin().x, main.terrain.pin().y)
 				print("aim s%d: pin %.1f m, target %.1f m, power %.3f, wind %s, wind lands %.1f m from target" % [shot + 1, b2.distance_to(pin2), b2.distance_to(main.target), main.full_power, main.wind, Vector2(main._wind_land.x, main._wind_land.y).distance_to(main.target) if main._wind_land != Vector3.INF else -1.0])
-				if main._wind_land != Vector3.INF:
+				if main._wind_land != Vector3.INF and not fixed:
 					var drift := Vector2(main._wind_land.x - main.target.x, main._wind_land.y - main.target.y)
 					main._set_target(main.target - drift)
 					print("   moved upwind: target %.1f m, power %.3f" % [b2.distance_to(main.target), main.full_power])
@@ -193,7 +198,8 @@ func _process(delta: float) -> void:
 				await snap("landing_fx")
 		"done":
 			if main.phase == main.Phase.RESULT and main.sim:
-				print("   shot s%d: landed %.1f m, finished %.1f m out (from %s)" % [shot + 1, Vector2(main.sim.first_land.x - main.last_ball.x, main.sim.first_land.y - main.last_ball.y).length() if main.sim.first_land != Vector3.INF else -1.0, Vector2(main.sim.pos.x - main.last_ball.x, main.sim.pos.y - main.last_ball.y).length(), main.last_ball])
+				print("   shot s%d (%s%s): landed %.1f m, finished %.1f m out (from %s)" % [shot + 1,
+					["flying", "rolling", "stopped", "holed", "WATER", "OUT OF BOUNDS"][main.sim.state], " in a web" if main.sim.caught else "", Vector2(main.sim.first_land.x - main.last_ball.x, main.sim.first_land.y - main.last_ball.y).length() if main.sim.first_land != Vector3.INF else -1.0, Vector2(main.sim.pos.x - main.last_ball.x, main.sim.pos.y - main.last_ball.y).length(), main.last_ball])
 			if main.phase == main.Phase.RESULT:
 				await snap("result")
 				shot += 1

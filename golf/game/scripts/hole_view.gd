@@ -48,6 +48,7 @@ func build(hole_dir: String, t: Terrain) -> void:
 	_horizon_rings()
 	_pin()
 	_green_lanterns()
+	_webs()
 	_make_bats()
 	add_child(ambience)
 	ambience.build(terrain, props, theme, env)
@@ -449,6 +450,57 @@ func _horizon_rings() -> void:
 ## A pair of Marc's post-top pumpkin lanterns behind each green, one at each back corner, faces turned
 ## back down the hole (background dressing: their glow is all emissive, no lights).
 const GREEN_LANTERN := "res://assets/props/lanterns/post.glb"
+
+
+## The giant spider webs (the layout's "web_art"): Marc's web drawing stretched over each one, draped on
+## the ground and glowing faintly lavender in the moonlight.
+func _webs() -> void:
+	var arts: Array = terrain.meta.get("web_art", [])
+	if arts.is_empty():
+		return
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
+uniform sampler2D web : source_color, filter_linear_mipmap, repeat_disable;
+uniform vec3 tint : source_color = vec3(0.86, 0.8, 1.0);
+void fragment() {
+	float a = texture(web, UV).a;
+	// a slow shimmer along the strands, as if dew or moonlight runs over them
+	float shimmer = 0.85 + 0.15 * sin(TIME * 1.3 + (UV.x + UV.y) * 18.0);
+	ALBEDO = tint * shimmer;
+	ALPHA = a * 0.8;
+}
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("web", load("res://assets/hazards/web.png"))
+	for w: Dictionary in arts:
+		var c := Vector2(w.center[0], w.center[1])
+		var r := Vector2(w.radius[0], w.radius[1])
+		var rot := float(w.get("rotation", 0.0))
+		var ax := Vector2(cos(rot), sin(rot))
+		var ay := Vector2(-sin(rot), cos(rot))
+		var n := clampi(int(maxf(r.x, r.y) / 1.5), 16, 72)     # a vertex every ~1.5 m, so it lies on the ground
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for j in n + 1:
+			for i in n + 1:
+				var u := float(i) / n
+				var v := float(j) / n
+				var p := c + ax * (u - 0.5) * 2.0 * r.x + ay * (v - 0.5) * 2.0 * r.y
+				st.set_uv(Vector2(u, 1.0 - v))
+				st.add_vertex(Terrain.to_world(Vector3(p.x, p.y, terrain.height(p.x, p.y) + 0.12)))
+		for j in n:
+			for i in n:
+				var a := j * (n + 1) + i
+				for k: int in [a, a + 1, a + n + 2, a, a + n + 2, a + n + 1]:
+					st.add_index(k)
+		var mi := MeshInstance3D.new()
+		mi.mesh = st.commit()
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
 
 
 func _green_lanterns() -> void:

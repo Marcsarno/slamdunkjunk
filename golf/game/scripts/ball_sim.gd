@@ -61,6 +61,7 @@ var bounces := 0
 var first_land := Vector3.INF
 var apex := 0.0
 var hit_obstacle := false
+var caught := false               # came down in a spider web
 var skid := 0.0
 var spin := 0.0                  # 0 (a driver's low spin) .. 1 (a wedge's); bites at the first landing
 
@@ -86,6 +87,7 @@ func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	first_land = Vector3.INF
 	apex = from.z
 	hit_obstacle = false
+	caught = false
 	_over_cup = false
 	state = State.FLYING if velocity.z > 0.01 else State.ROLLING
 
@@ -165,6 +167,12 @@ func _land() -> void:
 	if surf == Terrain.Surface.OOB:
 		state = State.OOB
 		return
+	if terrain.in_web(pos.x, pos.y):
+		# caught in a giant spider web: it stops dead where it comes down
+		caught = true
+		vel = Vector3.ZERO
+		state = State.STOPPED
+		return
 	bounces += 1
 	var p: Array = SURF[surf]
 	var n := terrain.normal(pos.x, pos.y)
@@ -198,6 +206,11 @@ func _roll(dt: float) -> void:
 		return
 	if surf == Terrain.Surface.OOB:
 		state = State.OOB
+		return
+	if terrain.in_web(pos.x, pos.y):
+		caught = true                          # rolled into a web: stuck fast
+		vel = Vector3.ZERO
+		state = State.STOPPED
 		return
 	var resist: float = SURF[surf][2]
 	if skid > 0.0:

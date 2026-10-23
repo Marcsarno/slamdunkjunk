@@ -365,7 +365,9 @@ func _on_green() -> bool:
 
 
 func _setup_shot() -> void:
+	_lie = 1.0
 	club = _pick_club()
+	_lie = _lie_at(ball)
 	if club.id == "putter":
 		putt_grid.build(terrain, Vector2(ball.x, ball.y), Vector2(terrain.pin().x, terrain.pin().y))
 	else:
@@ -379,6 +381,9 @@ func _setup_shot() -> void:
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
+	if _lie < 0.9:
+		var where := "A spider web" if terrain.in_web(ball.x, ball.y) else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)])
+		hud.hint.text = "%s: it'll fly %d%% shorter" % [where, roundi((1.0 - _lie) * 100.0)]
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
@@ -404,6 +409,7 @@ func _pick_club() -> Dictionary:
 	var start := mini(Clubs.ALL.find(Clubs.pick(d, false)) + 2, Clubs.ALL.size() - 2)
 	for i in range(start, -1, -1):
 		club = Clubs.ALL[i]
+		_lie = _lie_at(ball)
 		if _power_for(d, dir) <= Clubs.PICK_SHARE:
 			return club
 	return Clubs.ALL[0]
@@ -456,7 +462,7 @@ func _read_putt(pin2: Vector2) -> Vector2:
 	for i in 5:
 		var dir := (t - b).normalized()
 		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-			Clubs.launch_velocity(club, _power_for(b.distance_to(t), dir), dir), club.lift, 0.02)
+			_launch(_power_for(b.distance_to(t), dir), dir), club.lift, 0.02)
 		if r.state == BallSim.State.HOLED:
 			break
 		# where the roll passed the hole: its nearest point to the cup, and how far across the line
@@ -482,7 +488,7 @@ func _safe_layup(t: Vector2) -> Vector2:
 	var right := Vector2(dir.y, -dir.x)
 	for k in 10:
 		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-			Clubs.launch_velocity(club, _power_for(d, dir), dir), club.lift)
+			_launch(_power_for(d, dir), dir), club.lift)
 		var e := Vector2(r.end.x, r.end.y)
 		var m := _spread(d)
 		var ok: bool = r.state != BallSim.State.WATER and r.state != BallSim.State.OOB \
@@ -504,7 +510,7 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 	var land := d
 	for i in 3:
 		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-			Clubs.launch_velocity(club, _power_for(land, dir), dir), club.lift)
+			_launch(_power_for(land, dir), dir), club.lift)
 		if r.state == BallSim.State.HOLED:
 			break
 		var f := Vector2(r.end.x, r.end.y).distance_to(b)
@@ -516,9 +522,33 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 
 ## How far a club's swing at power `p` carries along `dir` with no wind (a putt: how far it rolls).
 ## INF when a putt drops: it would have rolled at least as far as it needed to.
+## How well the ball sits: the share of a club's power a full swing gets out of the lie (rough grabs
+## the club, deep rough and the corn more, a bunker takes some, a spider web holds it fast).
+const LIE := {Terrain.Surface.ROUGH: 0.92, Terrain.Surface.DEEP: 0.78, Terrain.Surface.SAND: 0.85}
+const LIE_WEB := 0.6
+var _lie := 1.0
+
+
+func _lie_at(b: Vector3) -> float:
+	if club.get("id", "") == "putter":
+		return 1.0
+	if terrain.in_web(b.x, b.y):
+		return LIE_WEB
+	var surf := terrain.surface_at(b.x, b.y)
+	var f: float = LIE.get(surf, 1.0)
+	if surf == Terrain.Surface.SAND and club.get("kind", "") == "wedge":
+		f = 0.95                               # a wedge splashes it out
+	return f
+
+
+## A shot's launch from where the ball lies (every shot and every preview goes through here).
+func _launch(p: float, dir: Vector2) -> Vector3:
+	return Clubs.launch_velocity(club, p * _lie, dir)
+
+
 func _carry(p: float, dir: Vector2) -> float:
 	var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-		Clubs.launch_velocity(club, p, dir), club.lift, 0.0, true)
+		_launch(p, dir), club.lift, 0.0, true)
 	if r.state == BallSim.State.HOLED:
 		return INF
 	var land: Vector3 = r.first_land if r.first_land != Vector3.INF else r.end
@@ -575,6 +605,7 @@ func _cycle_club() -> void:
 	if phase != Phase.AIM:
 		return
 	club = Clubs.next(club)
+	_lie = _lie_at(ball)
 	if club.id == "putter":
 		putt_grid.build(terrain, Vector2(ball.x, ball.y), Vector2(terrain.pin().x, terrain.pin().y))
 	else:
@@ -680,7 +711,7 @@ func _on_contact() -> void:
 	var land := b + aim * d + _right() * _shot_offset.x * r + aim * _shot_offset.y * r * SPREAD_LONG
 	var dir := (land - b).normalized()
 	var stretch := land.distance_to(b) / maxf(d, 0.01)
-	sim.launch(ball, Clubs.launch_velocity(club, power * stretch, dir), club.lift)
+	sim.launch(ball, _launch(power * stretch, dir), club.lift)
 	var hit: String = {"wood": "hit_driver", "putter": "putt"}.get(club.kind, "hit_iron")
 	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(power, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
@@ -717,7 +748,10 @@ func _shot_done() -> void:
 			hud.flash("Out of bounds! +1 stroke")
 		_:
 			ball = sim.pos
-			if club.id == "putter":
+			if sim.caught:
+				hud.flash("Caught in the web! · %s" % _dist_text(carried / YD, false))
+				Sfx.play("land_sand", -6.0, 0.7)
+			elif club.id == "putter":
 				hud.flash("%s to go" % _dist_text(_to_pin(), true))
 			else:
 				hud.flash("%s · %s" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
@@ -1449,7 +1483,7 @@ func _update_preview() -> void:
 	if not still:
 		_preview_ms = Time.get_ticks_msec()
 		preview = BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-			Clubs.launch_velocity(club, p, aim), club.lift, 0.05, not putt)
+			_launch(p, aim), club.lift, 0.05, not putt)
 		var land: Vector3 = preview.first_land if preview.first_land != Vector3.INF else preview.end
 		_carry_m = Vector2(land.x - ball.x, land.y - ball.y).length()
 		_finish_m = _carry_m if putt else -1.0
@@ -1458,7 +1492,7 @@ func _update_preview() -> void:
 	elif _finish_m < 0.0 and not target_dragging:
 		# held still: run it to the finish for the roll (a putt's preview already did)
 		var whole := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
-			Clubs.launch_velocity(club, p, aim), club.lift, 0.05)
+			_launch(p, aim), club.lift, 0.05)
 		_finish_m = Vector2(whole.end.x - ball.x, whole.end.y - ball.y).length()
 		_finish_warn = _trouble(whole.state)
 		_roll_pts = []
@@ -1477,7 +1511,7 @@ func _update_preview() -> void:
 		_wind_land = Vector3.INF
 		if not putt and wind.length() > 0.5:
 			var w := BallSim.simulate(terrain, obstacles, terrain.pin(), wind, ball,
-				Clubs.launch_velocity(club, full_power, aim), club.lift, 0.0, true)
+				_launch(full_power, aim), club.lift, 0.0, true)
 			_wind_land = w.first_land if w.first_land != Vector3.INF else w.end
 	_draw_preview(putt)
 	_show_aim_map(putt)

@@ -75,6 +75,20 @@ func normal(x: float, y: float) -> Vector3:
 	return Vector3(-dx, -dy, 1.0).normalized()
 
 
+## Inside one of the hole's giant spider webs (the layout's "webs": ellipses, course coords)?
+func in_web(x: float, y: float) -> bool:
+	for w: Dictionary in meta.get("webs", []):
+		var c := Vector2(w.center[0], w.center[1])
+		var r := Vector2(w.radius[0], w.radius[1])
+		var d := Vector2(x, y) - c
+		var rot := float(w.get("rotation", 0.0))
+		var u := (d.x * cos(rot) + d.y * sin(rot)) / r.x
+		var v := (-d.x * sin(rot) + d.y * cos(rot)) / r.y
+		if u * u + v * v < 1.0:
+			return true
+	return false
+
+
 func surface_at(x: float, y: float) -> int:
 	var i := int(round((x - origin.x) / surf_cell))
 	var j := int(round((y - origin.y) / surf_cell))

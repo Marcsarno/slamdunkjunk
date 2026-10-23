@@ -55,6 +55,9 @@ def main():
     for k, c in COLORS.items():
         rgb[surf == k] = c
     rgb[surf == hg.WATER] = (60, 110, 200)
+    for w in spec.get("webs", []):                     # spider webs: the ball stops dead in them
+        r, _ = hg.ellipse_r(gx, gy, w)
+        rgb[r < 1.0] = (rgb[r < 1.0] * 0.4 + np.array([170, 140, 220]) * 0.6).astype(np.uint8)
     img = Image.fromarray(rgb[::-1])
     dr = ImageDraw.Draw(img)
     top = ys[-1]

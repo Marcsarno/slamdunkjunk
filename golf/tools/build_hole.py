@@ -309,6 +309,15 @@ def in_cornfield(x, y):
     return hole.length * cf["from"] - 4 < s_ < hole.length * cf["to"] + 4 and start < lat * sgn < start + cf.get("depth", 26.0) + 4
 
 
+def in_web(x, y):
+    """Inside one of the hole's spider webs (nothing grows up through them)."""
+    for w in spec.get("web_art", spec.get("webs", [])):
+        r, _ = hole_gen.ellipse_r(np.array([x]), np.array([y]), w)
+        if r[0] < 1.0:
+            return True
+    return False
+
+
 def in_open(x, y, grow=1.1):
     """Inside one of the hole's landing pads or open zones (grown a little): no woods there."""
     for z in spec.get("pads", []) + spec.get("zones", []):
@@ -395,7 +404,7 @@ def scatter(img, spacing, prob, hrange, zone, shadow=False):
             su = surf_at(x, y)
             if su in (hole_gen.FAIRWAY, hole_gen.GREEN, hole_gen.SAND, hole_gen.WATER, hole_gen.TEE, hole_gen.FRINGE):
                 continue
-            if not zone(x, y, d, s, su) or not free(x, y, 0.4):
+            if not zone(x, y, d, s, su) or not free(x, y, 0.4) or in_web(x, y):
                 continue
             card(img, x, y, rng.uniform(*hrange), shadow)
             n += 1
