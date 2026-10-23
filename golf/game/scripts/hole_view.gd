@@ -455,7 +455,7 @@ func _green_lanterns() -> void:
 	var across := Vector2(dir.y, -dir.x)
 	var r := maxf(float(g.radius[0]), float(g.radius[1]))
 	var scene: PackedScene = load(GREEN_LANTERN)
-	for side in [-1.0, 1.0]:
+	for side: float in [-1.0, 1.0]:
 		var q := c + dir * (r + 5.0) + across * side * r * 0.9
 		for tries in 4:                                   # out of any water or sand behind the green
 			var su := terrain.surface_at(q.x, q.y)
