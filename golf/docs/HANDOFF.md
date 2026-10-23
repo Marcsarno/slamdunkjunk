@@ -1,6 +1,6 @@
 # Graveyard Shift: Midnight Golf: where things stand
 
-Notes to pick the work up from (last updated 2026-10-23). Code lives on the
+Notes to pick the work up from (last updated 2026-10-23, evening). Code lives on the
 `claude/hunting-game-pitch` branch of `Marcsarno/slamdunkjunk`, under `golf/`.
 
 ## Where it's played
@@ -56,11 +56,25 @@ project's convention), then `--import` again.
 - Black night sky on every hole (`shaders/night_sky.gdshader`): painted star, cloud and moon layers; the
   moon is round in screen space. Painted backdrops are no longer used (left out of the export).
 - Cast: the golfer alone (video-cut sprites: driver/iron swings, and putting from `tools/prep_video_putt.py`
-  with a 40% backswing; fitted to their drawn size by `tools/shrink_golfer.py`), and a modelled
-  jack-o'-lantern by every tee that the opening camera swings round. (The skeleton caddie, cat and cart
-  were removed: "failed experiment".)
+  with a 40% backswing; fitted to their drawn size by `tools/shrink_golfer.py`), and Marc's hanging-pumpkin
+  lantern (wooden post, braced arm) by every tee that the opening camera swings round (`hero_lantern.gd`,
+  `assets/props/lanterns/arm.glb`). A pair of his post-top pumpkin lanterns stands behind every green
+  (`hole_view._green_lanterns`). His lantern models (`art_src/lanterns`, ~16k tris each) are lightened to
+  ~3k by `tools/prep_lanterns.py` (decimated shell and inside, joined into one object); the bridge-mount
+  one is prepared (`lanterns/bridge.glb`) but not placed. (The skeleton caddie, cat and cart were
+  removed: "failed experiment".)
 - Courses: winding layouts, cart paths (a real, bouncy surface) with plank bridges at water, painted trees
-  (04-18) and glowing light props (01-15) per hole theme.
+  (04-18) and glowing light props (01-15) per hole theme. Graveyards use Marc's three headstones
+  (`props.py` `headstone_rip`, `headstone_moon`, `headstone_broken`, ~130-250 tris each) with crosses and
+  obelisks; the builder merges small props (stones, pumpkins) into one mesh per 40 m of ground.
+- **Revised holes from Marc's concepts** (`art_src/concepts/`): 3 (loop round a walled graveyard, carry to a
+  pad for eagle), 6 (bend round the ghost-lit marsh or fly it), 9 (curl round a fenced pumpkin patch, or
+  carry it to a pad) are built. Next in order: 2 and 1 (ponds, island pads), then 4, 5, 8 (new ground:
+  web = ball stops dead, corn = very deep rough, ravine = hazard), then 7 (hedge maze, mansion).
+  The builder now takes `pads` (fairway ellipses with a rough ring), `zones` (open rough/deep-rough areas,
+  no woods or trees, no framing banks) and `fences` (polylines) in a layout. Check a layout in 2D first:
+  `python3 -I tools/plan_check.py <layout.json> <out.png>` draws its `plan` ("safe"/"risk" landing
+  points) as shots with yards, the club the game picks, and the margin of error at each landing.
 - Clubs (`scripts/clubs.gd`): Driver 205 m, 3 Wood 185, 5/7/9 Iron 165/145/125, P/S/L Wedge 105/82/58,
   Chip 32 (skips and runs), Putter. Auto-picked: the shortest club whose full swing covers the shot
   with 10% in hand (`PICK_SHARE`), so most shots want 80-90% of a full pull. The club button steps down
@@ -92,16 +106,15 @@ project's convention), then `--import` again.
 
 ## What's next (in Marc's order of interest)
 
-1. **Marc's phone numbers** from `#fps` (tee, pulling, flight; phone model). Then, if needed, the rest of
-   the performance list: hide small props/ground cover past ~60-80 m and coarser far terrain (do it in
-   `build_hole.py`, automatic per rebuild), VRAM-compressed textures (cuts ~170 MB of GPU memory; make it
-   the import default; check download size), bake the three star strips into one, thinner mist up close.
+1. **Performance**: Marc says the lantern cut "really, really helped"; the flyover was the last choppy
+   spot (now drawn at 60% with no shadows). Left if needed: VRAM-compressed textures (check download
+   size), bake the three star strips into one, thinner mist up close, cheaper shadows on phones.
 2. **Feel tuning after Marc plays:** pull travel, putt headroom (2x), driver run-out, wedge bite.
-3. **The course plan** https://claude.ai/artifact/N3nVG9bieHCtFRGLxT2xFT (source in `golf/docs/plan/`:
-   `proposal.py` holds the nine build-ready specs, `python3 -I build_page.py` redraws the page): keep holes 1-2; redesign 3 (split fairway), 4 (drivable par 4 ~280 yd), 5 (cape
-   par 4), 6 (135-yd wedge, peninsula), 7 (hedge maze + moat), 8 (ridge high/low road), 9 (par 5 reachable
-   in two). Waiting on Marc's go-ahead. Landmarks to model in Blender: windmill, castle drawbridge,
-   covered bridge, village square; spider webs and hedge blocks best as painted art from Marc.
+3. **The rest of Marc's revised holes** (concept sheets in `art_src/concepts/`; 3, 6, 9 done): 2 and 1
+   next, then 4, 5, 8, then 7, as above. Landmarks from the concepts still to make: the clubhouse behind
+   9's green, the chapel on 3, the barn on 5, the mansion on 7, the Horseman statue and bridge on 8.
+   (The older plan page https://claude.ai/artifact/N3nVG9bieHCtFRGLxT2xFT, source `golf/docs/plan/`, is
+   superseded by Marc's concepts.)
 4. Fun extras from the plan: tombstone kicks, ball rattling over bridges, drifting wisps, the Horseman,
    homecoming lanterns.
 5. Voice (Kokoro TTS for the caddie's call-outs) is **skipped for now**; needs `huggingface.co` allowed in
