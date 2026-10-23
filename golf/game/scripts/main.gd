@@ -60,8 +60,8 @@ const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: t
 const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
 const BALL_LOOK_GROUND := 0.03  # the ball's drawn width as a share of its distance from the camera ...
 const BALL_LOOK_AIR := 0.11     # ... and in the air, where its face is the show
-const STREAKS_PER_S := 45.0     # wind streaks round the ball in flight ...
-const STREAK_LIFE := 0.32       # ... and how long each lasts (s)
+const STREAKS_PER_S := 40.0     # wind streaks round the ball in flight ...
+const STREAK_LIFE := 0.28       # ... and how long each lasts (s)
 const SWING_HOLD := 0.45        # seconds the swing view holds after contact, for her follow-through
 
 var terrain: Terrain
@@ -77,7 +77,8 @@ var _ball_tex := {}                       # its faces: "still", "launch" (scared
 var _ball_pose := "still"
 var wind_fx := MeshInstance3D.new()       # streaks of air rushing past it in flight
 var wind_mesh := ImmediateMesh.new()
-var _streaks: Array = []                  # [start, direction, length, age]
+var _streaks: Array = []                  # [angle round the ball, distance out, length, age]
+var _wind_dir := Vector3.ZERO
 var _streak_due := 0.0
 var trail := MeshInstance3D.new()
 var trail_mesh := ImmediateMesh.new()
@@ -229,7 +230,8 @@ func _prewarm() -> void:
 	fx.holed(under, Color(1.0, 0.6, 0.25))
 	for i in 8:
 		trail_pts.append(under + Vector3(i, 0, 0))
-	_streaks.append([under, Vector3.FORWARD, 1.0, 0.1])
+	_streaks.append([0.0, 1.0, 2.0, 0.1])
+	_wind_dir = Vector3.FORWARD
 	_ball_pose = "launch"
 	_update_ball_visual()
 	await _drawn(2)
@@ -1291,38 +1293,38 @@ func _update_ball_visual() -> void:
 var _ball_look := BALL_LOOK_GROUND
 
 
-## Air rushing past the ball in flight: short pale streaks spawned round it that stay where they were
-## made, so the ball flies on through them and they whip back past its face.
+## Air rushing past the ball in flight: thin pale streaks round it that slide back past its face and
+## fade (they travel with the ball, so none is left hanging where the camera flies through).
 func _update_wind(w: Vector3, size: float, flying: bool) -> void:
 	var dt := get_process_delta_time()
-	var dir := Vector3.ZERO
 	if sim != null and flying:
-		dir = (Terrain.to_world(sim.vel) - Terrain.to_world(Vector3.ZERO)).normalized()
+		_wind_dir = (Terrain.to_world(sim.vel) - Terrain.to_world(Vector3.ZERO)).normalized()
 		_streak_due += dt * STREAKS_PER_S
 		while _streak_due >= 1.0:
 			_streak_due -= 1.0
-			var across := dir.cross(Vector3.UP).normalized()
-			var up := across.cross(dir).normalized()
 			var a := randf() * TAU
-			var off := (across * cos(a) + up * sin(a)) * size * randf_range(0.6, 1.4)
-			_streaks.append([w + off + dir * size * randf_range(-0.5, 1.5), dir, size * randf_range(2.0, 3.5), 0.0])
+			# [angle round the ball, distance out (ball widths), length (ball widths), age]
+			_streaks.append([a, randf_range(0.55, 1.1), randf_range(1.5, 3.0), 0.0])
 	for st in _streaks:
 		st[3] += dt
 	_streaks = _streaks.filter(func(st): return st[3] < STREAK_LIFE)
 	wind_mesh.clear_surfaces()
-	if _streaks.is_empty():
+	if _streaks.is_empty() or _wind_dir == Vector3.ZERO:
 		return
+	var dir := _wind_dir
+	var across := dir.cross(Vector3.UP).normalized()
+	var up := across.cross(dir).normalized()
 	var cp := cam.global_position
 	wind_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	for st in _streaks:
-		var p0: Vector3 = st[0]
-		var p1: Vector3 = p0 - (st[1] as Vector3) * float(st[2])
-		var wdt := float(st[2]) * 0.05
-		var side := (st[1] as Vector3).cross(cp - p0).normalized() * wdt
 		var k: float = st[3] / STREAK_LIFE
-		var c := Color(0.85, 0.92, 1.0, 0.75 * (1.0 - k) * minf(1.0, k * 6.0))
+		var off := (across * cos(st[0]) + up * sin(st[0])) * size * float(st[1])
+		var head := w + off + dir * size * (1.2 - 7.0 * k)          # starts ahead of the ball, slides back past it
+		var tail := head - dir * size * float(st[2])
+		var side := dir.cross(cp - head).normalized() * size * 0.022
+		var c := Color(0.88, 0.94, 1.0, 0.7 * sin(k * PI))
 		var c_tail := Color(c, 0.0)
-		for v in [[p0 + side, c], [p0 - side, c], [p1, c_tail], [p0 - side, c], [p1 - side * 0.2, c_tail], [p1, c_tail]]:
+		for v in [[head + side, c], [head - side, c], [tail, c_tail]]:
 			wind_mesh.surface_set_color(v[1])
 			wind_mesh.surface_add_vertex(v[0])
 	wind_mesh.surface_end()
@@ -1464,6 +1466,9 @@ func _draw_preview(putt: bool) -> void:
 ## The map in the corner while aiming and pulling: where the shot lands, against the target and the
 ## course (aiming: where the target's pull lands; pulling: where this pull does).
 func _show_aim_map(putt: bool) -> void:
+	if putt:
+		hud.hide_aim_map()          # on the green the hole is in view, and the map would be all green
+		return
 	var m := hud.aim_map
 	var b2 := Vector2(ball.x, ball.y)
 	var dist := b2.distance_to(target)
