@@ -126,6 +126,8 @@ func _ready() -> void:
 		set_process(true)
 		set_process_unhandled_input(true)
 	terrain = Terrain.load_hole(Round.dir())
+	Quality.watching = true
+	tree_exiting.connect(func(): Quality.watching = false)
 	view.build(Round.dir(), terrain)
 	add_child(view)
 	obstacles = ObstacleGrid.new(view.props.obstacles)
@@ -1174,8 +1176,16 @@ func _update_preview() -> void:
 	var p := max_power * pull if phase == Phase.PULL else full_power
 	var key := "%.4f|%.3f|%.3f|%s" % [p, target.x, target.y, club.id]
 	var still := key == _preview_key
+	# while the pull or the aim is moving, the flight is worked out at most ten times a second (each
+	# run is a whole flight; the gauge and map keep up, the phone doesn't stall)
+	if not still and phase == Phase.PULL and Time.get_ticks_msec() - _preview_ms < PREVIEW_EVERY_MS:
+		_draw_preview(putt)
+		_show_gauge()
+		_show_aim_map(putt)
+		return
 	_preview_key = key
 	if not still:
+		_preview_ms = Time.get_ticks_msec()
 		preview = BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
 			Clubs.launch_velocity(club, p, aim), club.lift, 0.05, not putt)
 		var land: Vector3 = preview.first_land if preview.first_land != Vector3.INF else preview.end
@@ -1216,6 +1226,8 @@ func _update_preview() -> void:
 
 
 var _roll_pts: Array = []
+const PREVIEW_EVERY_MS := 100
+var _preview_ms := 0
 
 
 func _draw_preview(putt: bool) -> void:

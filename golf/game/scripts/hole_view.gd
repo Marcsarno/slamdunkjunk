@@ -155,7 +155,7 @@ func _environment() -> void:
 	moon_light.light_color = moon_col
 	moon_light.light_energy = float(theme.get("moon_energy", 0.75))
 	moon_light.shadow_enabled = true
-	moon_light.directional_shadow_max_distance = 80.0
+	moon_light.directional_shadow_max_distance = 40.0     # shadows round her and the tee; at night farther ones barely show
 	moon_light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	moon_light.shadow_blur = 1.5
 	add_child(moon_light)

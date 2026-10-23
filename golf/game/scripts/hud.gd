@@ -521,7 +521,8 @@ func _process(delta: float) -> void:
 		_fps_worst = maxf(_fps_worst, delta)
 		_fps_t += delta
 		if _fps_t >= 1.0:
-			fps.text = "%d fps · slowest frame %d ms" % [Engine.get_frames_per_second(), roundi(_fps_worst * 1000.0)]
+			fps.text = "%d fps · slowest frame %d ms · 3D at %d%%" % [Engine.get_frames_per_second(),
+				roundi(_fps_worst * 1000.0), roundi(Quality.scale() * 100.0)]
 			_fps_t = 0.0
 			_fps_worst = 0.0
 	if _fade_t > 0.0:
