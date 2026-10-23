@@ -1,9 +1,9 @@
 extends Node
-## Plays hole 1 to the bottom of the cup and saves a screenshot at each stage of every shot (aim, pull,
+## Plays a hole to the bottom of the cup and saves a screenshot at each stage of every shot (aim, pull,
 ## swing, flight, landing, result; the putts; the card), for checking the whole course's look.
 ## Each shot aims at the pin and picks the power whose simulated finish is nearest it (driver off the
 ## tee aims down the fairway's middle instead, as a player would).
-## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 720x1560 -- --capture-hole=<dir>
+## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 720x1560 -- [--hole=h02] [--round] --capture-hole=<dir>
 
 var main: Node
 var out_dir := ""
@@ -12,12 +12,15 @@ var shot := 0
 var t := 0.0
 var stage := "wait_aim"
 var landed := false
+var round := false     # --round: press Next hole on each card and play on to the last hole
 
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--capture-hole="):
 			out_dir = a.trim_prefix("--capture-hole=")
+		if a == "--round":
+			round = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
 
@@ -25,7 +28,7 @@ func _ready() -> void:
 func snap(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	img.save_png(out_dir.path_join("%02d_s%d_%s.png" % [n, shot + 1, name]))
+	img.save_png(out_dir.path_join("%s_%02d_s%d_%s.png" % [Round.current().id, n, shot + 1, name]))
 	n += 1
 	print("captured s%d %s phase=%d strokes=%d club=%s ball scale %.2f cam-ball %.1f m" % [shot + 1, name, main.phase, main.strokes, main.club.get("id", ""), main.ball_mesh.scale.x, main.cam.global_position.distance_to(main.ball_mesh.global_position)])
 
@@ -58,9 +61,15 @@ func _process(delta: float) -> void:
 				var to_pin := Vector2(pin.x - main.ball.x, pin.y - main.ball.y)
 				var target := pin
 				if main.club.id == "driver":
-					# off the tee: down the middle, about a full drive out
+					# a full drive down the middle: ~22 path samples (~220 m) on from where the ball lies
 					var path: Array = main.terrain.meta.path
-					var far := Vector2(path[min(22, path.size() - 1)][0], path[min(22, path.size() - 1)][1])
+					var here := Vector2(main.ball.x, main.ball.y)
+					var near := 0
+					for i in path.size():
+						if Vector2(path[i][0], path[i][1]).distance_to(here) < Vector2(path[near][0], path[near][1]).distance_to(here):
+							near = i
+					var k: int = mini(near + 22, path.size() - 1)
+					var far := Vector2(path[k][0], path[k][1])
 					to_pin = far - Vector2(main.ball.x, main.ball.y)
 					target = Vector3(far.x, far.y, 0)
 				main.aim = to_pin.normalized()
@@ -115,5 +124,9 @@ func _process(delta: float) -> void:
 				stage = "holed"
 		"holed":
 			if t > 3.2:
+				stage = "next"
 				await snap("card")
-				get_tree().quit()
+				if round and Round.has_next():
+					main._on_next()
+				else:
+					get_tree().quit()

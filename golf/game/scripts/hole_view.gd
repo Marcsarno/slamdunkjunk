@@ -225,7 +225,8 @@ func _apply_materials(root: Node) -> void:
 	var water := ShaderMaterial.new()
 	water.shader = load("res://shaders/water.gdshader")
 	water.set_shader_parameter("sky_color", env.fog_light_color)
-	water.set_shader_parameter("deep_color", Color(0.025, 0.035, 0.08))
+	water.set_shader_parameter("deep_color", _col(theme.get("water_deep"), Color(0.025, 0.035, 0.08)))
+	water.set_shader_parameter("glow", _col(theme.get("water_glow"), Color(0, 0, 0)))
 	var by_name := {
 		"terrain": terrain_mat,
 		"skirt_vc": terrain_mat,

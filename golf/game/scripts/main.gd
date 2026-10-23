@@ -5,7 +5,6 @@ extends Node3D
 
 enum Phase { INTRO, AIM, PULL, SWING, FLIGHT, RESULT, HOLED }
 
-const HOLE_DIR := "res://assets/holes/h01"
 const YD := 1.0936
 const AIM_ZONE := 0.30          # top share of the screen: drag sideways to turn
 const PULL_FULL := 0.28         # pull distance (share of screen height) for 100% power
@@ -54,8 +53,8 @@ var flight_dir := Vector2(0, 1)
 
 func _ready() -> void:
 	randomize()
-	terrain = Terrain.load_hole(HOLE_DIR)
-	view.build(HOLE_DIR, terrain)
+	terrain = Terrain.load_hole(Round.dir())
+	view.build(Round.dir(), terrain)
 	add_child(view)
 	obstacles = ObstacleGrid.new(view.props.obstacles)
 	par = int(terrain.meta.par)
@@ -70,7 +69,7 @@ func _ready() -> void:
 	Music.set_in_play(true)
 	Music.start()
 	hud.club_pressed.connect(_cycle_club)
-	hud.next_pressed.connect(_start_hole)
+	hud.next_pressed.connect(_on_next)
 	hud.menu_pressed.connect(func():
 		get_tree().set_meta("front_menu", true)   # straight back to the clubhouse board, no splash
 		get_tree().change_scene_to_file("res://scenes/front.tscn"))
@@ -85,6 +84,19 @@ func _ready() -> void:
 
 
 # ---------------------------------------------------------------- hole / shot flow
+## The card's first button: on to the next hole of the round, or this one again after the last.
+func _on_next() -> void:
+	if Round.has_next() or Round.scores.size() > 1:
+		# on to the next hole, or after a round of several holes a new one from hole 1
+		if Round.has_next():
+			Round.advance()
+		else:
+			Round.start(0)
+		hud.fade_out_then(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
+	else:
+		_start_hole()
+
+
 func _start_hole() -> void:
 	hud.hide_card()
 	strokes = 0
@@ -361,7 +373,11 @@ func _process(delta: float) -> void:
 		Phase.HOLED:
 			_chase_cam(delta)
 			if phase_t > 2.4 and not hud.card.visible:
-				hud.show_card(_score_name(strokes - par), "%d strokes on a par %d" % [strokes, par])
+				Round.record(strokes)
+				var detail := "%d strokes on a par %d" % [strokes, par]
+				if Round.scores.size() > 1:
+					detail += "\nRound: %s after %d" % [Round.to_par_text(), Round.scores.size()]
+				hud.show_card(_score_name(strokes - par), detail, "Next hole" if Round.has_next() else ("New round" if Round.scores.size() > 1 else "Play again"))
 	_apply_cam(delta)
 	_update_ball_visual()   # after the camera moves: the ball's size is set from its distance to the camera
 	_update_wind_hud()

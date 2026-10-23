@@ -238,9 +238,10 @@ func blocks(p: Vector2) -> bool:
 		or (card.is_visible_in_tree() and card.get_global_rect().has_point(p))
 
 
-func show_card(title_text: String, detail: String) -> void:
+func show_card(title_text: String, detail: String, next_text := "Play again") -> void:
 	card_title.text = title_text
 	card_text.text = detail
+	next.text = next_text
 	card.visible = true
 	card.modulate.a = 0.0
 	card.scale = Vector2.ONE * 0.92
@@ -278,6 +279,14 @@ func hide_card() -> void:
 
 
 ## Cover the cut to a new shot with a short fade from dark.
+## Fade the screen to dark, then run `then` (a scene change).
+func fade_out_then(then: Callable) -> void:
+	_fade_t = 0.0
+	var tw := create_tween()
+	tw.tween_property(fade, "color:a", 1.0, 0.3)
+	tw.tween_callback(then)
+
+
 func fade_in(seconds := 0.35) -> void:
 	_fade_t = seconds
 	fade.color.a = 1.0

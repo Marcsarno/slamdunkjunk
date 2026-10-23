@@ -1,0 +1,218 @@
+{
+ "id": "h02_witchs_hollow",
+ "name": "Witch's Hollow",
+ "number": 2,
+ "par": 3,
+ "origin": [
+  -48,
+  -48
+ ],
+ "extent": [
+  57,
+  196
+ ],
+ "phys": {
+  "cell": 1.0,
+  "nx": 106,
+  "ny": 245,
+  "file": "heights.bin"
+ },
+ "surf": {
+  "cell": 0.5,
+  "nx": 211,
+  "ny": 489,
+  "file": "surface.bin",
+  "names": [
+   "oob",
+   "rough",
+   "fairway",
+   "green",
+   "sand",
+   "water",
+   "tee",
+   "fringe",
+   "deep_rough"
+  ]
+ },
+ "splat": {
+  "file": "splat.png",
+  "detail": "detail.png",
+  "size": [
+   421,
+   977
+  ]
+ },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   526,
+   1221
+  ]
+ },
+ "theme": {
+  "trees_near": [
+   "haunted_tree",
+   "dead_tree",
+   "lantern_tree",
+   "haunted_tree",
+   "dead_tree"
+  ],
+  "trees_far": [
+   "pine_blue",
+   "dead_tree",
+   "pine_blue",
+   "haunted_tree"
+  ],
+  "backdrop": {
+   "hole": "02-witchs-hollow",
+   "variant": "a",
+   "span": 95,
+   "yaw": 0,
+   "horizon_v": 0.78
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 380,
+    "height": 40,
+    "base": -8,
+    "repeats": 9,
+    "haze": 0.55
+   }
+  ],
+  "sky_style": "painted",
+  "fog": [
+   0.24,
+   0.42,
+   0.36
+  ],
+  "fog_density": 0.0075,
+  "sky_horizon": [
+   0.3,
+   0.42,
+   0.44
+  ],
+  "backdrop_haze": 0.55,
+  "moon_scale": 0.7,
+  "light_azimuth": 190,
+  "light_elevation": 34,
+  "water_deep": [
+   0.02,
+   0.05,
+   0.035
+  ],
+  "water_glow": [
+   0.2,
+   0.75,
+   0.38
+  ]
+ },
+ "tee": [
+  0.0,
+  0.0,
+  12.991439189189773
+ ],
+ "pin": [
+  12,
+  151,
+  1.8808609837316221
+ ],
+ "green": {
+  "center": [
+   9,
+   148
+  ],
+  "radius": [
+   12,
+   10
+  ],
+  "rotation": 0.2,
+  "slope": [
+   0.012,
+   -0.02
+  ]
+ },
+ "length": 148.3,
+ "path": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.23,
+   10.0
+  ],
+  [
+   0.44,
+   20.0
+  ],
+  [
+   0.68,
+   30.0
+  ],
+  [
+   1.0,
+   40.0
+  ],
+  [
+   1.41,
+   50.09
+  ],
+  [
+   1.88,
+   60.25
+  ],
+  [
+   2.41,
+   70.28
+  ],
+  [
+   3.0,
+   80.0
+  ],
+  [
+   3.76,
+   90.4
+  ],
+  [
+   4.61,
+   100.49
+  ],
+  [
+   5.49,
+   110.28
+  ],
+  [
+   6.38,
+   120.19
+  ],
+  [
+   7.31,
+   130.28
+  ],
+  [
+   8.25,
+   140.09
+  ]
+ ],
+ "water": [
+  {
+   "center": [
+    9,
+    149
+   ],
+   "radius": [
+    44,
+    33
+   ],
+   "rotation": 0.1,
+   "island": true,
+   "level_offset": -0.6,
+   "level": 0.993
+  }
+ ],
+ "wind": {
+  "min": 2,
+  "max": 6
+ }
+}

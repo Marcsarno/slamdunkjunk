@@ -11,10 +11,10 @@ const CHALK := Color(0.96, 0.95, 0.9)
 const CHALK_DIM := Color(0.96, 0.95, 0.9, 0.58)
 const CHALK_ORANGE := Color(1.0, 0.72, 0.38)
 const HOLES := [
-	["Pumpkin Patch", 4], ["Witch's Hollow", 0], ["Forgotten Cemetery", 0], ["Spiderwood", 0],
+	["Pumpkin Patch", 4], ["Witch's Hollow", 3], ["Forgotten Cemetery", 5], ["Spiderwood", 0],
 	["Haunted Harvest", 0], ["Ghostlight Marsh", 0], ["Vampire's Garden", 0], ["Headless Trail", 0],
 	["Midnight Homecoming", 0],
-]   # par 0: not built yet
+]   # par 0: not built yet (the built ones are Round.HOLES, in the same order)
 const HELP := [
 	"Drag the sky to turn your aim.",
 	"Pull down anywhere below it to set the power.",
@@ -145,7 +145,7 @@ func _build_clubhouse() -> void:
 	var y := BOARD.position.y + 118.0
 	for i in HOLES.size():
 		var hole: Array = HOLES[i]
-		var ready_hole: bool = int(hole[1]) > 0
+		var ready_hole: bool = i < Round.HOLES.size()
 		var row := _invisible_button(Rect2(BOARD.position.x, y, BOARD.size.x, 64))
 		list.add_child(row)
 		var name := _chalk_label("%d.  %s" % [i + 1, hole[0]], hand_font, 40 if ready_hole else 36, CHALK if ready_hole else CHALK_DIM)
@@ -158,7 +158,7 @@ func _build_clubhouse() -> void:
 		right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		list.add_child(right)
 		if ready_hole:
-			row.pressed.connect(_play_hole.bind(row, name))
+			row.pressed.connect(_play_hole.bind(i, name))
 		else:
 			row.pressed.connect(_soon.bind(name, right))
 		y += 72.0
@@ -233,10 +233,11 @@ func _soon(label: Label, tag: Label) -> void:
 	tw.tween_property(label, "position:x", label.position.x, 0.05)
 
 
-func _play_hole(_row: Button, label: Label) -> void:
+func _play_hole(i: int, label: Label) -> void:
 	if _busy:
 		return
 	_busy = true
+	Round.start(i)
 	label.add_theme_color_override("font_color", CHALK_ORANGE)
 	var tw := create_tween()
 	tw.tween_interval(0.15)

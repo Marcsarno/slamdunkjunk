@@ -141,7 +141,12 @@ class Hole:
         start = self.spec["fairway_start"]
         e = np.where(s < start, np.maximum(e, (start - s)), e)
         tail = self.length + 6.0
-        return np.where(s > tail, np.maximum(e, s - tail), e)
+        e = np.where(s > tail, np.maximum(e, s - tail), e)
+        # a forced carry: no fairway over [from, to] metres along the hole (over a pond, say)
+        c = self.spec.get("carry")
+        if c:
+            e = np.where((s > c[0]) & (s < c[1]), np.maximum(e, np.minimum(s - c[0], c[1] - s)), e)
+        return e
 
     # --- fields -----------------------------------------------------------------------------
     BASE_CELL = 2.0
@@ -166,8 +171,14 @@ class Hole:
         sp, el = self.spec, self.spec["elevation"]
         lat, s = self.lateral(x, y)
         d = np.abs(lat)
-        t = smoothstep(0.0, 1.0, s / self.length)
-        h = el["tee"] + (el["green"] - el["tee"]) * t
+        if "profile" in el:
+            # an elevation profile along the line of play, [[metres from the tee, height], ...] (a ridge,
+            # a shelf, a climb), in place of the even tee-to-green fall
+            prof = np.array(el["profile"], float)
+            h = np.interp(s, prof[:, 0], prof[:, 1])
+        else:
+            t = smoothstep(0.0, 1.0, s / self.length)
+            h = el["tee"] + (el["green"] - el["tee"]) * t
         h += el.get("cross_tilt", 0.012) * lat                      # 1-2% fall across for drainage
         play = self.half_width(s) + sp["rough_width"] * 0.5
         rolls = el.get("roll_height", 0.45)
@@ -216,11 +227,15 @@ class Hole:
                                   + (tx - b["center"][0]) * (x - b["center"][0])) /
                                  (np.hypot(ty - b["center"][1], tx - b["center"][0]) * bmin + 1e-6), 0, 1)
             h = h + 0.25 * (1 - toward_tee) * np.exp(-((br - 1.12) / 0.14) ** 2)
-        # water: banks fall away under the waterline
+        # water: banks fall away under the waterline. An "island" pond leaves the green and a collar
+        # round it standing (an island green: the green's ground stays as built above)
         for w in sp.get("water", []):
             wr, _ = ellipse_r(x, y, w)
             floor = w["level"] - 0.7
-            h = h + (floor - h) * (1 - smoothstep(0.8, 1.5, wr))
+            sink = 1 - smoothstep(0.8, 1.5, wr)
+            if w.get("island"):
+                sink = sink * smoothstep(1.4, 2.2, gr)
+            h = h + (floor - h) * sink
         return h
 
     def surface(self, x, y, h):
@@ -233,6 +248,10 @@ class Hole:
         out[d < deep_lim] = DEEP
         out[d < hw + sp["rough_width"] + 1.5 * self.edge_noise(x + 50, y)] = ROUGH
         out[edge < 0] = FAIRWAY
+        # rough islands: a patch of rough inside the fairway (the fairway splits round it)
+        for r in sp.get("rough_islands", []):
+            ir, _ = ellipse_r(x, y, r)
+            out[(ir < 1.0) & (out == FAIRWAY)] = ROUGH
         tx, ty = sp["tee"]["center"]
         out[(np.abs(x - tx) <= sp["tee"]["size"][0] / 2) & (np.abs(y - ty) <= sp["tee"]["size"][1] / 2)] = TEE
         gr, _ = ellipse_r(x, y, sp["green"])
@@ -242,7 +261,10 @@ class Hole:
             out[kidney_r(x, y, b) < 1.0] = SAND
         for w in sp.get("water", []):
             wr, _ = ellipse_r(x, y, w)
-            out[(h < w["level"]) & (wr < 1.4)] = WATER
+            wet = (h < w["level"]) & (wr < 1.4)
+            if w.get("island"):
+                wet &= gr > 1.4
+            out[wet] = WATER
         return out
 
 
