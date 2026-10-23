@@ -47,6 +47,7 @@ func build(hole_dir: String, t: Terrain) -> void:
 	_glow_props()
 	_horizon_rings()
 	_pin()
+	_green_lanterns()
 	_make_bats()
 	add_child(ambience)
 	ambience.build(terrain, props, theme, env)
@@ -438,6 +439,45 @@ func _horizon_rings() -> void:
 
 
 # ---------------------------------------------------------------- pin
+## A pair of Marc's post-top pumpkin lanterns behind each green, one at each back corner, faces turned
+## back down the hole (background dressing: their glow is all emissive, no lights).
+const GREEN_LANTERN := "res://assets/props/lanterns/post.glb"
+
+
+func _green_lanterns() -> void:
+	if not ResourceLoader.exists(GREEN_LANTERN):
+		return
+	var g: Dictionary = terrain.meta.green
+	var c := Vector2(g.center[0], g.center[1])
+	var path: Array = terrain.meta.path
+	var a := Vector2(path[path.size() - 2][0], path[path.size() - 2][1])
+	var dir := (c - a).normalized()                     # the way the hole comes into the green
+	var across := Vector2(dir.y, -dir.x)
+	var r := maxf(float(g.radius[0]), float(g.radius[1]))
+	var scene: PackedScene = load(GREEN_LANTERN)
+	for side in [-1.0, 1.0]:
+		var q := c + dir * (r + 5.0) + across * side * r * 0.9
+		for tries in 4:                                   # out of any water or sand behind the green
+			var su := terrain.surface_at(q.x, q.y)
+			if su != Terrain.Surface.WATER and su != Terrain.Surface.SAND and su != Terrain.Surface.GREEN:
+				break
+			q += dir * 3.0
+		var post: Node3D = scene.instantiate()
+		add_child(post)
+		var w := Terrain.to_world(Vector3(q.x, q.y, terrain.height(q.x, q.y) - 0.03))
+		post.position = w
+		var f := Terrain.to_world(Vector3(-dir.x, -dir.y, 0)) - Terrain.to_world(Vector3.ZERO)
+		post.look_at(w - f, Vector3.UP)                  # its face (local +z) back down the hole
+		for node in post.find_children("*", "MeshInstance3D", true, false):
+			var mi := node as MeshInstance3D
+			for i in mi.mesh.get_surface_count():
+				var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+				if m and m.emission_enabled:
+					m = m.duplicate()
+					m.emission_energy_multiplier = 3.0
+					mi.set_surface_override_material(i, m)
+
+
 func _pin() -> void:
 	var p := Terrain.to_world(terrain.pin())
 	var cup := MeshInstance3D.new()
