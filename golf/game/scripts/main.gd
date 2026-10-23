@@ -38,6 +38,7 @@ var obstacles: ObstacleGrid
 var view := HoleView.new()
 var fx := Fx.new()
 var golfer := Golfer.new()
+var cat := Cat.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
 var ball_mesh := MeshInstance3D.new()
@@ -100,6 +101,7 @@ func _ready() -> void:
 		Sfx.play_after(randf_range(0.4, 1.8), "thunder", lerpf(-12.0, -3.0, k), randf_range(0.85, 1.1)))
 	par = int(terrain.meta.par)
 	add_child(golfer)
+	add_child(cat)
 	cam.keep_aspect = Camera3D.KEEP_WIDTH
 	cam.near = 0.05
 	cam.far = 2500.0
@@ -149,6 +151,9 @@ func _start_hole() -> void:
 	phase = Phase.INTRO
 	phase_t = 0.0
 	hud.hint.text = "Tap to skip"
+	hud.caddie.say("bow", INTRO_TIME)
+	_place_cat()
+	cat.pose("ball")
 	hud.flash("Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)], INTRO_TIME)
 
 
@@ -173,6 +178,8 @@ func _setup_shot() -> void:
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
+	if phase != Phase.INTRO:
+		hud.caddie.rest()
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
@@ -282,6 +289,8 @@ func _set_target(t: Vector2, exact := true) -> void:
 	aim = v.normalized()
 	_place_golfer_back(phase != Phase.PULL)       # mid-pull she keeps her backswing
 	if exact:
+		if strokes == 0:
+			_place_cat()
 		full_power = _power_for(v.length(), aim)
 		if full_power > 1.0:
 			# uphill or blocked: a full swing doesn't get there, so the target comes back to where it does
@@ -305,6 +314,7 @@ func _cycle_club() -> void:
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	_set_target(_default_target())
+	hud.caddie.say("club", 1.6)       # handing over the new club
 
 
 func _right() -> Vector2:
@@ -323,6 +333,13 @@ func _place_golfer_back(pose := true) -> void:
 	golfer.position = Terrain.to_world(Vector3(g2.x, g2.y, terrain.height(g2.x, g2.y)))
 	if pose:
 		golfer.address(set_name)
+
+
+## The cat sits just left of the tee shot's line a few steps ahead, in sight from behind her and in
+## the swing shot (moved when the aim settles, while the view is up high and she's too small to see).
+func _place_cat() -> void:
+	var c2 := Vector2(ball.x, ball.y) - _right() * 1.9 + aim * 1.6
+	cat.position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
 
 
 ## How far off a shot of `d` meters may land (the circle's half-width): a few percent on short shots,
@@ -352,10 +369,14 @@ func _shoot() -> void:
 		_shot_offset = spread_test if spread_test != Vector2.INF else Vector2.from_angle(randf() * TAU) * randf()
 		if _shot_offset.length() < 0.2:
 			hud.flash("Perfect!", 1.0)
+			hud.caddie.say("cheer", 2.0)
 			Sfx.play("perfect", -6.0)
 	if club.id != "putter":
 		Sfx.play_after(0.08, "swing", -4.0, randf_range(0.95, 1.05))
 	_show_preview(false)
+	if hud.caddie._pose == "point":
+		hud.caddie.rest()
+	cat.watch_swing()
 	phase = Phase.SWING
 	phase_t = 0.0
 	if golfer.contact.is_connected(_on_contact):
@@ -397,6 +418,7 @@ func _shot_done() -> void:
 			phase = Phase.HOLED
 			ball = sim.pos
 			hud.flash(_score_name(strokes - par), 3.0)
+			hud.caddie.say("cheer" if strokes <= par else "tip")
 			Sfx.play("cup")
 			Sfx.play_after(0.3, "holed", -3.0)
 			fx.holed(Terrain.to_world(terrain.pin()), HoleView._col(view.theme.get("wisp_color"), Color(1.0, 0.6, 0.25)))
@@ -405,15 +427,20 @@ func _shot_done() -> void:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Splash! +1 stroke")
+			hud.caddie.say("read", 2.8)      # checking the rule book
 		BallSim.State.OOB:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Out of bounds! +1 stroke")
+			hud.caddie.say("read", 2.8)
 		_:
 			ball = sim.pos
 			if club.id == "putter":
 				hud.flash("%s to go" % _dist_text(_to_pin(), true))
 			else:
+				var s := terrain.surface_at(ball.x, ball.y)
+				if s == Terrain.Surface.FAIRWAY or s == Terrain.Surface.GREEN:
+					hud.caddie.say("tip", 1.8)
 				hud.flash("%s · %s" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
 
 
@@ -464,6 +491,7 @@ func _press(p: Vector2) -> void:
 				_side_goal = 0.0
 				_side = 0.0
 				hud.hint.text = ""
+				hud.caddie.say("point")
 			else:
 				var hit: Variant = _ground_at(p)
 				if hit != null:
@@ -551,6 +579,7 @@ func _release() -> void:
 			pull_goal = 0.0
 			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
+			hud.caddie.rest()
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
 			if _side != 0.0 or _side_goal != 0.0:
@@ -623,6 +652,7 @@ func _process(delta: float) -> void:
 
 func _end_intro() -> void:
 	phase = Phase.AIM
+	hud.caddie.rest()
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
 	_target_cam()

@@ -84,6 +84,7 @@
   "sky_style": "night",
   "moon_azimuth": -14,
   "moon_elevation": 13,
+  "moon": "harvest",
   "moon_scale": 0.75,
   "backdrop_haze": 0.15,
   "light_azimuth": 200,

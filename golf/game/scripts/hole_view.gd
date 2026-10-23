@@ -8,6 +8,7 @@ extends Node3D
 const CARD_DIR := "res://assets/cards/"
 const TEX_DIR := "res://assets/textures/"
 const BACKDROP_DIR := "res://assets/backdrops/"
+const SKY_DIR := "res://assets/sky/"
 const LANTERN_LIGHTS := 6
 const TERRAIN_LAYER := 2
 const POOLS := 16
@@ -98,19 +99,24 @@ func _environment() -> void:
 		mat.set_shader_parameter("yaw_deg", float(bd.get("yaw", 0.0)))
 		mat.set_shader_parameter("paint_top_deg", float(theme.get("skyline_top", 14.0)))
 		mat.set_shader_parameter("paint_dark", float(theme.get("skyline_dark", 0.5)))
+	# the painted layers: stars, clouds and the moon (the theme picks the white moon or the harvest moon)
+	for layer in ["stars_1", "stars_2", "stars_3", "clouds_bank", "clouds_puffs", "clouds_wisps"]:
+		mat.set_shader_parameter(layer, load(SKY_DIR + layer + ".png"))
 	var noise := FastNoiseLite.new()
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-	noise.frequency = 0.008
-	noise.fractal_octaves = 5
-	var clouds := NoiseTexture2D.new()
-	clouds.width = 512
-	clouds.height = 512
-	clouds.seamless = true
-	clouds.noise = noise
-	mat.set_shader_parameter("cloud_noise", clouds)
-	mat.set_shader_parameter("cloud_amount", float(theme.get("clouds", 0.45)))
+	noise.frequency = 0.05
+	var twinkle := NoiseTexture2D.new()
+	twinkle.width = 128
+	twinkle.height = 128
+	twinkle.seamless = true
+	twinkle.noise = noise
+	mat.set_shader_parameter("twinkle_noise", twinkle)
+	mat.set_shader_parameter("cloud_amount", float(theme.get("clouds", 0.6)))
+	mat.set_shader_parameter("cloud_tint", _col(theme.get("cloud_tint"), Color(0.55, 0.55, 0.68)))
 	mat.set_shader_parameter("star_amount", float(theme.get("stars", 1.0)))
 	mat.set_shader_parameter("moon_dir", moon_dir)
+	var moon_kind: String = theme.get("moon", "white")
+	mat.set_shader_parameter("moon_tex", load(SKY_DIR + "moon_" + moon_kind + ".png"))
+	mat.set_shader_parameter("moon_glow", Color(1.0, 0.62, 0.22) if moon_kind == "harvest" else Color(0.85, 0.88, 1.0))
 	mat.set_shader_parameter("moon_radius", float(theme.get("moon_size", 0.034)))
 	mat.set_shader_parameter("top_color", top_col)
 	mat.set_shader_parameter("horizon_color", horizon_col)
