@@ -467,7 +467,8 @@ func _green_lanterns() -> void:
 		var w := Terrain.to_world(Vector3(q.x, q.y, terrain.height(q.x, q.y) - 0.03))
 		post.position = w
 		var f := Terrain.to_world(Vector3(-dir.x, -dir.y, 0)) - Terrain.to_world(Vector3.ZERO)
-		post.look_at(w - f, Vector3.UP)                  # its face (local +z) back down the hole
+		post.basis = Basis.looking_at(-f, Vector3.UP)    # its face (local +z) back down the hole (built before
+		                                                 # the view is in the tree, so no look_at)
 		for node in post.find_children("*", "MeshInstance3D", true, false):
 			var mi := node as MeshInstance3D
 			for i in mi.mesh.get_surface_count():
