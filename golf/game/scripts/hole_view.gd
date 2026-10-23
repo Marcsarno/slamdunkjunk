@@ -199,6 +199,13 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("extent", Vector2(terrain.meta.extent[0], terrain.meta.extent[1]))
 	m.set_shader_parameter("texture_strength", float(theme.get("texture_strength", 0.35)))
 	m.set_shader_parameter("brightness", float(theme.get("ground_brightness", 1.0)))
+	# the green's cut: stripes across the way in (or a checker, if the theme says), centred on the cup
+	var path: Array = terrain.meta.path
+	var gin := Vector2(path[-1][0], path[-1][1]) - Vector2(path[-2][0], path[-2][1])
+	m.set_shader_parameter("pin_xy", Vector2(terrain.pin().x, terrain.pin().y))
+	m.set_shader_parameter("green_dir", gin.normalized() if gin.length() > 0.01 else Vector2(0, 1))
+	var cut := str(theme.get("green_cut", "checker" if str(Round.current().get("id", "")) in CHECKER_GREENS else "stripes"))
+	m.set_shader_parameter("green_checker", 1.0 if cut == "checker" else 0.0)
 	var noise := FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.frequency = 0.02
@@ -480,6 +487,8 @@ func _green_lanterns() -> void:
 
 
 const FLAG_SIZE := Vector2(0.8, 0.5)
+## Greens cut in a checker rather than stripes (a layout's theme can say with "green_cut").
+const CHECKER_GREENS := ["h03", "h06", "h09"]
 ## Which of Marc's flags flies on each hole (a layout's theme can name its own with "flag").
 const FLAGS := {"h01": "pumpkin", "h02": "moon", "h03": "skull", "h04": "ghost", "h05": "pumpkin",
 	"h06": "ghost", "h07": "moon", "h08": "skull", "h09": "pumpkin"}
@@ -491,16 +500,30 @@ func _flag_name() -> String:
 
 func _pin() -> void:
 	var p := Terrain.to_world(terrain.pin())
+	# the cup: a white liner showing as a rim round the dark hole, like a real one
+	var liner := MeshInstance3D.new()
+	var lm := CylinderMesh.new()
+	lm.top_radius = BallSim.CUP_RADIUS * 1.6
+	lm.bottom_radius = lm.top_radius
+	lm.height = 0.02
+	liner.mesh = lm
+	var white_rim := StandardMaterial3D.new()
+	white_rim.albedo_color = Color(0.92, 0.92, 0.88)
+	white_rim.emission_enabled = true
+	white_rim.emission = Color(0.35, 0.35, 0.35)
+	liner.material_override = white_rim
+	liner.position = p + Vector3(0, 0.004, 0)
+	add_child(liner)
 	var cup := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
-	cm.top_radius = BallSim.CUP_RADIUS * 1.6
+	cm.top_radius = BallSim.CUP_RADIUS * 1.25
 	cm.bottom_radius = cm.top_radius
 	cm.height = 0.02
 	cup.mesh = cm
 	var dark := StandardMaterial3D.new()
 	dark.albedo_color = Color(0.02, 0.02, 0.02)
 	cup.material_override = dark
-	cup.position = p + Vector3(0, 0.005, 0)
+	cup.position = p + Vector3(0, 0.007, 0)
 	add_child(cup)
 	var pole := MeshInstance3D.new()
 	var pm := CylinderMesh.new()

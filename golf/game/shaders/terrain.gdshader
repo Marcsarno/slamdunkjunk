@@ -5,6 +5,9 @@
 // Jack-o'-lantern light pools are added here for the nearest lanterns (cheaper than real lights).
 // A large, slow noise (`blotch`) breaks up the big flat areas: drifts of fallen leaves and darker and
 // lighter patches in the rough, a gentle unevenness in the fairway; greens and sand stay clean.
+// Greens get their own finish: fine grass up close, mowing stripes across the approach (or a checker)
+// that flip light and dark with the view like real cut grass, a darker collar round the edge, a dew
+// sheen and a few glints in the moonlight, and a worn ring of turf round the cup.
 // Course coords: x = world x, y = -world z.
 shader_type spatial;
 render_mode diffuse_lambert;
@@ -33,6 +36,10 @@ uniform vec3 col_sand : source_color = vec3(0.72, 0.60, 0.42);
 uniform vec3 dark_tint : source_color = vec3(0.45, 0.45, 0.42);
 uniform float texture_strength = 0.35;
 uniform float brightness = 1.0;
+uniform vec2 pin_xy = vec2(0.0);           // the cup, course coords
+uniform vec2 green_dir = vec2(0.0, 1.0);   // the way the hole comes in to the green (course coords)
+uniform float green_checker = 0.0;         // 1: a checkerboard cut instead of stripes
+uniform float stripe_width = 2.4;          // m
 
 const int MAX_POOLS = 16;
 uniform vec4 pools[MAX_POOLS];          // xyz world position, w strength (0 = unused)
@@ -65,6 +72,7 @@ void fragment() {
 	float cam_d = length(CAMERA_POSITION_WORLD - wpos);
 	det = mix(max(det, 0.9), det, smoothstep(10.0, 45.0, cam_d));
 
+	det = mix(det, 1.0, smoothstep(0.55, 0.9, w.g) * step(0.94, det));    // the shader cuts the green's own lanes
 	vec3 base_col = mix(col_rough, col_fairway, w.r);
 	base_col = mix(base_col, col_green, w.g);
 	base_col = mix(base_col, col_sand, w.b);
@@ -77,6 +85,36 @@ void fragment() {
 	grain = mix(grain, g_green, w.g);
 	grain = mix(grain, g_sand, w.b);
 	vec3 c = base_col * mix(1.0, grain, texture_strength);
+	// --- the green's finish ---
+	float on_green = smoothstep(0.55, 0.9, w.g);
+	// the collar: the fringe's ring (green weight ~0.25 there), a shade darker and coarser
+	float collar = smoothstep(0.12, 0.22, w.g) * (1.0 - smoothstep(0.32, 0.55, w.g)) * w.r;
+	c *= 1.0 - 0.14 * collar;
+	c *= mix(1.0, g_fair, 0.25 * collar);
+	if (w.g > 0.05) {
+		// fine grass up close (two tiny tilings), so the putting view has short blades, not a blur
+		float near = 1.0 - smoothstep(4.0, 16.0, cam_d);
+		vec2 r1 = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * cxy;
+		float fine = lum(texture(tex_green, cxy / 0.45).rgb) * 0.5 + lum(texture(tex_green, r1 / 0.28).rgb) * 0.5;
+		c *= mix(1.0, fine / 0.38, 0.32 * near * on_green);
+		// mowing stripes across the way in (or a checker): grass laid toward you reads light, away
+		// dark, so they swap as the view turns round
+		vec2 gd = normalize(green_dir);
+		vec2 gr = vec2(gd.y, -gd.x);
+		vec2 rel = cxy - pin_xy;
+		float sa = sin(3.14159 * dot(rel, gd) / stripe_width);
+		float band = sa;
+		if (green_checker > 0.5) {
+			band = sa * sin(3.14159 * dot(rel, gr) / stripe_width);
+		}
+		band = clamp(band * 4.0, -1.0, 1.0);
+		vec3 vd = normalize(wpos - CAMERA_POSITION_WORLD);
+		float facing = dot(normalize(vec2(vd.x, -vd.z) + vec2(0.0001)), gd);
+		c *= 1.0 + 0.07 * band * sign(facing + 0.0001) * on_green;
+		// a worn, slightly paler ring of turf round the cup
+		float dc = distance(cxy, pin_xy);
+		c *= mix(vec3(1.0), vec3(1.07, 1.05, 0.9), (1.0 - smoothstep(0.12, 0.6, dc)) * on_green);
+	}
 	// big patches: two scales of noise, ~70 m and ~18 m across
 	float big = texture(blotch, cxy / 70.0).r;
 	float small = texture(blotch, cxy / 18.0 + vec2(0.31, 0.77)).r;
@@ -96,8 +134,19 @@ void fragment() {
 	}
 	c *= det * brightness;
 	ALBEDO = c;
-	ROUGHNESS = 0.95;
-	SPECULAR = 0.12;
+	// dew on the green: a soft sheen toward the moon, brighter at a glancing look
+	float dew = smoothstep(0.55, 0.9, w.g);
+	ROUGHNESS = mix(0.95, 0.72, dew);
+	SPECULAR = mix(0.12, 0.2, dew);
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
+	vec3 dew_glow = vec3(0.55, 0.65, 1.0) * fres * 0.05 * dew;
+	// and a few drops catching the light up close, twinkling
+	vec2 cell = floor(cxy * 16.0);
+	float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+	float tw = step(0.992, h) * smoothstep(0.75, 1.0, sin(TIME * 2.3 + h * 60.0));
+	vec2 inr = fract(cxy * 16.0) - 0.5;
+	tw *= 1.0 - smoothstep(0.05, 0.18, length(inr));
+	dew_glow += vec3(0.8, 0.9, 1.0) * tw * 0.6 * dew * (1.0 - smoothstep(3.0, 14.0, cam_d));
 
 	float pool = 0.0;
 	for (int i = 0; i < MAX_POOLS; i++) {
@@ -107,5 +156,5 @@ void fragment() {
 		float r = d / pool_radius;
 		pool += p.w / (1.0 + r * r) * smoothstep(pool_range, pool_range * 0.3, d);
 	}
-	EMISSION = c * pool_color * pool;
+	EMISSION = c * pool_color * pool + dew_glow;
 }

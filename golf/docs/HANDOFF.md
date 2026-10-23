@@ -103,6 +103,10 @@ project's convention), then `--import` again.
   straight aim line as long as the putt (`scripts/putt_grid.gd`), as PGA 2K / EA PGA show it. The cup
   judges a putt once as it comes over the rim: slow enough for its line drops, else it hops the hole
   and rolls on a little slower (`ball_sim._check_cup`).
+- Greens (`shaders/terrain.gdshader`, uniforms set in `hole_view._terrain_material`): fine grass tiled in
+  up close, mowing stripes across the way in (a checker on `hole_view.CHECKER_GREENS`) that swap light
+  and dark with the view, a darker collar, a soft dew gloss and a few glints, a worn ring round the cup;
+  the cup has a white liner rim.
 - Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`). No slow motion
   near the cup (Marc took it out); flight plays at 1.25x, easing to real time on landing (`main._time_scale`).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
