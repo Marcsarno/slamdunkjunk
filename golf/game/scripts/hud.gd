@@ -258,7 +258,9 @@ class AimMap extends Control:
 ## drawn. --ball-size=<share of the screen's width> tries other sizes.
 class Sling extends Control:
 	const DIR := "res://assets/balls/"
-	const BALLS := ["pumpkin", "ghost", "skull"]     # picked on the clubhouse bar (front.gd)
+	const BALLS := ["pumpkin", "ghost", "skull", "mummy", "vampire", "frank", "bat"]   # picked on the clubhouse bar (front.gd)
+	const NAMES := {"pumpkin": "Jack", "ghost": "Boo", "skull": "Bones", "mummy": "Wraps", "vampire": "The Count",
+		"frank": "Frankie", "bat": "Batty"}
 	const SETTINGS := "user://settings.cfg"
 	const REST_Y := 0.70            # where it rests, as a share of the screen's height
 	const ART_FILL := 0.8           # the ball's share of its art's square

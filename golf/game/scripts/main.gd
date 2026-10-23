@@ -294,7 +294,7 @@ func _default_target() -> Vector2:
 	var b := Vector2(ball.x, ball.y)
 	var pin2 := Vector2(terrain.pin().x, terrain.pin().y)
 	if club.id == "putter":
-		return pin2 + (pin2 - b).normalized() * PUTT_PAST
+		return _read_putt(pin2)
 	var reach: float = club.carry_m
 	if b.distance_to(pin2) <= reach:
 		return _landing_to_stop_at(pin2)
@@ -315,6 +315,30 @@ func _default_target() -> Vector2:
 			best_err = err
 			best = v
 	return _safe_layup(b + best)
+
+
+## A putt's line, read the way a caddie reads a green: a foot past the hole, then moved across the
+## slope until the roll at that pace runs over the cup (the white dots show it bending in).
+func _read_putt(pin2: Vector2) -> Vector2:
+	var b := Vector2(ball.x, ball.y)
+	var t := pin2 + (pin2 - b).normalized() * PUTT_PAST
+	for i in 5:
+		var dir := (t - b).normalized()
+		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
+			Clubs.launch_velocity(club, _power_for(b.distance_to(t), dir), dir), club.lift, 0.02)
+		if r.state == BallSim.State.HOLED:
+			break
+		# where the roll passed the hole: its nearest point to the cup, and how far across the line
+		var near := b
+		for q in r.points:
+			if Vector2(q.x, q.y).distance_to(pin2) < near.distance_to(pin2):
+				near = Vector2(q.x, q.y)
+		var right := Vector2(dir.y, -dir.x)
+		var miss := (pin2 - near).dot(right)
+		if absf(miss) < 0.01:
+			break
+		t += right * miss * b.distance_to(t) / maxf(b.distance_to(near), 0.1)
+	return t
 
 
 ## Start the aim somewhere the shot finishes safely: if a shot to `t` would roll into water, out of

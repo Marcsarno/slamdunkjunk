@@ -22,9 +22,15 @@ const HELP := [
 	"The white circle: where it may land.",
 	"Wind blows a shot to the mint ring: aim off.",
 ]
-const BALL_SPOTS := [Vector2(505, 1262), Vector2(645, 1262), Vector2(785, 1262)]   # on the bar
-const BALL_D := 112.0
-const BALL_GLOW := {"pumpkin": Color(1.0, 0.55, 0.15), "ghost": Color(0.62, 0.55, 1.0), "skull": Color(0.62, 0.55, 1.0)}
+## The slingshot balls, in a turntable on the bar: the one you play with sits big in the middle with
+## its neighbours either side; tap one (or swipe) to turn it.
+const BALL_MID := Vector2(668, 1326)      # the middle ball's foot, on the bar
+const BALL_STEP := 150.0                  # from one ball to the next
+const BALL_BIG := 138.0                   # the middle ball's height ...
+const BALL_SMALL := 82.0                  # ... and its neighbours'
+const BALL_GLOW := {"pumpkin": Color(1.0, 0.55, 0.15), "ghost": Color(0.62, 0.55, 1.0), "skull": Color(0.62, 0.55, 1.0),
+	"mummy": Color(1.0, 0.8, 0.45), "vampire": Color(0.85, 0.2, 0.35), "frank": Color(0.45, 1.0, 0.45),
+	"bat": Color(0.75, 0.35, 1.0)}
 
 var splash := Control.new()
 var clubhouse := Control.new()
@@ -38,8 +44,12 @@ var head_font: Font = Chalk.head_font()
 var hand_font: Font = Chalk.hand_font()
 var _t := 0.0
 var _busy := false
-var _balls := {}            # name -> [its picture, its glow]
-var _ball := Hud.Sling.chosen()
+var _ball_pics: Array[TextureRect] = []   # in Hud.Sling.BALLS order
+var _ball_glow := TextureRect.new()
+var _ball_name := Label.new()
+var _ball_i := maxi(0, Hud.Sling.BALLS.find(Hud.Sling.chosen()))
+var _spin := float(_ball_i)                 # where the turntable is, easing toward _ball_i
+var _press_x := 0.0
 
 
 func _ready() -> void:
@@ -70,15 +80,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	play_art.scale = Vector2.ONE * (1.0 + 0.025 * sin(_t * 3.0)) if not _busy else play_art.scale
-	# the picked ball bobs on the bar in its glow; the others sit still, a little dimmer
-	for n: String in _balls:
-		var pic: TextureRect = _balls[n][0]
-		var glow: TextureRect = _balls[n][1]
-		var on := n == _ball
-		var i := Hud.Sling.BALLS.find(n)
-		pic.position.y = BALL_SPOTS[i].y - BALL_D * 0.5 / Hud.Sling.ART_FILL + (sin(_t * 2.6) * 5.0 - 5.0 if on else 0.0)
-		pic.modulate = Color.WHITE if on else Color(0.72, 0.68, 0.76)
-		glow.modulate.a = (0.75 + 0.2 * sin(_t * 2.6)) if on else 0.0
+	_turn_balls(delta)
 
 
 func _fit() -> void:
@@ -221,51 +223,92 @@ func _build_clubhouse() -> void:
 	help.add_child(back_l)
 	back.pressed.connect(_show_help.bind(false))
 
-	# the slingshot balls on the bar: tap one to play with it
-	var glow_tex := _glow_texture()
-	for i in Hud.Sling.BALLS.size():
-		var n: String = Hud.Sling.BALLS[i]
-		var c: Vector2 = BALL_SPOTS[i]
-		var glow := TextureRect.new()
-		glow.texture = glow_tex
-		glow.size = Vector2.ONE * BALL_D * 1.9
-		glow.position = c - glow.size * 0.5
-		glow.self_modulate = BALL_GLOW[n]
-		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		clubhouse.add_child(glow)
+	# the slingshot balls' turntable on the bar
+	_ball_glow.texture = _glow_texture()
+	_ball_glow.size = Vector2.ONE * BALL_BIG * 1.9
+	_ball_glow.position = BALL_MID - Vector2(0, BALL_BIG * 0.5) - _ball_glow.size * 0.5
+	_ball_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clubhouse.add_child(_ball_glow)
+	for n: String in Hud.Sling.BALLS:
 		var pic := TextureRect.new()
 		pic.texture = load("res://assets/balls/%s/still.png" % n)
 		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		pic.size = Vector2.ONE * BALL_D / Hud.Sling.ART_FILL
-		pic.position = c - pic.size * 0.5
 		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		clubhouse.add_child(pic)
-		_balls[n] = [pic, glow]
-		var hit := _invisible_button(Rect2(c - Vector2.ONE * BALL_D * 0.6, Vector2.ONE * BALL_D * 1.2))
-		hit.pressed.connect(_pick_ball.bind(n))
-		clubhouse.add_child(hit)
-	var pick := _chalk_label("pick your ball", hand_font, 32, CHALK_ORANGE)
-	pick.material = null
-	pick.add_theme_color_override("font_outline_color", Color(0.08, 0.03, 0.1))
-	pick.add_theme_constant_override("outline_size", 8)
-	pick.position = Vector2(BALL_SPOTS[0].x - 70, 1384)
-	pick.size = Vector2(BALL_SPOTS[2].x - BALL_SPOTS[0].x + 140, 50)
-	pick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	clubhouse.add_child(pick)
+		_ball_pics.append(pic)
+	var touch := Control.new()      # taps and swipes on the bar
+	touch.position = Vector2(BALL_MID.x - BALL_STEP * 1.6, BALL_MID.y - BALL_BIG - 20)
+	touch.size = Vector2(BALL_STEP * 3.2, BALL_BIG + 130)
+	touch.gui_input.connect(_bar_input.bind(touch))
+	clubhouse.add_child(touch)
+	_ball_name = _chalk_label("", hand_font, 40, CHALK_ORANGE)
+	_ball_name.material = null
+	_ball_name.add_theme_color_override("font_outline_color", Color(0.08, 0.03, 0.1))
+	_ball_name.add_theme_constant_override("outline_size", 10)
+	_ball_name.position = Vector2(BALL_MID.x - 220, 1372)
+	_ball_name.size = Vector2(440, 60)
+	_ball_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ball_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clubhouse.add_child(_ball_name)
+	_name_ball()
+	_turn_balls(0.0)
 
 
-func _pick_ball(n: String) -> void:
-	if n == _ball:
+## Turn the turntable toward the picked ball: each ball's place, size and fade from how far round it is.
+func _turn_balls(delta: float) -> void:
+	var n := Hud.Sling.BALLS.size()
+	if n == 0 or _ball_pics.is_empty():
 		return
-	_ball = n
-	Hud.Sling.choose(n)
+	var to := float(_ball_i)
+	var gap := wrapf(to - _spin, -n * 0.5, n * 0.5)
+	_spin = to if absf(gap) < 0.002 else _spin + gap * (1.0 - exp(-delta * 12.0))
+	for k in n:
+		var pic := _ball_pics[k]
+		var o := wrapf(k - _spin, -n * 0.5, n * 0.5)
+		var near := clampf(1.0 - absf(o), 0.0, 1.0)
+		var h := lerpf(BALL_SMALL, BALL_BIG, near)
+		var bob := sin(_t * 2.6) * 5.0 - 5.0 if absf(o) < 0.05 else 0.0
+		pic.size = Vector2.ONE * h / Hud.Sling.ART_FILL
+		pic.position = Vector2(BALL_MID.x + o * BALL_STEP, BALL_MID.y - h * 0.5 + bob) - pic.size * 0.5
+		var fade := clampf(1.9 - absf(o), 0.0, 1.0)
+		var dim := lerpf(0.8, 1.0, near)
+		pic.modulate = Color(dim, dim * 0.95, dim * 1.02, fade)
+		pic.z_index = 1 if absf(o) < 0.5 else 0
+	var g: Color = BALL_GLOW.get(Hud.Sling.BALLS[_ball_i], Color(1.0, 0.6, 0.3))
+	_ball_glow.self_modulate = Color(g, 0.7 + 0.2 * sin(_t * 2.6))
+
+
+func _name_ball() -> void:
+	_ball_name.text = "<   %s   >" % Hud.Sling.NAMES.get(Hud.Sling.BALLS[_ball_i], "")
+
+
+## A swipe turns it by one; a tap on a ball to either side brings that one round.
+func _bar_input(e: InputEvent, touch: Control) -> void:
+	if not (e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if e.pressed:
+		_press_x = e.position.x
+		return
+	var dx: float = e.position.x - _press_x
+	var mid := touch.size.x * 0.5
+	if absf(dx) > 30.0:
+		_pick_ball(_ball_i - int(signf(dx)))
+	elif e.position.x < mid - BALL_BIG * 0.5:
+		_pick_ball(_ball_i - 1)
+	elif e.position.x > mid + BALL_BIG * 0.5:
+		_pick_ball(_ball_i + 1)
+
+
+func _pick_ball(i: int) -> void:
+	var n := Hud.Sling.BALLS.size()
+	var k := posmod(i, n)
+	if k == _ball_i:
+		return
+	_ball_i = k
+	Hud.Sling.choose(Hud.Sling.BALLS[k])
 	Sfx.play("click", -4.0)
-	var pic: TextureRect = _balls[n][0]
-	pic.pivot_offset = pic.size * 0.5
-	var tw := create_tween()
-	tw.tween_property(pic, "scale", Vector2.ONE * 1.15, 0.08)
-	tw.tween_property(pic, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_name_ball()
 
 
 ## A soft round glow, white, to tint.
@@ -327,6 +370,7 @@ func _chalk_label(text: String, font: Font, size: int, color: Color) -> Label:
 	l.add_theme_font_override("font", font)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
+	Chalk.dust(l, color)
 	l.material = chalk
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
