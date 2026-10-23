@@ -33,6 +33,10 @@ def main():
     d = sys.argv[1]
     path = os.path.join(d, "golfer.json")
     meta = json.load(open(path))
+    # sets share files (the driver and iron cuts are the same video), so first work out every file's
+    # scale and whether any set still uses it, then touch each file once
+    scale_of, kept, dropped = {}, set(), set()
+    todo = []
     for name, (k, every) in SETS.items():
         s = meta[name]
         if s["body_px"] < FULL_BODY_PX:
@@ -41,19 +45,28 @@ def main():
         back = s["back"]
         keep = [f for i, f in enumerate(back) if i % every == 0 or i == len(back) - 1]
         used = set(str(f) for f in keep) | set(str(f) for f in s["down"])
+        for key, f in s["frames"].items():
+            assert scale_of.get(f["file"], k) == k, f["file"] + " shared at two scales"
+            scale_of[f["file"]] = k
+            (kept if key in used else dropped).add(f["file"])
+        todo.append((name, k, keep, used))
+    for file in dropped - kept:
+        os.remove(os.path.join(d, file))
+        if os.path.exists(os.path.join(d, file + ".import")):
+            os.remove(os.path.join(d, file + ".import"))
+    for file in kept:
+        img = Image.open(os.path.join(d, file))
+        k = scale_of[file]
+        img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS).save(
+            os.path.join(d, file), optimize=True)
+    for name, k, keep, used in todo:
+        s = meta[name]
         for key in list(s["frames"]):
             f = s["frames"][key]
-            file = os.path.join(d, f["file"])
             if key not in used:
-                os.remove(file)
-                if os.path.exists(file + ".import"):
-                    os.remove(file + ".import")
                 del s["frames"][key]
                 continue
-            img = Image.open(file)
-            w, h = max(1, round(img.width * k)), max(1, round(img.height * k))
-            img.resize((w, h), Image.LANCZOS).save(file, optimize=True)
-            f["size"] = [w, h]
+            f["size"] = [max(1, round(v * k)) for v in f["size"]]
             f["anchor"] = [round(v * k, 1) for v in f["anchor"]]
             if f.get("club_head") is not None:
                 f["club_head"] = [round(v * k, 1) for v in f["club_head"]]
