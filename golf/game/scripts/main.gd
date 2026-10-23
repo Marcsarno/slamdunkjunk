@@ -646,9 +646,14 @@ func _on_contact() -> void:
 	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(power, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
 	trail_pts.clear()
+	_time_scale = 1.0 if club.id == "putter" else FLIGHT_SPEED
 	flight_dir = aim
 	phase = Phase.FLIGHT
 	phase_t = 0.0
+
+
+var _time_scale := 1.0           # how fast the shot plays: flight a bit quick, eased to real time on the
+                                 # ground and into slow motion near the cup
 
 
 func _shot_done() -> void:
@@ -851,10 +856,13 @@ func _process(delta: float) -> void:
 			_orbit(delta)
 		Phase.FLIGHT:
 			var was_flying := sim.state == BallSim.State.FLYING
-			# a ball trickling up to the cup goes into slow motion: will it drop?
+			# a ball trickling up to the cup eases into slow motion while it can still reach it (will it
+			# drop?), and eases back out once it can't
 			var to_cup := Vector2(sim.pos.x - terrain.pin().x, sim.pos.y - terrain.pin().y).length()
-			var slow := 0.45 if sim.state == BallSim.State.ROLLING and to_cup < 2.2 and sim.vel.length() > 0.15 else 1.0
-			sim.advance(delta * (FLIGHT_SPEED if was_flying else slow))
+			var reach := sim.vel.length_squared() / (2.0 * BallSim.SURF[Terrain.Surface.GREEN][2]) + 0.3
+			var slow := 0.45 if sim.state == BallSim.State.ROLLING and to_cup < 2.2 and reach > to_cup else 1.0
+			_time_scale = move_toward(_time_scale, FLIGHT_SPEED if was_flying else slow, delta * 2.0)
+			sim.advance(delta * _time_scale)
 			if not _landed_fx and sim.first_land != Vector3.INF:
 				_landed_fx = true
 				var surf := terrain.surface_at(sim.first_land.x, sim.first_land.y)

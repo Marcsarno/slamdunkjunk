@@ -41,6 +41,11 @@ const PLUG_SPEED := 12.0         # m/s into the ground at which a landing takes 
 # backspin checks the ball for a moment after it lands
 const CHECK_TIME := 0.35
 const CHECK_BRAKE := 2.5         # extra m/s^2 at full spin
+# the turf's drag eases off as the ball slows (to ROLL_TAIL of it at a crawl, from ROLL_TAIL_SPEED
+# down), so a roll dies away over its last metre instead of stopping dead
+const ROLL_TAIL := 0.3
+const ROLL_TAIL_SPEED := 1.0     # m/s
+const STOP_SPEED := 0.025        # m/s: slower than this, where the slope can't move it, it's still
 
 var terrain: Terrain
 var obstacles: ObstacleGrid
@@ -200,14 +205,19 @@ func _roll(dt: float) -> void:
 	var n := terrain.normal(pos.x, pos.y)
 	var slope := Vector3(0, 0, -G) - n * (-G * n.z)       # gravity along the ground
 	var speed := vel.length()
-	if speed < 0.04 and slope.length() < resist * 0.9:
+	var holds := slope.length() < resist * 0.9               # the slope can't start it rolling again
+	if speed < STOP_SPEED and holds:
 		vel = Vector3.ZERO
 		state = State.STOPPED
 		return
 	var dir := vel / speed if speed > 0.0001 else Vector3.ZERO
-	vel += (slope - dir * resist) * dt
+	var drag := resist * lerpf(ROLL_TAIL, 1.0, clampf(speed / ROLL_TAIL_SPEED, 0.0, 1.0))
+	if holds:
+		# still more than the slope's pull along its way, so it can't creep on downhill for ever
+		drag = maxf(drag, minf(resist, slope.dot(dir) + 0.1 * resist))
+	vel += (slope - dir * drag) * dt
 	# friction must not reverse the ball within one step
-	if speed > 0.0001 and vel.dot(dir) < 0.0 and slope.length() < resist:
+	if speed > 0.0001 and vel.dot(dir) < 0.0 and holds:
 		vel = Vector3.ZERO
 	vel -= n * vel.dot(n)
 	var prev := pos
