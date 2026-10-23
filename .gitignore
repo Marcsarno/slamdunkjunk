@@ -8,3 +8,8 @@ golf/game/assets/holes/*/hole.blend
 golf/game/assets/holes/*/hole.blend1
 golf/game/assets/holes/*/preview.png
 golf/build/
+# written by build_hole.py for the all-3D scenery experiment; the game doesn't load them (and the web export skips them)
+golf/game/assets/holes/*/ground.jpg
+golf/game/assets/holes/*/ground.jpg.import
+golf/game/assets/holes/*/library.glb
+golf/game/assets/holes/*/library.glb.import
