@@ -16,6 +16,8 @@ usage: python3 -I make_sfx.py <out_dir>
   click       a tiny tick as the pull settles on the mark
   stretch     a short rubbery creak as the slingshot's band stretches
   twang       the band snapping back when it's let go
+  chalk       a stick of chalk writing a line on the board (scratchy taps)
+  erase       a felt eraser swished across the board
 """
 import os
 import sys
@@ -208,6 +210,27 @@ def main():
     tone *= env(n, 0.002, 0.08)
     snap = high(rng.standard_normal(n), 1500) * env(n, 0.0005, 0.012)
     save(out, "twang", tone / np.max(np.abs(tone)) + snap * 0.5, 0.6)
+
+    # (the menu's sounds, on their own dice so everything above stays as it was)
+    mr = np.random.default_rng(31)
+    # chalk: short scratchy strokes, bright noise in quick taps, the way chalk skips across a board
+    n = int(0.55 * RATE)
+    t = np.arange(n) / RATE
+    strokes = np.zeros(n)
+    at = 0.0
+    while at < 0.5:
+        ln = mr.uniform(0.03, 0.08)
+        s0, s1 = int(at * RATE), int(min(at + ln, 0.55) * RATE)
+        m = s1 - s0
+        strokes[s0:s1] += np.sin(np.pi * np.arange(m) / m) ** 0.7 * mr.uniform(0.6, 1.0)
+        at += ln + mr.uniform(0.01, 0.04)
+    grit = band(mr.standard_normal(n), 1800, 7000) * (0.75 + 0.25 * np.sign(np.sin(2 * np.pi * 160 * t)))
+    save(out, "chalk", grit * strokes, 0.35)
+    # erase: a soft felt swish back and forth
+    n = int(0.5 * RATE)
+    t = np.arange(n) / RATE
+    swish = np.abs(np.sin(2 * np.pi * 3.0 * t)) ** 1.5 * np.sin(np.pi * t / 0.5)
+    save(out, "erase", sweep_band(mr.standard_normal(n), 500, 1400, 0.9) * swish, 0.4)
     print("wrote", sorted(os.listdir(out)))
 
 

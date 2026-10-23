@@ -22,6 +22,9 @@ const SETTINGS := "user://settings.cfg"
 
 var step := START
 var adaptive := false
+## The clubhouse's Graphics option: "auto" (adapts on the web), "sharp" or "smooth" (fixed steps).
+var mode := "auto"
+const MODES := {"sharp": 1, "smooth": 4}
 var watching := false          # main turns this on while a hole is being played (not on the menu or loading)
 var _avg_ms := 16.7
 var _slow_t := 0.0
@@ -31,18 +34,40 @@ var _dropped := false
 
 func _ready() -> void:
 	adaptive = OS.has_feature("web")
+	var cfg := ConfigFile.new()
+	var saved := cfg.load(SETTINGS) == OK
+	if saved:
+		mode = str(cfg.get_value("video", "mode", "auto"))
 	if not adaptive:
 		step = 0
-	else:
-		var cfg := ConfigFile.new()
-		if cfg.load(SETTINGS) == OK:
-			step = clampi(int(cfg.get_value("video", "step", START)), 1, STEPS.size() - 1)
+	elif saved:
+		step = clampi(int(cfg.get_value("video", "step", START)), 1, STEPS.size() - 1)
+	if MODES.has(mode):
+		adaptive = false
+		step = MODES[mode]
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--quality="):
 			adaptive = false
 			step = -1
 			_apply_scale(clampf(float(a.trim_prefix("--quality=")), 0.5, 1.0))
 			return
+	_apply()
+
+
+## Set the Graphics option (and remember it): sharp and smooth fix the scene's step, auto lets the web
+## adapt again.
+func set_mode(m: String) -> void:
+	mode = m
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS)
+	cfg.set_value("video", "mode", m)
+	cfg.save(SETTINGS)
+	if MODES.has(m):
+		adaptive = false
+		step = MODES[m]
+	else:
+		adaptive = OS.has_feature("web")
+		step = START if adaptive else 0
 	_apply()
 
 

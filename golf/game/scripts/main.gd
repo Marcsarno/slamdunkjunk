@@ -775,7 +775,7 @@ func _press(p: Vector2) -> void:
 				_side = 0.0
 				hud.hint.text = ""
 				_pull_quarter = 0
-				Input.vibrate_handheld(10)
+				Sfx.buzz(10)
 			else:
 				target_dragging = true
 				_drag_from = p
@@ -800,7 +800,7 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 		var m := mark_pull()
 		if absf(g - m) < MAGNET:
 			if absf(pull_goal - m) >= MAGNET:
-				Input.vibrate_handheld(18)      # a click onto the mark
+				Sfx.buzz(18)      # a click onto the mark
 				Sfx.play("click", -6.0)
 			g = m
 		pull_goal = g
@@ -848,7 +848,7 @@ func _pull_feel() -> void:
 	var q := int(pull * 4.0 + 0.001)
 	if q > _pull_quarter:
 		Sfx.play("stretch", -14.0 + 2.0 * q, 0.85 + 0.12 * q)
-		Input.vibrate_handheld(6)
+		Sfx.buzz(6)
 	_pull_quarter = q
 
 
@@ -874,7 +874,7 @@ func _release() -> void:
 				_side = _side_goal
 				_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull)
 			Sfx.play("twang", lerpf(-12.0, -4.0, pull), lerpf(1.15, 0.9, pull))
-			Input.vibrate_handheld(25)
+			Sfx.buzz(25)
 			_shoot()
 
 

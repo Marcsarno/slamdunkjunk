@@ -1,5 +1,6 @@
 extends SceneTree
-## Screenshots of the splash and the clubhouse menu, for checking the look without a phone.
+## Screenshots of the splash and the clubhouse board's pages (and an eraser sweep mid-way), for
+## checking the look without a phone.
 ## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 1080x2340 --script res://tests/capture_front.gd -- --out=<dir>
 
 var out := ""
@@ -14,18 +15,33 @@ func _initialize() -> void:
 	await _wait(1.2)
 	await _save("front_1_splash")
 	front._on_play()
-	await _wait(1.3)
+	await _wait(0.75)
+	await _save("front_2a_writing")
+	await _wait(1.5)
 	await _save("front_2_menu")
+	front._go("holes")
+	await _wait(0.25)
+	await _save("front_3a_erasing")
+	await _wait(2.4)
+	await _save("front_3_holes")
+	front._go("main")
+	await _wait(2.6)
+	front._go("balls")
+	await _wait(2.4)
 	front._pick_ball(front._ball_i + 1)
-	await _wait(0.5)
-	await _save("front_2b_ball")
-	front._pick_ball(front._ball_i - 1)
-	front._soon(front.list.get_child(4), front.list.get_child(5))
-	await _wait(0.3)
-	await _save("front_3_soon")
-	front._show_help(true)
 	await _wait(0.8)
-	await _save("front_4_help")
+	await _save("front_4_balls")
+	front._pick_ball(front._ball_i - 1)
+	front._go("main")
+	await _wait(2.6)
+	front._go("options")
+	await _wait(2.4)
+	await _save("front_5_options")
+	front._go("main")
+	await _wait(2.6)
+	front._go("help")
+	await _wait(2.6)
+	await _save("front_6_help")
 	quit()
 
 

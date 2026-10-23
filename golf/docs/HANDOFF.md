@@ -109,6 +109,12 @@ project's convention), then `--import` again.
   the cup has a white liner rim.
 - Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`). No slow motion
   near the cup (Marc took it out); flight plays at 1.25x, easing to real time on landing (`main._time_scale`).
+- The clubhouse board (`scripts/front.gd`) is pages: main (Play Now = the round from hole 1, Pick a Hole,
+  Pick your Ball, Options, How to Play) and one for each. Changing page, a felt eraser sweeps the board
+  (each line wiped as it passes, a cloud of dust left that settles) and the new page is chalked on line by
+  line (the chalk shader's `write_x` / `erase_x`, in each item's own units), with chalk and eraser sounds
+  (`make_sfx.py`). Options: Music, Sounds (`Sfx.on`), Vibration (`Sfx.buzz`), Graphics auto / sharp /
+  smooth (`Quality.set_mode`), all remembered in `user://settings.cfg`.
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,

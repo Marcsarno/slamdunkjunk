@@ -21,6 +21,7 @@ const HELP := [
 	"Pull to the right to send it left, to the left to send it right.",
 	"The white circle: where it may land.",
 	"Wind blows a shot to the mint ring: aim off.",
+	"On the green the beads run downhill: aim above the hole.",
 ]
 ## The slingshot balls, in a turntable on the bar: the one you play with sits big in the middle with
 ## its neighbours either side; tap one (or swipe) to turn it.
@@ -35,9 +36,6 @@ const BALL_GLOW := {"pumpkin": Color(1.0, 0.55, 0.15), "ghost": Color(0.62, 0.55
 var splash := Control.new()
 var clubhouse := Control.new()
 var play_art := TextureRect.new()
-var list := Control.new()
-var help := Control.new()
-var title := Label.new()
 var fade := ColorRect.new()
 var chalk: ShaderMaterial
 var head_font: Font = Chalk.head_font()
@@ -124,11 +122,25 @@ func _on_play() -> void:
 	tw.tween_callback(func():
 		splash.visible = false
 		clubhouse.visible = true
+		_show_page("main")
 		_busy = false)
 	tw.tween_property(fade, "color:a", 0.0, 0.3)
 
 
 # ---------------------------------------------------------------- clubhouse menu, in chalk
+## The board shows one page at a time: the main page (Play Now, Pick a Hole, Pick your Ball, Options,
+## How to Play) and one for each of those. Going to another page, a felt eraser sweeps the board (and
+## leaves a smudge of dust), then the new page is chalked on line by line.
+var _pages := {}                 # name -> Control
+var _items := {}                 # name -> Array of chalk CanvasItems, in the order they're written
+var _page := ""
+var _dust: ColorRect
+var _eraser := Control.new()
+var _ball_ring: Line2D
+var _board_balls: Array[TextureRect] = []
+var _board_ball_name: Label
+
+
 func _build_clubhouse() -> void:
 	clubhouse.size = ART
 	add_child(clubhouse)
@@ -138,90 +150,102 @@ func _build_clubhouse() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clubhouse.add_child(bg)
 	# old chalk, wiped but never quite gone
-	var dust := ColorRect.new()
-	dust.color = Color(0.9, 0.88, 0.92, 1.0)
-	dust.position = BOARD.position - Vector2(26, 26)
-	dust.size = BOARD.size + Vector2(48, 44)
-	dust.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dust = ColorRect.new()
+	_dust.color = Color(0.9, 0.88, 0.92, 1.0)
+	_dust.position = BOARD.position - Vector2(26, 26)
+	_dust.size = BOARD.size + Vector2(48, 44)
+	_dust.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var dm := chalk.duplicate()
 	dm.set_shader_parameter("dust", 0.09)
-	dust.material = dm
-	clubhouse.add_child(dust)
+	_dust.material = dm
+	clubhouse.add_child(_dust)
 
-	title = _chalk_label("Tonight's Course", head_font, 62, CHALK)
-	title.position = Vector2(BOARD.position.x, BOARD.position.y)
-	title.size = Vector2(BOARD.size.x, 80)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	clubhouse.add_child(title)
-	clubhouse.add_child(_chalk_line(BOARD.position.y + 86, 0.16, 0.84))
+	var x0 := BOARD.position.x
+	var w := BOARD.size.x
+	var top := BOARD.position.y
+	# the main page
+	var m := _new_page("main")
+	_write(m, "The Clubhouse", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
+	_rule(m, top + 92, 0.16, 0.84)
+	_write(m, "Play Now", head_font, 80, CHALK_ORANGE, Rect2(x0, top + 140, w, 104))
+	_write(m, "nine holes, from the first tee", hand_font, 30, CHALK_DIM, Rect2(x0, top + 244, w, 44))
+	_tap(m, Rect2(x0, top + 132, w, 160), _play_round)
+	_rule(m, top + 318, 0.3, 0.7)
+	var y := top + 360.0
+	for row: Array in [["Pick a Hole", "holes"], ["Pick your Ball", "balls"], ["Options", "options"], ["How to Play", "help"]]:
+		_write(m, row[0], hand_font, 50, CHALK, Rect2(x0, y, w, 70))
+		_tap(m, Rect2(x0, y - 4, w, 78), _go.bind(row[1]))
+		y += 96.0
 
-	list.size = ART
-	list.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	clubhouse.add_child(list)
-	var y := BOARD.position.y + 118.0
+	# pick a hole
+	var hp := _new_page("holes")
+	_write(hp, "Pick a Hole", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
+	_rule(hp, top + 92, 0.16, 0.84)
+	y = top + 116.0
 	for i in HOLES.size():
 		var hole: Array = HOLES[i]
-		var ready_hole: bool = i < Round.HOLES.size()
-		var row := _invisible_button(Rect2(BOARD.position.x, y, BOARD.size.x, 64))
-		list.add_child(row)
-		var name := _chalk_label("%d.  %s" % [i + 1, hole[0]], hand_font, 40 if ready_hole else 36, CHALK if ready_hole else CHALK_DIM)
-		name.position = Vector2(BOARD.position.x + 14, y + 4)
-		name.size = Vector2(BOARD.size.x - 120, 58)
-		list.add_child(name)
-		var right := _chalk_label("par %d" % hole[1] if ready_hole else "soon", hand_font, 34, CHALK_ORANGE if ready_hole else CHALK_DIM)
-		right.position = Vector2(BOARD.end.x - 118, y + 8)
-		right.size = Vector2(104, 52)
-		right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		list.add_child(right)
-		if ready_hole:
-			row.pressed.connect(_play_hole.bind(i, name))
+		var built: bool = i < Round.HOLES.size()
+		var name := _write(hp, "%d.  %s" % [i + 1, hole[0]], hand_font, 40 if built else 36, CHALK if built else CHALK_DIM,
+			Rect2(x0 + 14, y + 4, w - 120, 58), HORIZONTAL_ALIGNMENT_LEFT)
+		var right := _write(hp, "par %d" % hole[1] if built else "soon", hand_font, 34, CHALK_ORANGE if built else CHALK_DIM,
+			Rect2(BOARD.end.x - 118, y + 8, 104, 52), HORIZONTAL_ALIGNMENT_RIGHT)
+		if built:
+			_tap(hp, Rect2(x0, y, w, 64), _play_hole.bind(i, name))
 		else:
-			row.pressed.connect(_soon.bind(name, right))
-		y += 72.0
-	list.add_child(_chalk_line(y + 6, 0.08, 0.92))
-	var half := BOARD.size.x * 0.5
-	var how := _invisible_button(Rect2(BOARD.position.x, y + 22, half, 64))
-	list.add_child(how)
-	var how_l := _chalk_label("How to play ?", hand_font, 36, CHALK)
-	how_l.position = Vector2(BOARD.position.x, y + 26)
-	how_l.size = Vector2(half, 58)
-	how_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	list.add_child(how_l)
-	how.pressed.connect(_show_help.bind(true))
-	var mus := _invisible_button(Rect2(BOARD.position.x + half, y + 22, half, 64))
-	list.add_child(mus)
-	var mus_l := _chalk_label(_music_text(), hand_font, 36, CHALK)
-	mus_l.position = Vector2(BOARD.position.x + half, y + 26)
-	mus_l.size = Vector2(half, 58)
-	mus_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	list.add_child(mus_l)
-	mus.pressed.connect(func():
-		Music.toggle()
-		mus_l.text = _music_text())
+			_tap(hp, Rect2(x0, y, w, 64), _soon.bind(name, right))
+		y += 70.0
+	_back(hp)
 
-	help.size = ART
-	help.visible = false
-	help.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	clubhouse.add_child(help)
-	var tips := VBoxContainer.new()
-	tips.position = Vector2(BOARD.position.x + 14, BOARD.position.y + 130)
-	tips.size = Vector2(BOARD.size.x - 28, 0)
-	tips.add_theme_constant_override("separation", 34)
-	tips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	help.add_child(tips)
-	for line in HELP:
-		var l := _chalk_label(line, hand_font, 38, CHALK)
-		l.custom_minimum_size.x = BOARD.size.x - 28
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		tips.add_child(l)
-	var back := _invisible_button(Rect2(BOARD.position.x, BOARD.end.y - 90, BOARD.size.x, 70))
-	help.add_child(back)
-	var back_l := _chalk_label("<  back to the course", hand_font, 38, CHALK_ORANGE)
-	back_l.position = Vector2(BOARD.position.x, BOARD.end.y - 84)
-	back_l.size = Vector2(BOARD.size.x, 58)
-	back_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	help.add_child(back_l)
-	back.pressed.connect(_show_help.bind(false))
+	# pick your ball: the seven on the board, the one you play with ringed in chalk
+	var bp := _new_page("balls")
+	_write(bp, "Pick your Ball", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
+	_rule(bp, top + 92, 0.16, 0.84)
+	var cx := x0 + w * 0.5
+	for k in Balls.BALLS.size():
+		var row := 0 if k < 4 else 1
+		var col := k if k < 4 else k - 4
+		var c := Vector2(cx + (col - (1.5 if row == 0 else 1.0)) * 116.0, top + 230 + row * 150)
+		var pic := TextureRect.new()
+		pic.texture = load("res://assets/balls/%s/still.png" % Balls.BALLS[k])
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		pic.size = Vector2.ONE * 104.0
+		pic.position = c - pic.size * 0.5
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bp.add_child(pic)
+		_items["balls"].append(pic)
+		_board_balls.append(pic)
+		_tap(bp, Rect2(c - Vector2(58, 64), Vector2(116, 128)), func(): _pick_ball(k))
+	_ball_ring = _rule(bp, 0.0, 0.0, 0.0)
+	_board_ball_name = _write(bp, "", head_font, 58, CHALK_ORANGE, Rect2(x0, top + 470, w, 80))
+	_write(bp, "or turn them on the bar", hand_font, 30, CHALK_DIM, Rect2(x0, top + 560, w, 44))
+	_back(bp)
+
+	# options
+	var op := _new_page("options")
+	_write(op, "Options", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
+	_rule(op, top + 92, 0.16, 0.84)
+	y = top + 150.0
+	for opt: String in ["music", "sounds", "vibration", "graphics"]:
+		var l := _write(op, _option_text(opt), hand_font, 48, CHALK, Rect2(x0, y, w, 70))
+		_tap(op, Rect2(x0, y - 4, w, 78), _toggle_option.bind(opt, l))
+		y += 100.0
+	_write(op, "graphics: auto picks what runs smoothly", hand_font, 28, CHALK_DIM, Rect2(x0, y + 10, w, 44))
+	_back(op)
+
+	# how to play
+	var help_p := _new_page("help")
+	_write(help_p, "How to Play", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
+	_rule(help_p, top + 92, 0.16, 0.84)
+	y = top + 124.0
+	for line: String in HELP:
+		var tip := _write(help_p, line, hand_font, 36, CHALK, Rect2(x0 + 14, y, w - 28, 50), HORIZONTAL_ALIGNMENT_LEFT, true)
+		y += maxf(tip.get_combined_minimum_size().y, 50.0) + 30.0
+	_back(help_p)
+
+	_build_eraser()
+	_show_page("main")
+	_board_ball_ring()
 
 	# the slingshot balls' turntable on the bar
 	_ball_glow.texture = _glow_texture()
@@ -309,6 +333,7 @@ func _pick_ball(i: int) -> void:
 	Balls.choose(Balls.BALLS[k])
 	Sfx.play("click", -4.0)
 	_name_ball()
+	_board_ball_ring()
 
 
 ## A soft round glow, white, to tint.
@@ -322,19 +347,187 @@ func _glow_texture() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
-func _show_help(on: bool) -> void:
+## Change the board's page: wipe it, then chalk the new one on.
+func _go(name: String) -> void:
+	if _busy or name == _page:
+		return
+	_busy = true
+	Sfx.play("click", -8.0)
+	await _erase_board()
+	_show_page(name)
+	_busy = false
+
+
+func _show_page(name: String) -> void:
+	for n: String in _pages:
+		_pages[n].visible = n == name
+	_page = name
+	_write_on(name)
+
+
+## The felt eraser's sweep, side to side down the board while working across it; each line goes as it
+## passes, and a cloud of dust is left behind that settles back.
+func _erase_board() -> void:
+	Sfx.play("erase", -6.0, randf_range(0.95, 1.05))
+	_eraser.visible = true
+	var items: Array = _items.get(_page, [])
+	var span := Vector2(BOARD.position.x - 70.0, BOARD.end.x + 70.0)
+	var sweep := func(u: float) -> void:
+		var x := lerpf(span.x, span.y, u)
+		_eraser.position = Vector2(x - 60.0, BOARD.position.y + BOARD.size.y * (0.48 + 0.36 * sin(u * TAU * 2.5)) - 24.0)
+		for it: CanvasItem in items:
+			if it is TextureRect:
+				var tr := it as TextureRect
+				tr.modulate.a = minf(tr.modulate.a, clampf((tr.position.x + tr.size.x - (x - 40.0)) / tr.size.x, 0.0, 1.0))
+			elif it.material:
+				(it.material as ShaderMaterial).set_shader_parameter("erase_x", x - _item_x(it) - 20.0)
+		(_dust.material as ShaderMaterial).set_shader_parameter("dust", lerpf(0.09, 0.17, u))
 	var tw := create_tween()
-	var out: Control = list if on else help
-	var into: Control = help if on else list
-	tw.tween_property(out, "modulate:a", 0.0, 0.15)
-	tw.parallel().tween_property(title, "modulate:a", 0.0, 0.15)
+	tw.tween_method(sweep, 0.0, 1.0, 0.5)
+	await tw.finished
+	_eraser.visible = false
+	var settle := create_tween()
+	settle.tween_method(func(v: float): (_dust.material as ShaderMaterial).set_shader_parameter("dust", v), 0.17, 0.09, 1.6)
+
+
+## Chalk a page on: each line written left to right in turn (overlapping a little), with the scratch of
+## the chalk; the balls appear as their turn comes.
+func _write_on(name: String) -> void:
+	var items: Array = _items.get(name, [])
+	var at := 0.0
+	var k := 0
+	for it: CanvasItem in items:
+		if it is TextureRect:
+			it.modulate.a = 0.0
+			create_tween().tween_property(it, "modulate:a", 1.0, 0.18).set_delay(at)
+			at += 0.05
+			continue
+		var mat := it.material as ShaderMaterial
+		var ext: Vector2 = it.get_meta("ext", Vector2(0, 400))
+		mat.set_shader_parameter("erase_x", -100000.0)
+		mat.set_shader_parameter("write_x", ext.x - 20.0)
+		var dur := clampf((ext.y - ext.x) / 1500.0, 0.08, 0.38)
+		var tw := create_tween()
+		tw.tween_interval(at)
+		if k % 2 == 0:
+			tw.tween_callback(func(): Sfx.play("chalk", -9.0, randf_range(0.9, 1.15)))
+		tw.tween_method(func(v: float): mat.set_shader_parameter("write_x", v), ext.x - 20.0, ext.y + 30.0, dur)
+		at += dur * 0.35 + 0.025
+		k += 1
+
+
+## Rub out one line and chalk it again (an option changing its value).
+func _rewrite(l: Label, text: String) -> void:
+	var mat := l.material as ShaderMaterial
+	var ext: Vector2 = l.get_meta("ext")
+	var tw := create_tween()
+	tw.tween_method(func(v: float): mat.set_shader_parameter("erase_x", v), ext.x - 30.0, ext.y + 40.0, 0.18)
 	tw.tween_callback(func():
-		title.text = "How to Play" if on else "Tonight's Course"
-		out.visible = false
-		into.modulate.a = 0.0
-		into.visible = true)
-	tw.tween_property(into, "modulate:a", 1.0, 0.2)
-	tw.parallel().tween_property(title, "modulate:a", 1.0, 0.2)
+		l.text = text
+		_measure(l)
+		var e: Vector2 = l.get_meta("ext")
+		mat.set_shader_parameter("erase_x", -100000.0)
+		mat.set_shader_parameter("write_x", e.x - 20.0)
+		Sfx.play("chalk", -9.0, randf_range(0.95, 1.1)))
+	tw.tween_method(func(v: float): mat.set_shader_parameter("write_x", v), ext.x - 20.0, ext.y + 60.0, 0.3)
+
+
+func _build_eraser() -> void:
+	# a wooden-backed felt board eraser
+	_eraser.size = Vector2(120, 48)
+	_eraser.pivot_offset = _eraser.size * 0.5
+	_eraser.rotation = -0.12
+	_eraser.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var wood := Panel.new()
+	var ws := StyleBoxFlat.new()
+	ws.bg_color = Color(0.55, 0.34, 0.18)
+	ws.set_corner_radius_all(10)
+	ws.border_color = Color(0.36, 0.2, 0.1)
+	ws.set_border_width_all(2)
+	wood.add_theme_stylebox_override("panel", ws)
+	wood.size = Vector2(120, 30)
+	wood.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_eraser.add_child(wood)
+	var felt := Panel.new()
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = Color(0.72, 0.7, 0.68)
+	fs.corner_radius_bottom_left = 6
+	fs.corner_radius_bottom_right = 6
+	felt.add_theme_stylebox_override("panel", fs)
+	felt.position = Vector2(3, 28)
+	felt.size = Vector2(114, 18)
+	felt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_eraser.add_child(felt)
+	_eraser.visible = false
+	_eraser.z_index = 5
+	clubhouse.add_child(_eraser)
+
+
+## The chalk ring round the ball you play with on the Pick your Ball page, and its name under them.
+func _board_ball_ring() -> void:
+	if _ball_ring == null or _board_balls.is_empty():
+		return
+	var pic := _board_balls[_ball_i]
+	var c := pic.position + pic.size * 0.5
+	_ball_ring.clear_points()
+	var n := 28
+	for i in n + 2:
+		var a := TAU * float(i) / n - 0.4
+		var r := 62.0 + 3.0 * sin(i * 1.7)
+		_ball_ring.add_point(c + Vector2(cos(a) * r, sin(a) * r * 0.95))
+	var ext := Vector2(c.x - 70.0, c.x + 70.0)
+	_ball_ring.set_meta("ext", ext)
+	var rm := _ball_ring.material as ShaderMaterial
+	rm.set_shader_parameter("erase_x", -100000.0)
+	if _page == "balls":
+		# drawn round the new one with a quick stroke of chalk
+		create_tween().tween_method(func(v: float): rm.set_shader_parameter("write_x", v), ext.x - 20.0, ext.y + 30.0, 0.22)
+	for k in _board_balls.size():
+		_board_balls[k].self_modulate = Color(1, 1, 1) if k == _ball_i else Color(0.78, 0.76, 0.82)
+	if _board_ball_name:
+		var t := Balls.NAMES.get(Balls.BALLS[_ball_i], "") as String
+		if _board_ball_name.text == "":
+			_board_ball_name.text = t
+			_measure(_board_ball_name)
+		elif _board_ball_name.text != t and _page == "balls":
+			_rewrite(_board_ball_name, t)
+		else:
+			_board_ball_name.text = t
+			_measure(_board_ball_name)
+
+
+func _play_round() -> void:
+	if _busy:
+		return
+	_busy = true
+	Round.start(0)
+	var tw := create_tween()
+	tw.tween_interval(0.12)
+	tw.tween_property(fade, "color:a", 1.0, 0.3)
+	tw.tween_callback(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
+
+
+func _option_text(opt: String) -> String:
+	match opt:
+		"music": return "Music: " + ("on" if Music.on else "off")
+		"sounds": return "Sounds: " + ("on" if Sfx.on else "off")
+		"vibration": return "Vibration: " + ("on" if Sfx.buzz_on else "off")
+		"graphics": return "Graphics: " + Quality.mode
+	return opt
+
+
+func _toggle_option(opt: String, l: Label) -> void:
+	match opt:
+		"music": Music.toggle()
+		"sounds": Sfx.set_sounds(not Sfx.on)
+		"vibration":
+			Sfx.set_buzz(not Sfx.buzz_on)
+			Sfx.buzz(30)
+		"graphics":
+			var order := ["auto", "sharp", "smooth"]
+			Quality.set_mode(order[(order.find(Quality.mode) + 1) % order.size()])
+	Sfx.play("click", -6.0)
+	_rewrite(l, _option_text(opt))
 
 
 ## A hole that isn't built yet: its "soon" lights up orange for a moment and the name wiggles.
@@ -359,11 +552,77 @@ func _play_hole(i: int, label: Label) -> void:
 	tw.tween_callback(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
 
 
-func _music_text() -> String:
-	return "Music: on" if Music.on else "Music: off"
-
-
 # ---------------------------------------------------------------- helpers
+func _new_page(name: String) -> Control:
+	var p := Control.new()
+	p.size = ART
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.visible = false
+	clubhouse.add_child(p)
+	_pages[name] = p
+	_items[name] = []
+	return p
+
+
+## A line of chalk on a page, in its own copy of the chalk material (so it can be written and wiped on
+## its own), remembered in the page's writing order.
+func _write(page: Control, text: String, font: Font, size: int, color: Color, r: Rect2,
+		align := HORIZONTAL_ALIGNMENT_CENTER, wrap := false) -> Label:
+	var l := _chalk_label(text, font, size, color)
+	l.material = chalk.duplicate()
+	if wrap:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size.x = r.size.x
+	l.position = r.position
+	l.size = r.size
+	l.horizontal_alignment = align
+	page.add_child(l)
+	_measure(l)
+	_items[_pages.find_key(page)].append(l)
+	return l
+
+
+## Where a label's words run along its x (its own units), for the chalk to be written along them.
+func _measure(l: Label) -> void:
+	var font: Font = l.get_theme_font("font")
+	var fs := l.get_theme_font_size("font_size")
+	var tw := minf(font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x, l.size.x)
+	var x0 := 0.0
+	if l.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER:
+		x0 = (l.size.x - tw) * 0.5
+	elif l.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+		x0 = l.size.x - tw
+	if l.autowrap_mode != TextServer.AUTOWRAP_OFF:
+		x0 = 0.0
+		tw = l.size.x
+	l.set_meta("ext", Vector2(x0, x0 + tw))
+
+
+## Where an item's own x starts on the board (a label's left edge; a line's points are board coords).
+func _item_x(it: CanvasItem) -> float:
+	return (it as Control).position.x if it is Control else 0.0
+
+
+func _rule(page: Control, y: float, a: float, b: float) -> Line2D:
+	var line := _chalk_line(y, a, b)
+	line.material = chalk.duplicate()
+	line.set_meta("ext", Vector2(BOARD.position.x + BOARD.size.x * a, BOARD.position.x + BOARD.size.x * b))
+	page.add_child(line)
+	_items[_pages.find_key(page)].append(line)
+	return line
+
+
+func _tap(page: Control, r: Rect2, f: Callable) -> void:
+	var b := _invisible_button(r)
+	b.pressed.connect(f)
+	page.add_child(b)
+
+
+func _back(page: Control) -> void:
+	_write(page, "<  back", hand_font, 40, CHALK_ORANGE, Rect2(BOARD.position.x, BOARD.end.y - 84, BOARD.size.x, 58))
+	_tap(page, Rect2(BOARD.position.x, BOARD.end.y - 92, BOARD.size.x, 72), _go.bind("main"))
+
+
 func _chalk_label(text: String, font: Font, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
