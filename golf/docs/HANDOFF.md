@@ -60,10 +60,15 @@ project's convention), then `--import` again.
   jack-o'-lantern by every tee that the opening camera swings round.
 - Courses: winding layouts, cart paths (a real, bouncy surface) with plank bridges at water, painted trees
   (04-18) and glowing light props (01-15) per hole theme.
-- Aiming: target auto-placed (lays up short of trouble), drag to move it, pull down from the lower screen
-  to swing. **The pull is the club's power:** the bottom of the screen is full power wherever the finger
-  starts; the target is a mark part way (click). Putts: a full pull is 2x the putt. Past 90% power the
-  margin of error widens. Slide sideways while pulling to aim. A map (top left) shows where the pull lands.
+- Aiming: target auto-placed (lays up short of trouble), drag to move it. **Slingshot:** a Halloween ball
+  button (`hud.gd` `Sling`, an on-screen control, not the golf ball) rests low in the middle; pull it
+  back. The band's length is the power (a full stretch, 21% of the screen height, is the club's full
+  power; the target is a mark part way, with a click), its tilt aims the other way (down-right sends it
+  left, `SLING_AIM` 0.35 of the tilt past a 4 degree dead zone). Its face goes still -> launch -> panic
+  (past 90%). The view stays up on the course while pulling (no zoom down; the corner map is off,
+  `AIM_MAP`), cuts to her swing on release. Putts: a full pull is 2x the putt. Past 90% power the
+  margin of error widens. Art drops in at `assets/balls/<name>/{still,launch,panic}.png` (512 px,
+  ball ~80% of the square); until then a stand-in face is drawn. `--ball-size=0.13` tries sizes.
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,
   wedge stops; tuned in `scripts/ball_sim.gd` SURF table).
 - Performance: `Quality` autoload draws 3D at 75% on the web (HUD sharp), adapts 85/75/65/55% to the

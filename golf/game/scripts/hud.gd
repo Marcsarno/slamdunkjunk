@@ -17,6 +17,7 @@ var wind := Label.new()
 var wind_arrow := WindArrow.new()
 var gauge := Gauge.new()
 var aim_map := AimMap.new()
+var sling := Sling.new()
 var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
@@ -249,6 +250,186 @@ class AimMap extends Control:
 			draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, cream)
 
 
+## The slingshot: a Halloween ball you pull back to shoot (a control on the screen, not the golf ball).
+## It rests low in the middle of the screen; pulling draws it down after the finger on a band, its
+## face going from calm to "you're about to launch me" as it stretches, and to panic past nine
+## tenths. Let go and it snaps up and away. Art: res://assets/balls/<ball>/{still,launch,panic}.png,
+## 512 px squares with the ball filling about 80% of the middle; until there is some, a stand-in is
+## drawn. --ball-size=<share of the screen's width> tries other sizes.
+class Sling extends Control:
+	const DIR := "res://assets/balls/"
+	const REST_Y := 0.70            # where it rests, as a share of the screen's height
+	const ART_FILL := 0.8           # the ball's share of its art's square
+	var size_share := 0.15          # the ball's width, as a share of the screen's (about 58 pt on a phone)
+	var ball_name := "pumpkin"
+	var offset := Vector2.ZERO      # where the finger has drawn it from its rest (px)
+	var stretch := 0.0              # 0 .. 1: share of a full pull
+	var pose := "still"
+	var hint := false               # a nudge under it to pull, on the first shot
+	var _tex := {}
+	var _t := 0.0
+	var _snap_t := -1.0             # flying off after the release: seconds since
+	var _snap_from := Vector2.ZERO
+	var _pop_t := 1.0               # popping back in for the next shot: seconds since
+	var _back_t := 1.0              # springing back to rest after a pull let go without a shot
+	var _back_from := Vector2.ZERO
+
+	func _ready() -> void:
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--ball-size="):
+				size_share = clampf(float(a.trim_prefix("--ball-size=")), 0.08, 0.3)
+		set_ball(ball_name)
+
+	func set_ball(n: String) -> void:
+		ball_name = n
+		_tex.clear()
+		for p: String in ["still", "launch", "panic"]:
+			var path := DIR + n + "/" + p + ".png"
+			if ResourceLoader.exists(path):
+				_tex[p] = load(path)
+
+	func rest() -> Vector2:
+		return Vector2(size.x * 0.5, size.y * REST_Y)
+
+	func radius() -> float:
+		return size.x * size_share * 0.5
+
+	## A touch on (or close round) the ball.
+	func hit(p: Vector2) -> bool:
+		return visible and p.distance_to(rest()) < radius() * 1.7
+
+	## In for a new shot, with a little pop.
+	func appear() -> void:
+		offset = Vector2.ZERO
+		stretch = 0.0
+		pose = "still"
+		_snap_t = -1.0
+		_back_t = 1.0
+		_pop_t = 0.0
+		visible = true
+
+	## Let go with a shot: it snaps up and away along the band.
+	func release() -> void:
+		_snap_from = offset
+		_snap_t = 0.0
+
+	## Let go without a shot: it springs back to rest.
+	func cancel() -> void:
+		_back_from = offset
+		_back_t = 0.0
+		offset = Vector2.ZERO
+		stretch = 0.0
+		pose = "still"
+
+	func _process(delta: float) -> void:
+		if not visible:
+			return
+		_t += delta
+		_pop_t += delta
+		_back_t += delta
+		if _snap_t >= 0.0:
+			_snap_t += delta
+			if _snap_t > 0.24:
+				_snap_t = -1.0
+				visible = false
+		queue_redraw()
+
+	func _draw() -> void:
+		var r := radius()
+		var at := offset
+		var alpha := 1.0
+		var grow := 1.0
+		var bob := 0.0
+		if _snap_t >= 0.0:
+			# up past its rest along the band and gone
+			var u := _snap_t / 0.24
+			var away := -_snap_from.normalized() if _snap_from.length() > 1.0 else Vector2.UP
+			at = _snap_from.lerp(away * size.y * 0.12, 1.0 - pow(1.0 - u, 3.0))
+			alpha = clampf((1.0 - u) / 0.45, 0.0, 1.0)
+			grow = lerpf(1.0, 0.6, u)
+		elif _back_t < 0.3:
+			var u := _back_t / 0.3
+			at = _back_from * (1.0 - u) * cos(u * PI * 1.5)     # a wobble home
+		elif stretch < 0.02:
+			bob = sin(_t * 2.4) * r * 0.04
+		if _pop_t < 0.3:
+			var u := _pop_t / 0.3
+			grow *= 1.0 + 2.70158 * pow(u - 1.0, 3.0) + 1.70158 * pow(u - 1.0, 2.0)   # ease out, back
+		if pose == "panic" and _snap_t < 0.0:
+			at += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * r * 0.05
+		var c := rest() + at + Vector2(0, bob)
+		var ink := Color(0.06, 0.02, 0.1, alpha)
+		# the band, from two pegs either side of its rest to behind the ball
+		if at.length() > r * 0.15 and _snap_t < 0.0:
+			var band_col := Color(1.0, 0.94, 0.84).lerp(Color(1.0, 0.62, 0.18), clampf(stretch * 1.4, 0.0, 1.0)) \
+				.lerp(Color(1.0, 0.3, 0.25), clampf((stretch - 0.85) / 0.15, 0.0, 1.0))
+			var back := c + at.normalized() * r * 0.75
+			var w := lerpf(7.0, 4.0, stretch)       # thinner as it stretches
+			for sx: float in [-1.0, 1.0]:
+				var peg := rest() + Vector2(sx * r * 1.35, -r * 0.1)
+				draw_line(peg, back, ink, w + 5.0, true)
+				draw_line(peg, back, band_col, w, true)
+			for sx: float in [-1.0, 1.0]:
+				var peg := rest() + Vector2(sx * r * 1.35, -r * 0.1)
+				draw_circle(peg, r * 0.16, ink)
+				draw_circle(peg, r * 0.11, Color(0.86, 0.8, 0.68))
+		elif hint and stretch < 0.02 and _snap_t < 0.0:
+			# a nudge: chevrons pointing down under it
+			var k := 0.5 + 0.5 * sin(_t * 4.0)
+			for i in 2:
+				var y := c.y + r * (1.35 + 0.42 * i) + k * r * 0.12
+				var pts := PackedVector2Array([Vector2(c.x - r * 0.32, y), Vector2(c.x, y + r * 0.26), Vector2(c.x + r * 0.32, y)])
+				draw_polyline(pts, ink, 9.0, true)
+				draw_polyline(pts, Color(1.0, 0.94, 0.84, 0.55 + 0.35 * k - 0.25 * i), 4.5, true)
+		# the ball, squashed along the band as it stretches (its face stays upright)
+		var d := at.normalized() if at.length() > 1.0 else Vector2.DOWN
+		var along := (1.0 + 0.16 * stretch) * grow
+		var across := (1.0 - 0.08 * stretch) * grow
+		var xa := Vector2(across, 0) + d * d.x * (along - across)
+		var ya := Vector2(0, across) + d * d.y * (along - across)
+		draw_set_transform_matrix(Transform2D(xa, ya, c))
+		var tex: Texture2D = _tex.get(pose, _tex.get("launch" if pose == "panic" else "still"))
+		if tex:
+			var s := 2.0 * r / ART_FILL
+			draw_texture_rect(tex, Rect2(-s * 0.5, -s * 0.5, s, s), false, Color(1, 1, 1, alpha))
+		else:
+			_stand_in(r, d, alpha)
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+
+	## Until the art comes: a white golf ball with a face, looking at the finger as it pulls.
+	func _stand_in(r: float, look: Vector2, alpha: float) -> void:
+		var ink := Color(0.06, 0.02, 0.1, alpha)
+		var white := Color(0.97, 0.95, 0.9, alpha)
+		draw_circle(Vector2.ZERO, r + 4.0, ink)
+		draw_circle(Vector2.ZERO, r, Color(0.78, 0.76, 0.8, alpha))
+		draw_circle(Vector2(-r * 0.08, -r * 0.08), r * 0.9, white)
+		for q in [Vector2(-0.55, -0.45), Vector2(0.5, -0.5), Vector2(-0.7, 0.2), Vector2(0.68, 0.15), Vector2(-0.35, 0.65), Vector2(0.38, 0.62)]:
+			draw_circle(q * r, r * 0.07, Color(0.8, 0.78, 0.82, alpha))
+		var e := r * (0.13 if pose == "still" else (0.2 if pose == "launch" else 0.25))
+		var pupil := e * (1.0 if pose == "still" else (0.5 if pose == "launch" else 0.3))
+		for sx: float in [-1.0, 1.0]:
+			var ec := Vector2(sx * r * 0.33, -r * 0.14)
+			if pose == "still":
+				draw_circle(ec, e, ink)
+			else:
+				draw_circle(ec, e + 2.0, ink)
+				draw_circle(ec, e, white)
+				draw_circle(ec + look * (e - pupil) * 0.8, pupil, ink)
+				# brows up in alarm
+				draw_line(ec + Vector2(-sx * e * 0.9, -e * 1.5), ec + Vector2(sx * e * 0.6, -e * (1.9 if pose == "panic" else 1.6)), ink, 4.0, true)
+		match pose:
+			"still":
+				draw_arc(Vector2(0, r * 0.12), r * 0.28, PI * 0.18, PI * 0.82, 12, ink, 4.0, true)
+			"launch":
+				draw_circle(Vector2(0, r * 0.38), r * 0.12, ink)
+			_:
+				draw_circle(Vector2(0, r * 0.42), r * 0.2, ink)
+				draw_circle(Vector2(0, r * 0.48), r * 0.1, Color(0.85, 0.25, 0.3, alpha))
+				var drop := Vector2(r * 0.78, -r * 0.42)
+				draw_circle(drop, r * 0.09, Color(0.6, 0.85, 1.0, alpha))
+				draw_colored_polygon(PackedVector2Array([drop + Vector2(-r * 0.085, -r * 0.02), drop + Vector2(0, -r * 0.24), drop + Vector2(r * 0.085, -r * 0.02)]), Color(0.6, 0.85, 1.0, alpha))
+
+
 func _label(l: Label, size: int, color := CREAM) -> Label:
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
@@ -349,6 +530,11 @@ func _ready() -> void:
 	hint.size = Vector2(680, 90)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_label(hint, 26, Color(1, 1, 1, 0.85)))
+
+	sling.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sling.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sling.visible = false
+	root.add_child(sling)
 
 	var vig := ColorRect.new()
 	vig.set_anchors_preset(Control.PRESET_FULL_RECT)

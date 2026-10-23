@@ -14,6 +14,8 @@ usage: python3 -I make_sfx.py <out_dir>
   holed       a spooky celesta run when the ball drops
   thunder     a crack and a long rumble, for the lightning
   click       a tiny tick as the pull settles on the mark
+  stretch     a short rubbery creak as the slingshot's band stretches
+  twang       the band snapping back when it's let go
 """
 import os
 import sys
@@ -183,6 +185,22 @@ def main():
     # click: a tiny tick
     n = int(0.03 * RATE)
     save(out, "click", np.sin(2 * np.pi * 3200 * t_of(0.03)) * env(n, 0.0003, 0.004), 0.4)
+
+    # stretch: rubber creaking, friction noise gliding up with a fast flutter
+    n = int(0.16 * RATE)
+    t = t_of(0.16)
+    creak = sweep_band(rng.standard_normal(n), 380, 900, 0.5)
+    creak *= (0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 46 * t))) * env(n, 0.03, 0.06)
+    save(out, "stretch", creak / np.max(np.abs(creak)), 0.35)
+
+    # twang: a plucked band dropping in pitch, with the snap of it
+    n = int(0.35 * RATE)
+    t = t_of(0.35)
+    f = 150 + 140 * np.exp(-t / 0.05)
+    tone = np.sin(2 * np.pi * np.cumsum(f) / RATE) + 0.35 * np.sin(4 * np.pi * np.cumsum(f) / RATE)
+    tone *= env(n, 0.002, 0.08)
+    snap = high(rng.standard_normal(n), 1500) * env(n, 0.0005, 0.012)
+    save(out, "twang", tone / np.max(np.abs(tone)) + snap * 0.5, 0.6)
     print("wrote", sorted(os.listdir(out)))
 
 

@@ -17,7 +17,7 @@ var round := false     # --round: press Next hole on each card and play on to th
 var burst := false     # --burst: a screenshot every frame through each swing, not just one
 var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
 var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, land at the margin's edge
-var side_test := false    # --side-test: first shot, slide the pulling finger a fifth of the screen right
+var side_test := false    # --side-test: first shot, slide the pulling finger a fifth of the screen right (aims left)
 
 
 func _ready() -> void:
@@ -142,7 +142,10 @@ func _process(delta: float) -> void:
 						await get_tree().process_frame
 					await get_tree().create_timer(0.5).timeout
 					await snap("side")
-					print("side test: aim turned %.2f degrees" % rad_to_deg(aim0.angle_to(main.aim)))
+					# a slingshot: the finger slid right, so the shot should have turned left
+					var r0 := Vector2(aim0.y, -aim0.x)
+					print("side test: aim turned %.2f degrees to the %s" % [rad_to_deg(absf(aim0.angle_to(main.aim))),
+						"left (right for a slingshot)" if main.aim.dot(r0) < 0.0 else "right (WRONG for a slingshot)"])
 					stage = "pull"
 				main._release()
 				t = 0.0

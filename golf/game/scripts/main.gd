@@ -5,8 +5,10 @@ extends Node3D
 ##
 ## Aiming works like the phone golf games: each shot starts with a target on the best landing spot
 ## (where the roll ends at the pin, when it's in reach); drag it anywhere in the club's range. Pulling
-## back to the gauge's mark lands on the target (no wind); past it is extra power at a risk. Sliding
-## sideways while pulling swings the aim left or right. No shot is exact: it lands somewhere in a
+## back to the gauge's mark lands on the target (no wind); past it is extra power at a risk. The pull
+## is a slingshot (hud.gd Sling): pulling down and to the right sends the shot left, and down-left
+## sends it right, and the view stays up on the course while it's drawn so the landing can be watched
+## swinging round as it moves. No shot is exact: it lands somewhere in a
 ## margin of error that grows with its length (the white circle on the ground). The wind is the
 ## aiming game: a mint ring shows where it carries the shot.
 
@@ -15,13 +17,13 @@ enum Phase { INTRO, AIM, PULL, SWING, FLIGHT, RESULT, HOLED }
 const YD := 1.0936
 const PULL_ZONE := 0.62         # touches starting below this share of the screen height pull back to
                                 # swing; above it they drag the target
-## The pull: pulling all the way to the bottom of the screen is the club's full power, wherever the
-## finger starts (the travel is what's left below it, kept between these shares of the screen
-## height). The target is a mark partway along it. A putt's full pull is PUTT_HEADROOM times the
-## putt, so the hole sits halfway down and a firm putt can run past.
-const PULL_BOTTOM := 0.965
-const PULL_TRAVEL_MIN := 0.10
-const PULL_TRAVEL_MAX := 0.34
+## The pull: drawing the band PULL_TRAVEL_MAX of the screen's height down (sideways only aims) is
+## the club's full power (less when the finger starts too near the bottom: what's left above
+## PULL_BOTTOM, but never under PULL_TRAVEL_MIN). The target is a mark partway along it. A putt's full
+## pull is PUTT_HEADROOM times the putt, so the hole sits halfway along and a firm putt can run past.
+const PULL_BOTTOM := 0.975
+const PULL_TRAVEL_MIN := 0.12
+const PULL_TRAVEL_MAX := 0.21
 const PUTT_HEADROOM := 2.0
 const MAGNET := 0.03            # within this (share of the pull) of the mark, the pull settles exactly on it
 const RISKY_POWER := 0.9        # past this share of a club's power the swing gets loose: a wider margin
@@ -31,14 +33,24 @@ const SPREAD_NEAR := 0.045      # how far off a shot may land, as a share of its
 const SPREAD_FAR := 0.10        # ... up to this for a full drive of SPREAD_AT meters
 const SPREAD_AT := 220.0
 const SPREAD_LONG := 0.75       # the margin is shorter along the line than across it
-const SIDE_AIM := 0.5           # radians of aim per screen-width the finger slides sideways while pulling ...
-const SIDE_DEAD := 0.04         # ... once it has drifted this share of the width
-const HINT := "Drag the target · pull down from the bottom to swing, sideways to aim"
+## Slingshot aim: the band's tilt from straight down turns the shot the other way, scaled down (a 30
+## degree tilt turns it about 10), past a little dead zone so a slightly crooked pull still goes
+## straight. The tilt only counts once the band is stretched a little: the first pixels of a touch
+## point anywhere.
+const SLING_AIM := 0.35
+const SLING_DEAD := deg_to_rad(4.0)
+const SLING_TILT_MAX := deg_to_rad(60.0)
+const SLING_AIM_FROM := 0.04    # share of a full pull where the tilt starts to count ...
+const SLING_AIM_FULL := 0.14    # ... and where it counts fully
+const PANIC_PULL := 0.9         # the ball's face goes from worried to panic past this share of the pull
+const HINT := "Drag the target to aim · pull the ball back to shoot"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 6.5
 const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
 const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
+const AIM_BALL_Y := 0.58        # the aiming view tips down until the ball sits this far down the screen,
+                                # clear of the slingshot under it
 const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
 
 var terrain: Terrain
@@ -84,8 +96,8 @@ var pull_goal := 0.0            # where the finger says the pull should be; pull
 var pull_start := Vector2.ZERO
 var spread_test := Vector2.INF  # a test can fix where in the margin a shot lands (x across, y along, -1..1)
 var _shot_offset := Vector2.ZERO
-var _aim_at_pull := Vector2(0, 1)   # sideways aim while pulling: the aim and target distance when the
-var _dist_at_pull := 0.0            # pull began, and how far the finger says to turn from them (eased)
+var _aim_at_pull := Vector2(0, 1)   # slingshot aim while pulling: the aim and target distance when the
+var _dist_at_pull := 0.0            # pull began, and how far the band says to turn from them (eased)
 var _side_goal := 0.0
 var _side := 0.0
 var target_dragging := false
@@ -215,6 +227,7 @@ func _start_hole() -> void:
 	_setup_shot()
 	phase = Phase.INTRO
 	phase_t = 0.0
+	hud.sling.visible = false
 	hud.hint.text = "Tap to skip"
 	caddie.pose("bow", INTRO_TIME)
 	_place_pals()
@@ -253,6 +266,8 @@ func _setup_shot() -> void:
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
+	hud.sling.appear()
+	hud.sling.hint = strokes == 0
 	phase = Phase.AIM
 	_target_cam()
 	cam_pos = _want_pos
@@ -525,6 +540,11 @@ func _shoot() -> void:
 		golfer.contact.disconnect(_on_contact)
 	golfer.contact.connect(_on_contact, CONNECT_ONE_SHOT)
 	if club.id == "putter":
+		# down behind her for the stroke (the view stayed up on the green while the putt was drawn)
+		_aim_cam()
+		cam_pos = _want_pos
+		cam_target = _want_target
+		cam_fov = _want_fov
 		golfer.play_downswing(_sprite_set("back"))
 	else:
 		_place_golfer_face()
@@ -627,7 +647,7 @@ func _press(p: Vector2) -> void:
 		Phase.INTRO:
 			_end_intro()
 		Phase.AIM:
-			if p.y > vp.y * PULL_ZONE:
+			if p.y > vp.y * PULL_ZONE or hud.sling.hit(p):
 				phase = Phase.PULL
 				pull_start = p
 				pull_goal = 0.0
@@ -640,6 +660,9 @@ func _press(p: Vector2) -> void:
 				_side_goal = 0.0
 				_side = 0.0
 				hud.hint.text = ""
+				hud.sling.hint = false
+				_pull_quarter = 0
+				Input.vibrate_handheld(10)
 				caddie.pose("point")
 			else:
 				var hit: Variant = _ground_at(p)
@@ -650,13 +673,14 @@ func _press(p: Vector2) -> void:
 
 
 func _drag(p: Vector2, _rel: Vector2) -> void:
-	var vp := get_viewport().get_visible_rect().size
 	if target_dragging:
 		var hit: Variant = _ground_at(p)
 		if hit != null:
 			_set_target(_target0 + (hit - _drag_hit0), false)
 	elif phase == Phase.PULL:
-		var g := clampf((p - pull_start).y / _pull_len, 0.0, 1.0)
+		# the band, from where the finger went down: how far down it is drawn is the power, its tilt the aim
+		var v := p - pull_start
+		var g := clampf(v.y / _pull_len, 0.0, 1.0)      # how far down is the power; sideways only aims
 		var m := mark_pull()
 		if absf(g - m) < MAGNET:
 			if absf(pull_goal - m) >= MAGNET:
@@ -664,9 +688,10 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 				Sfx.play("click", -6.0)
 			g = m
 		pull_goal = g
-		# sliding sideways swings the aim (past a little drift, which pulling down always has)
-		var dx := (p - pull_start).x / vp.x
-		_side_goal = signf(dx) * maxf(0.0, absf(dx) - SIDE_DEAD) * SIDE_AIM
+		var tilt := clampf(atan2(v.x, maxf(v.y, 0.001)), -SLING_TILT_MAX, SLING_TILT_MAX)
+		var counts := smoothstep(SLING_AIM_FROM, SLING_AIM_FULL, v.length() / _pull_len)
+		_side_goal = signf(tilt) * maxf(0.0, absf(tilt) - SLING_DEAD) * SLING_AIM * counts
+		hud.sling.offset = v.limit_length(_pull_len * 1.04)
 
 
 ## The power of a full pull: the club's full power, or for a putt PUTT_HEADROOM times this putt.
@@ -723,9 +748,26 @@ func _ease_toward_finger(delta: float) -> void:
 		_side = lerpf(_side, _side_goal, k)
 		if absf(_side - _side_goal) < 0.0005:
 			_side = _side_goal
-		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(-_side) * _dist_at_pull, false)
+		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull, false)
 	if phase == Phase.PULL:
 		golfer.set_pull(_sprite_set("back"), pull)
+		_sling_face()
+
+
+## The slingshot ball's face and the band's creak as it stretches: a creak (and a tap of the phone)
+## each quarter of the way, higher as it goes.
+var _pull_quarter := 0
+
+
+func _sling_face() -> void:
+	var s := hud.sling
+	s.stretch = pull
+	s.pose = "still" if pull < 0.12 else ("panic" if pull >= PANIC_PULL else "launch")
+	var q := int(pull * 4.0 + 0.001)
+	if q > _pull_quarter:
+		Sfx.play("stretch", -14.0 + 2.0 * q, 0.85 + 0.12 * q)
+		Input.vibrate_handheld(6)
+	_pull_quarter = q
 
 
 func _release() -> void:
@@ -739,14 +781,22 @@ func _release() -> void:
 			phase = Phase.AIM
 			pull = 0.0
 			pull_goal = 0.0
+			_side = 0.0
+			_side_goal = 0.0
 			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
+			hud.sling.cancel()
+			golfer.address(_sprite_set("back"))
 			caddie.rest()
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
 			if _side != 0.0 or _side_goal != 0.0:
 				_side = _side_goal
-				_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(-_side) * _dist_at_pull)
+				_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull)
+			hud.sling.stretch = pull
+			hud.sling.release()
+			Sfx.play("twang", lerpf(-12.0, -4.0, pull), lerpf(1.15, 0.9, pull))
+			Input.vibrate_handheld(25)
 			_shoot()
 
 
@@ -760,9 +810,7 @@ func _process(delta: float) -> void:
 				_end_intro()
 		Phase.AIM, Phase.PULL:
 			_ease_toward_finger(delta)
-			if phase == Phase.PULL:
-				_aim_cam()
-			elif not target_dragging:     # the view holds still under a dragging finger
+			if not target_dragging:     # the view holds still under a dragging finger
 				_target_cam()
 			_update_preview()
 		Phase.SWING:
@@ -819,6 +867,8 @@ func _end_intro() -> void:
 	caddie.rest()
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
+	hud.sling.appear()
+	hud.sling.hint = true
 	_target_cam()
 
 
@@ -829,8 +879,7 @@ var _want_fov := 64.0
 var _cam_rate := 8.0
 
 
-## While pulling, the view holds the line the pull began on, so sliding sideways visibly swings the
-## target and its flight across the screen.
+## Down behind her, for the putting stroke.
 func _aim_cam_dir() -> Vector3:
 	var d := _aim_at_pull if phase == Phase.PULL else aim
 	return Vector3(d.x, d.y, 0)
@@ -840,7 +889,7 @@ func _aim_cam_pos() -> Vector3:
 	var a := _aim_cam_dir()
 	if club.id == "putter":
 		return Terrain.to_world(ball - a * 3.0 + Vector3(0, 0, 1.3))
-	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))   # held still while pulling, so the landing marker can be read
+	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))
 
 
 func _aim_cam_target() -> Vector3:
@@ -860,16 +909,27 @@ func _aim_cam() -> void:
 
 
 ## Aiming: up behind the ball, high enough to see the ball at the bottom and the target well up the
-## screen, so where the shot is going reads at a glance.
+## screen, so where the shot is going reads at a glance. While pulling it holds the line the pull
+## began on (so the slingshot's aim visibly swings the target and its flight across the screen) and
+## leans in a little as the band stretches.
 func _target_cam() -> void:
-	var d := maxf(Vector2(target.x - ball.x, target.y - ball.y).length(), 5.0)
-	var a := Vector3(aim.x, aim.y, 0)
-	var t3 := Vector3(target.x, target.y, terrain.height(target.x, target.y))
+	var pulling := phase == Phase.PULL
+	var a2 := _aim_at_pull if pulling else aim
+	var t2 := Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull if pulling else target
+	var d := maxf(Vector2(t2.x - ball.x, t2.y - ball.y).length(), 5.0)
+	var a := Vector3(a2.x, a2.y, 0)
 	var p := ball - a * (0.24 * d + 6.0) + Vector3(0, 0, 0.2 * d + 4.0)
 	p.z = maxf(p.z, terrain.height(p.x, p.y) + 3.0)
+	_want_fov = 50.0 - (4.0 * pull if pulling else 0.0)
 	_want_pos = Terrain.to_world(p)
-	_want_target = Terrain.to_world(ball.lerp(t3, 0.85))
-	_want_fov = 50.0
+	# straight down the line, tipped down from the ball by as much as puts it AIM_BALL_Y down the
+	# screen (the view is as wide as the screen; its height follows from the aspect)
+	var vp := get_viewport().get_visible_rect().size
+	var tan_v := tan(deg_to_rad(_want_fov) * 0.5) * vp.y / maxf(vp.x, 1.0)
+	var to_b := ball - p
+	var pitch := atan2(-to_b.z, Vector2(to_b.x, to_b.y).length()) - atan(2.0 * (AIM_BALL_Y - 0.5) * tan_v)
+	var look := p + (a * cos(pitch) - Vector3(0, 0, sin(pitch))) * maxf(d, 20.0)
+	_want_target = Terrain.to_world(look)
 	_cam_rate = 4.0
 
 
@@ -1181,7 +1241,8 @@ func _update_preview() -> void:
 	if not still and phase == Phase.PULL and Time.get_ticks_msec() - _preview_ms < PREVIEW_EVERY_MS:
 		_draw_preview(putt)
 		_show_gauge()
-		_show_aim_map(putt)
+		if AIM_MAP:
+			_show_aim_map(putt)
 		return
 	_preview_key = key
 	if not still:
@@ -1220,13 +1281,15 @@ func _update_preview() -> void:
 	_draw_preview(putt)
 	if phase == Phase.PULL:
 		_show_gauge()
-		_show_aim_map(putt)
+		if AIM_MAP:
+			_show_aim_map(putt)
 	else:
 		hud.hide_gauge()
 
 
 var _roll_pts: Array = []
 const PREVIEW_EVERY_MS := 100
+const AIM_MAP := false          # the corner map while pulling: off now the view stays up on the course
 var _preview_ms := 0
 
 
