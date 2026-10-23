@@ -1,6 +1,6 @@
 """Model the giant jack-o'-lantern that sits by every tee (the opening shot of each hole swings round it).
 
-usage: python3 -I hero_lantern.py <out.glb> [--preview <png>]
+usage: python3 -I hero_lantern.py <out.glb> [--preview <png>] [--ratio <share of the body's triangles kept>]
 
 A ribbed pumpkin about a meter across with a real shell (solidify), a face carved through it with
 booleans (triangle eyes and nose, a toothy grin), the lid's cut line, a twisted stem with a curling
@@ -26,6 +26,7 @@ random.seed(4)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 OUT = args[0]
 PREVIEW = sys.argv[sys.argv.index("--preview") + 1] if "--preview" in sys.argv else None
+DECIMATE = float(sys.argv[sys.argv.index("--ratio") + 1]) if "--ratio" in sys.argv else 0.22   # share of the body's triangles kept
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -175,6 +176,15 @@ for poly in me.polygons:
         c = (1.0, 0.72, 0.28) if poly.material_index == 1 else (1.0, 0.85, 0.5)
         for li in poly.loop_indices:
             cl.data[li].color = (*c, 1.0)
+
+# fewer triangles where the shell is smooth (the lobes), keeping them where it bends (the carved face,
+# the lid's groove): the full sphere was ~50k triangles for a meter-wide prop, a lot for a phone
+if DECIMATE < 1.0:
+    dec = body.modifiers.new("Lighter", "DECIMATE")
+    dec.decimate_type = "COLLAPSE"
+    dec.ratio = DECIMATE
+    dec.use_collapse_triangulate = True
+    bpy.ops.object.modifier_apply(modifier=dec.name)
 
 # ---- the stem: a twisted, ridged, tapering stalk leaning over, flared where it meets the pumpkin ----
 top_z = body.location.z + R * SQUASH - 0.16 * R

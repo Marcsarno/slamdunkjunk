@@ -59,7 +59,7 @@ const CHASE_UP := 1.8           # ... and above
 const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
 const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
 const CLUB_FACE := 0.13         # m from the middle of a driver or iron head in her sprite to its face
-const BALL_LOOK_GROUND := 0.03  # the ball's drawn width as a share of its distance from the camera ...
+const BALL_LOOK_GROUND := 0.018  # the ball's drawn width as a share of its distance from the camera ...
 const BALL_LOOK_AIR := 0.11     # ... and in the air, where its face is the show
 const STREAKS_PER_S := 40.0     # wind streaks round the ball in flight ...
 const STREAK_LIFE := 0.28       # ... and how long each lasts (s)
@@ -73,9 +73,11 @@ var golfer := Golfer.new()
 var lantern := HeroLantern.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
-var ball_mesh := Sprite3D.new()          # the ball she plays: Marc's design picked in the clubhouse
-var _ball_tex := {}                       # its faces: "still", "launch" (scared)
-var _ball_pose := "still"
+var ball_mesh := Sprite3D.new()          # the ball she plays: Marc's design picked in the clubhouse, its face in the air ...
+var ball_plain := MeshInstance3D.new()    # ... and plain in its colour on the ground, turning as it rolls
+var _ball_spin := Basis()
+var _ball_last := Vector3.INF
+var _ball_face_tex: Texture2D             # its scared face
 var wind_fx := MeshInstance3D.new()       # streaks of air rushing past it in flight
 var wind_mesh := ImmediateMesh.new()
 var _streaks: Array = []                  # [angle round the ball, distance out, length, age]
@@ -243,8 +245,9 @@ func _prewarm() -> void:
 		trail_pts.append(under + Vector3(i, 0, 0))
 	_streaks.append([0.0, 1.0, 2.0, 0.1])
 	_wind_dir = Vector3.FORWARD
-	_ball_pose = "launch"
 	_update_ball_visual()
+	ball_mesh.visible = true                   # its face too, though it only shows in the air
+	ball_mesh.modulate.a = 0.5
 	await _drawn(2)
 	trail_pts.clear()
 	_streaks.clear()
@@ -344,7 +347,6 @@ func _setup_shot() -> void:
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
-	_ball_pose = "still"
 	phase = Phase.AIM
 	_aim_cam()
 	cam_pos = _want_pos
@@ -795,13 +797,11 @@ func _ease_toward_finger(delta: float) -> void:
 		_pull_feel()
 
 
-## As the pull grows the ball at her feet turns scared, and there's a creak (and a tap of the phone)
-## each quarter of the way, higher as it goes.
+## As the pull grows there's a creak (and a tap of the phone) each quarter of the way, higher as it goes.
 var _pull_quarter := 0
 
 
 func _pull_feel() -> void:
-	_ball_pose = "still" if pull < 0.12 else "launch"
 	var q := int(pull * 4.0 + 0.001)
 	if q > _pull_quarter:
 		Sfx.play("stretch", -14.0 + 2.0 * q, 0.85 + 0.12 * q)
@@ -824,7 +824,6 @@ func _release() -> void:
 			_side_goal = 0.0
 			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
-			_ball_pose = "still"
 			golfer.address(_sprite_set("back"))
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
@@ -1120,9 +1119,8 @@ func _apply_cam(delta: float) -> void:
 # ---------------------------------------------------------------- ball, trail, preview
 func _make_ball_visuals() -> void:
 	var name := Balls.chosen()
-	for pose in ["still", "launch"]:
-		_ball_tex[pose] = Balls.texture(name, pose)
-	ball_mesh.texture = _ball_tex.still
+	_ball_face_tex = Balls.texture(name, "launch")
+	ball_mesh.texture = _ball_face_tex
 	ball_mesh.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	ball_mesh.shaded = false
 	ball_mesh.double_sided = true
@@ -1130,6 +1128,22 @@ func _make_ball_visuals() -> void:
 	ball_mesh.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	ball_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ball_mesh)
+	var sm := SphereMesh.new()
+	sm.radius = 0.5
+	sm.height = 1.0
+	sm.radial_segments = 16
+	sm.rings = 8
+	ball_plain.mesh = sm
+	var pm := StandardMaterial3D.new()
+	pm.albedo_texture = Balls.plain_texture(name)
+	pm.emission_enabled = true                  # lit a little from within, so it reads at night
+	pm.emission_texture = pm.albedo_texture
+	pm.emission_energy_multiplier = 0.35
+	pm.roughness = 0.6
+	pm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+	ball_plain.material_override = pm
+	ball_plain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ball_plain)
 	wind_fx.mesh = wind_mesh
 	var wm := StandardMaterial3D.new()
 	wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -1268,18 +1282,30 @@ func _update_ball_visual() -> void:
 	# at her feet, more in the air where the camera chases it
 	var flying := phase == Phase.FLIGHT and sim != null and sim.state == BallSim.State.FLYING
 	var rolling_fast := phase == Phase.FLIGHT and sim != null and sim.vel.length() > 3.0
-	# it grows as it climbs and shrinks back as it comes down, so it's ball size again as it lands
+	# it grows as it climbs and shrinks back as it comes down, so it's ball size again as it lands;
+	# up high its scared face fades in, and low it's the plain ball in its colour, seen rolling
 	var up := b.z - terrain.height(b.x, b.y) if flying else 0.0
 	_ball_look = lerpf(BALL_LOOK_GROUND, BALL_LOOK_AIR, smoothstep(0.3, BALL_GROW_HEIGHT, up))
-	var size := maxf(2.0 * BallSim.RADIUS, d * _ball_look)       # the ball's own width on screen, in metres here
-	if phase == Phase.FLIGHT or phase == Phase.SWING:
-		_ball_pose = "launch" if (flying or rolling_fast or phase == Phase.SWING) else "still"
-	var tex: Texture2D = _ball_tex.get(_ball_pose)
-	if tex:
-		ball_mesh.texture = tex
-		ball_mesh.pixel_size = size / (tex.get_height() * Balls.ART_FILL)
-	ball_mesh.position = w + (Vector3.ZERO if flying else Vector3(0, size * 0.5, 0))   # sitting on the grass
-	ball_mesh.visible = phase != Phase.HOLED
+	var size := maxf(2.0 * BallSim.RADIUS, d * _ball_look)       # the ball's drawn width, in metres
+	var face := smoothstep(FACE_FROM, FACE_FULL, up)
+	if _ball_face_tex:
+		ball_mesh.pixel_size = size / (_ball_face_tex.get_height() * Balls.ART_FILL)
+	var at := w + (Vector3.ZERO if flying else Vector3(0, size * 0.5, 0))   # sitting on the grass
+	ball_mesh.position = at
+	ball_mesh.modulate.a = face
+	ball_mesh.visible = phase != Phase.HOLED and face > 0.01
+	# the plain ball turns over as it goes (about the level axis across its path), at its drawn size
+	if _ball_last != Vector3.INF:
+		var moved := at - _ball_last
+		var flat := Vector3(moved.x, 0, moved.z)
+		if flat.length() > 0.0001 and flat.length() < 20.0:
+			var axis := flat.normalized().cross(Vector3.DOWN)
+			_ball_spin = Basis(axis, -flat.length() / maxf(size * 0.5, 0.01)) * _ball_spin
+			_ball_spin = _ball_spin.orthonormalized()
+	_ball_last = at
+	ball_plain.transform = Transform3D(_ball_spin.scaled(Vector3.ONE * size), at)
+	(ball_plain.material_override as StandardMaterial3D).albedo_color.a = 1.0 - face
+	ball_plain.visible = phase != Phase.HOLED and face < 0.99
 	_update_wind(w, size, flying)
 	# trail
 	if phase == Phase.FLIGHT and sim.state == BallSim.State.FLYING:
@@ -1311,6 +1337,8 @@ func _update_ball_visual() -> void:
 
 var _ball_look := BALL_LOOK_GROUND
 const BALL_GROW_HEIGHT := 9.0   # m above the ground where the ball is drawn at its biggest
+const FACE_FROM := 2.5          # m up where its face starts to show ...
+const FACE_FULL := 6.0          # ... and where it's all face
 
 
 ## Air rushing past the ball in flight: thin pale streaks round it that slide back past its face and
