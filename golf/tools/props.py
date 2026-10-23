@@ -117,6 +117,133 @@ def headstone(col, name, pos, w=0.7, h=1.0, d=0.16, rot_z=0.0, tilt=(0, 0)):
     return _finish_stone(bm, name, pos, rot_z, tilt, h, col)
 
 
+def _slab(bm, pts, d, z0, inset):
+    """An extruded stone slab from a profile [(x, z), ...] (front at -y), sitting at z0, with its front
+    panel set back into a frame. Returns the panel's y (where carvings go)."""
+    face = bm.faces.new([bm.verts.new((x, -d / 2, z + z0)) for x, z in pts])
+    ext = bmesh.ops.extrude_face_region(bm, geom=[face])
+    bmesh.ops.translate(bm, vec=(0, d, 0), verts=[e for e in ext["geom"] if isinstance(e, bmesh.types.BMVert)])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    # the slab's own front (not the plinth's, which stands further out)
+    front = next(f for f in bm.faces if f.normal.y < -0.9 and abs(f.calc_center_median().y + d / 2) < 1e-4
+                 and f.calc_center_median().z > z0 + 0.05)
+    bmesh.ops.inset_region(bm, faces=[front], thickness=inset, depth=0.0)       # the frame round it ...
+    bmesh.ops.inset_region(bm, faces=[front], thickness=0.004, depth=0.0)       # ... and a sharp step down
+    for v in front.verts:
+        v.co.y += 0.02                              # the panel set back behind its frame
+    return front.calc_center_median().y
+
+
+def _plinth(bm, w, d, h):
+    r = bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=(w, d, h), verts=r["verts"])
+    bmesh.ops.translate(bm, vec=(0, 0, h / 2), verts=r["verts"])
+    # a little narrower at the top, as the concept's
+    for v in r["verts"]:
+        if v.co.z > h * 0.9:
+            v.co.x *= 0.96
+            v.co.y *= 0.92
+
+
+def _carving(bm, polys, y):
+    """Flat carved shapes laid on the panel at `y` (a hair proud of it, so they never flicker), marked
+    (face layer "carved") to be painted dark as cut stone."""
+    carved = bm.faces.layers.int.get("carved") or bm.faces.layers.int.new("carved")
+    for poly in polys:
+        f = bm.faces.new([bm.verts.new((x, y - 0.003, z)) for x, z in poly])
+        f.normal_update()
+        if f.normal.y > 0:
+            f.normal_flip()
+        f[carved] = 1
+
+
+def _letters(text, size, center_z, resolution=1):
+    """Polygons of `text` in Blender's own font, centred, as [(x, z), ...] lists (a few per letter)."""
+    cu = bpy.data.curves.new("txt", "FONT")
+    cu.body = text
+    cu.size = size
+    cu.align_x = "CENTER"
+    cu.resolution_u = resolution
+    ob = bpy.data.objects.new("txt", cu)
+    bpy.context.scene.collection.objects.link(ob)
+    deps = bpy.context.evaluated_depsgraph_get()
+    me = ob.evaluated_get(deps).to_mesh()
+    polys = [[(me.vertices[i].co.x, me.vertices[i].co.y + center_z - size * 0.35) for i in p.vertices] for p in me.polygons]
+    ob.evaluated_get(deps).to_mesh_clear()
+    bpy.data.objects.remove(ob)
+    bpy.data.curves.remove(cu)
+    return polys
+
+
+def _finish_concept_stone(bm, name, pos, rot_z, tilt, h, col):
+    carved = bm.faces.layers.int["carved"]
+    bmesh.ops.bevel(bm, geom=[e for e in bm.edges if not any(f[carved] for f in e.link_faces) and e.calc_face_angle(0) > 0.6],
+                    offset=0.03, segments=1, affect="EDGES", clamp_overlap=True)
+    for v in bm.verts:
+        if not any(f[carved] for f in v.link_faces):
+            v.co += Vector((noise.noise(v.co * 4.0), noise.noise(v.co * 4.0 + Vector((3, 1, 2))), 0)) * 0.012
+    bm.normal_update()
+    paint(bm, _stone_colors(h))
+    lay = bm.loops.layers.color["Col"]
+    for f in bm.faces:
+        if f[carved]:
+            for lp in f.loops:
+                lp[lay] = (0.16, 0.14, 0.2, 1.0)
+    ob = link(name, bm, [material("stone_vc", 0.9)], col)
+    ob.location = (pos[0], pos[1], pos[2] - 0.06)
+    ob.rotation_euler = (tilt[0], tilt[1], rot_z)
+    return ob
+
+
+def headstone_rip(col, name, pos, scale=1.0, rot_z=0.0, tilt=(0, 0)):
+    """Marc's tall arched headstone: stepped shoulders, a recessed arched panel with RIP cut in it, on
+    a wider plinth. About 300 triangles."""
+    bm = bmesh.new()
+    w, h, d, base = 0.62 * scale, 1.18 * scale, 0.17 * scale, 0.24 * scale
+    _plinth(bm, w + 0.16 * scale, d + 0.2 * scale, base)
+    hs = h - 0.36 * scale                       # the shoulders
+    r = w / 2 - 0.05 * scale
+    pts = [(-w / 2, 0), (w / 2, 0), (w / 2, hs), (w / 2 - 0.05 * scale, hs)]
+    for k in range(1, 8):
+        a = math.pi * k / 8
+        pts.append((r * math.cos(a), hs + r * math.sin(a) * 0.95))
+    pts += [(-w / 2 + 0.05 * scale, hs), (-w / 2, hs)]
+    panel = _slab(bm, pts, d, base - 0.02 * scale, 0.07 * scale)
+    _carving(bm, _letters("RIP", 0.15 * scale, base + h * 0.6), panel)
+    return _finish_concept_stone(bm, name, pos, rot_z, tilt, base + h, col)
+
+
+def headstone_moon(col, name, pos, scale=1.0, rot_z=0.0, tilt=(0, 0)):
+    """Marc's wide headstone: a low arch over shoulders, a recessed panel with a crescent moon cut in
+    it, on a plinth. About 250 triangles."""
+    bm = bmesh.new()
+    w, h, d, base = 1.0 * scale, 0.8 * scale, 0.2 * scale, 0.2 * scale
+    _plinth(bm, w + 0.12 * scale, d + 0.16 * scale, base)
+    hs = h - 0.24 * scale
+    pts = [(-w / 2, 0), (w / 2, 0), (w / 2, hs), (w / 2 - 0.08 * scale, hs + 0.03 * scale)]
+    for k in range(1, 8):
+        t = k / 8
+        x = (w / 2 - 0.08 * scale) * (1 - 2 * t)
+        pts.append((x, hs + 0.03 * scale + (h - hs - 0.03 * scale) * math.sqrt(max(0.0, 1 - (2 * t - 1) ** 2))))
+    pts += [(-w / 2 + 0.08 * scale, hs + 0.03 * scale), (-w / 2, hs)]
+    panel = _slab(bm, pts, d, base - 0.02 * scale, 0.08 * scale)
+    # the crescent: an outer circle's arc and an offset inner one, as one flat polygon
+    cz, cx, ro = base + h * 0.6, 0.0, 0.08 * scale
+    # a strip of quads from tip to tip (one concave polygon would triangulate across the hollow)
+    n = 9
+    strip = []
+    for k in range(n + 1):
+        t = k / n
+        a_out = math.radians(55 + 250 * t)
+        a_in = math.radians(75 + 210 * t)
+        po = (cx + ro * math.cos(a_out), cz + ro * math.sin(a_out))
+        pi_ = (cx + 0.04 * scale + ro * 0.8 * math.cos(a_in), cz + 0.025 * scale + ro * 0.8 * math.sin(a_in))
+        strip.append((po, pi_))
+    quads = [[strip[k][0], strip[k + 1][0], strip[k + 1][1], strip[k][1]] for k in range(n)]
+    _carving(bm, quads, panel)
+    return _finish_concept_stone(bm, name, pos, rot_z, tilt, base + h, col)
+
+
 def cross_stone(col, name, pos, h=1.3, rot_z=0.0, tilt=(0, 0)):
     bm = bmesh.new()
     for sx, sy, sz, z in [(0.18, 0.15, h, h / 2), (0.75, 0.15, 0.18, h * 0.7), (0.5, 0.34, 0.2, 0.1)]:

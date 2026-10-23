@@ -259,11 +259,14 @@ for g, gy_ in enumerate(spec.get("graveyards", [])):
         face = math.atan2(-(cx - 0), -(cy - 0)) + random.uniform(-0.35, 0.35)   # roughly toward the tee
         name = f"Grave_{g}_{placed}"
         tilt = (random.uniform(-0.1, 0.1), random.uniform(-0.12, 0.12))
-        if kind < 0.55:
-            w, hh = random.uniform(0.55, 0.85), random.uniform(0.8, 1.2)
-            props.headstone(col, name, (x, y, z), w=w, h=hh, rot_z=face, tilt=tilt)
-            obstacles.append({"type": "box", "pos": [x, y, z], "size": [w, 0.18, hh], "rot": face})
-        elif kind < 0.85:
+        sc = random.uniform(0.85, 1.15)
+        if kind < 0.33:                 # Marc's tall RIP stone
+            props.headstone_rip(col, name, (x, y, z), scale=sc, rot_z=face, tilt=tilt)
+            obstacles.append({"type": "box", "pos": [x, y, z], "size": [0.72 * sc, 0.26 * sc, 1.42 * sc], "rot": face})
+        elif kind < 0.62:               # ... and his wide crescent-moon stone
+            props.headstone_moon(col, name, (x, y, z), scale=sc, rot_z=face, tilt=tilt)
+            obstacles.append({"type": "box", "pos": [x, y, z], "size": [1.08 * sc, 0.3 * sc, 1.0 * sc], "rot": face})
+        elif kind < 0.86:
             props.cross_stone(col, name, (x, y, z), h=random.uniform(1.0, 1.4), rot_z=face, tilt=tilt)
             obstacles.append({"type": "box", "pos": [x, y, z], "size": [0.6, 0.3, 1.3], "rot": face})
         else:
