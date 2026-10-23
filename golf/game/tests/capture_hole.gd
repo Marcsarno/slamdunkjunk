@@ -13,6 +13,7 @@ var t := 0.0
 var stage := "wait_aim"
 var landed := false
 var round := false     # --round: press Next hole on each card and play on to the last hole
+var burst := false     # --burst: a screenshot every frame through each swing, not just one
 
 
 func _ready() -> void:
@@ -21,6 +22,8 @@ func _ready() -> void:
 			out_dir = a.trim_prefix("--capture-hole=")
 		if a == "--round":
 			round = true
+		if a == "--burst":
+			burst = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
 
@@ -93,8 +96,13 @@ func _process(delta: float) -> void:
 				t = 0.0
 				stage = "swing"
 		"swing":
-			if t > 0.2:
+			if burst and t < 1.1:
+				stage = "burst"
 				await snap("swing")
+				stage = "swing"
+			elif t > (1.1 if burst else 0.2):
+				if not burst:
+					await snap("swing")
 				t = 0.0
 				landed = false
 				stage = "fly"

@@ -10,6 +10,10 @@ signal contact
 signal swing_finished
 
 const HEIGHT_M := 1.55          # sole to top of hair in the address pose
+## Which front-on swing to play: "video" (cut from a rendered video by tools/prep_video_swing.py, a
+## stand-in until the 3D avatar) or "" for the drawn frames. Clubs without a video set (the putter)
+## always use the drawn ones.
+const FACE_SWING := "video"
 const DIR := "res://assets/golfer/"
 
 var sets: Dictionary
@@ -38,6 +42,12 @@ func _ready() -> void:
 	add_child(mesh)
 
 
+## The front-on set for a club's sprite name: the FACE_SWING one when there is one.
+func face_set(sprite: String) -> String:
+	var name := "%s_%s" % [FACE_SWING, sprite]
+	return name if FACE_SWING != "" and sets.has(name) else sprite
+
+
 func _quad(set_name: String, frame: int) -> Array:
 	var key := "%s/%d" % [set_name, frame]
 	if _quads.has(key):
@@ -60,6 +70,17 @@ func show_frame(set_name: String, frame: int) -> void:
 	mesh.mesh = qt[0]
 	mat.albedo_texture = qt[1]
 	current_set = set_name
+
+
+## How far in front of her (toward the swing camera) the ball sits, in meters: the drawn frames
+## stand her back from it; the video has the ball level with her feet.
+func ball_ahead(set_name: String) -> float:
+	return float(sets[set_name].get("ball_ahead_m", 0.45))
+
+
+## How far toward the target the swing camera looks past her feet, in meters, to frame the set.
+func swing_cam_lead(set_name: String) -> float:
+	return float(sets[set_name].get("swing_cam_lead_m", 0.55))
 
 
 ## Club head at address, relative to the foot anchor, in meters along the sprite's right/up.
@@ -102,14 +123,17 @@ func _process(delta: float) -> void:
 	if _down_i < 0:
 		return
 	_down_t += delta * 1000.0
-	if _down_t < float(_down_ms[_down_i]):
-		return
-	_down_t = 0.0
-	_down_i += 1
-	if _down_i >= _down.size():
-		_down_i = -1
-		swing_finished.emit()
-		return
-	show_frame(current_set, int(_down[_down_i]))
-	if _down_i == _contact_i:
-		contact.emit()
+	# on a slow frame, step past as many swing frames as the time covers (contact still fires)
+	var moved := false
+	while _down_t >= float(_down_ms[_down_i]):
+		_down_t -= float(_down_ms[_down_i])
+		_down_i += 1
+		if _down_i >= _down.size():
+			_down_i = -1
+			swing_finished.emit()
+			return
+		moved = true
+		if _down_i == _contact_i:
+			contact.emit()
+	if moved:
+		show_frame(current_set, int(_down[_down_i]))

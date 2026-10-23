@@ -204,7 +204,7 @@ func _right() -> Vector2:
 
 func _sprite_set(view_name: String) -> String:
 	var s: String = club.sprite
-	return ("back_" + s) if view_name == "back" else s
+	return ("back_" + s) if view_name == "back" else golfer.face_set(s)
 
 
 func _place_golfer_back() -> void:
@@ -218,7 +218,7 @@ func _place_golfer_back() -> void:
 func _place_golfer_face() -> void:
 	var set_name := _sprite_set("face")
 	var off := golfer.club_offset(set_name)
-	var g2 := Vector2(ball.x, ball.y) - aim * off.x - _right() * 0.45
+	var g2 := Vector2(ball.x, ball.y) - aim * off.x - _right() * golfer.ball_ahead(set_name)
 	golfer.position = Terrain.to_world(Vector3(g2.x, g2.y, terrain.height(g2.x, g2.y)))
 
 
@@ -465,8 +465,9 @@ func _cut_to_swing_cam() -> void:
 	var g := Terrain.to_course(golfer.position)
 	var a := Vector3(aim.x, aim.y, 0)
 	var r := Vector3(_right().x, _right().y, 0)
-	_want_pos = Terrain.to_world(g + r * 3.0 + a * 0.45 + Vector3(0, 0, 0.95))
-	_want_target = Terrain.to_world(g + a * 0.55 + Vector3(0, 0, 0.8))
+	var lead := golfer.swing_cam_lead(golfer.current_set)
+	_want_pos = Terrain.to_world(g + r * 3.0 + a * (lead - 0.1) + Vector3(0, 0, 0.95))
+	_want_target = Terrain.to_world(g + a * lead + Vector3(0, 0, 0.8))
 	_want_fov = 52.0
 	cam_pos = _want_pos
 	cam_target = _want_target
