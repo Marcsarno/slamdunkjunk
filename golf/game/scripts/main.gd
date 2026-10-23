@@ -45,6 +45,7 @@ var caddie := Pal.new("skelly_", {"idle": 1.2, "wave": 1.2, "tip": 1.2, "club": 
 var cat := Pal.new("cat_", {"ball": 0.8, "sit": 0.8, "happy": 0.8, "groom": 0.74, "crouch": 0.58,
 	"pounce": 0.67, "sleep": 0.45, "stretch": 0.64, "walk": 0.77, "walk2": 0.72},
 	["sit", "sit", "groom", "happy", "sleep", "stretch"], "sit")
+var cart := Cart.new()            # their golf cart, parked behind them
 var lantern := HeroLantern.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
@@ -110,6 +111,7 @@ func _ready() -> void:
 	add_child(golfer)
 	add_child(caddie)
 	add_child(cat)
+	add_child(cart)
 	add_child(lantern)
 	cam.keep_aspect = Camera3D.KEEP_WIDTH
 	cam.near = 0.05
@@ -354,6 +356,13 @@ func _place_pals() -> void:
 	for p in [[caddie, Vector2(2.4, 1.7)], [cat, Vector2(1.7, 1.1)]]:
 		var c2: Vector2 = Vector2(ball.x, ball.y) - _right() * p[1].x + aim * p[1].y
 		p[0].position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
+	# the cart parked up the line behind the caddie, nosed down the hole, angled in toward the line
+	var k2 := Vector2(ball.x, ball.y) - _right() * 3.4 + aim * 5.2
+	var kw := Terrain.to_world(Vector3(k2.x, k2.y, terrain.height(k2.x, k2.y)))
+	var heading := aim.rotated(-0.35)
+	var hw := Terrain.to_world(Vector3(heading.x, heading.y, 0)) - Terrain.to_world(Vector3.ZERO)
+	cart.position = kw
+	cart.look_at(kw + hw, Vector3.UP)
 
 
 ## The giant jack-o'-lantern sits off the right of the tee, its face turned back across the tee box.

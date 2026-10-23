@@ -10,8 +10,14 @@ usage: python3 -I prep_night_art.py <src_dir> <game_assets_dir>
   cast_sheet.png                           4x4: two rows of skeleton poses, two rows of cat poses (the
                                            figures overrun the grid, so each is cut out by its outline)
 
-Writes <assets>/sky/{moon_*,stars_*,clouds_*}.png and <assets>/cast/*.png (each trimmed to its figure).
+  cart_sheet.png                           the caddie's golf cart from 8 sides, 2 rows of 4, in order round it:
+                                           front, front-left, left, back-left, back, back-right, right, front-right
+                                           (the side of the cart the camera is on)
+
+Writes <assets>/sky/{moon_*,stars_*,clouds_*}.png and <assets>/cast/*.png (each trimmed to its figure),
+<assets>/cast/cart_0..7.png (cut at the wheels' bottom, glows kept) and cast/cart.json (meters per pixel).
 """
+import json
 import os
 import sys
 
@@ -77,7 +83,39 @@ def main():
         only[..., 3] = np.where(labels == k, only[..., 3], 0)          # nothing of the neighbours
         fig = Image.fromarray(only).crop((max(0, x0 - 6), max(0, y0 - 6), x1 + 7, y1 + 7))
         fig.save(os.path.join(cast, SHEET_NAMES[i // 4][i % 4] + ".png"))
+    cart_views(os.path.join(src, "cart_sheet.png"), cast)
     print("wrote", sorted(os.listdir(sky)), sorted(os.listdir(cast)))
+
+
+CART_HEIGHT_M = 2.3     # wheels to the curl of the canopy, seen from the front
+
+
+def cart_views(path, cast):
+    sheet = Image.open(path).convert("RGBA")
+    px = np.array(sheet)
+    a = px[..., 3]
+    labels, n = ndimage.label(ndimage.binary_dilation(a > 40, iterations=6))
+    sizes = ndimage.sum(np.ones_like(a), labels, range(1, n + 1))
+    keep = list(np.argsort(sizes)[::-1][:8] + 1)
+    figs = []
+    for k in keep:
+        ys, xs = np.where(labels == k)
+        figs.append((int(ys.mean() > sheet.height / 2), xs.mean(), k))
+    figs.sort()
+    scale = None
+    for i, (_, _, k) in enumerate(figs):
+        near = ndimage.binary_dilation(labels == k, iterations=14)      # its glows, none of the neighbours'
+        only = px.copy()
+        only[..., 3] = np.where(near & ~np.isin(labels, [j for j in keep if j != k]), a, 0)
+        ys, xs = np.where(only[..., 3] > 8)
+        solid_y = np.where(only[..., 3] > 200)[0]
+        bottom = solid_y.max() + 2                                         # the tyres' bottom: no glow below it
+        fig = Image.fromarray(only).crop((xs.min(), ys.min(), xs.max() + 1, bottom))
+        fig.save(os.path.join(cast, "cart_%d.png" % i))
+        if i == 0:
+            scale = CART_HEIGHT_M / (bottom - solid_y.min())
+    with open(os.path.join(cast, "cart.json"), "w") as f:
+        json.dump({"m_per_px": round(scale, 6)}, f)
 
 
 if __name__ == "__main__":
