@@ -32,6 +32,8 @@ LAST = 86
 HOLD_FROM = 76              # from here she holds the finish: every other frame is enough
 PAD = 260                   # canvas margin around the video, for a club carried past its edge
 FPS = 24.0
+CLUB_DEPTH = 0.75           # a club carried past the picture's edge is drawn this share of its
+                            # address length (swinging, it's foreshortened)
 BALL_AHEAD_M = 0.15         # the video's ball sits about this far in front of her feet (by its
                             # height below her soles, against her height)
 
@@ -169,17 +171,21 @@ def finish_club(img, a, keep, head, head_hosel):
     hands = tp[np.argmin(np.linalg.norm(tp - e, axis=1))]
     d = (e - hands) / np.linalg.norm(e - hands)
     near = np.linalg.norm(pts - e, axis=1) < 40
-    shaft_len = np.hypot(HOSEL0[0] - HANDS0[0], HOSEL0[1] - HANDS0[1])
-    hosel = hands + d * shaft_len
-    if np.linalg.norm(hosel - hands) <= np.linalg.norm(e - hands) + 4:
-        return img, None                         # the whole club is in the picture after all
-    # shaft: the colour of the shaft just inside the edge, about as wide as it is there
+    # the club carried on is drawn shorter than at address: swinging, it points partly toward or away
+    # from the camera, so it looks shorter than it is. Never shorter than what the video shows.
+    shaft_len = CLUB_DEPTH * np.hypot(HOSEL0[0] - HANDS0[0], HOSEL0[1] - HANDS0[1])
+    hosel = hands + d * max(shaft_len, np.linalg.norm(e - hands))
     col = tuple(int(v) for v in np.median(a[ys[near], xs[near]], 0)) + (255,)   # the shaft's colour at the edge
+    # one straight shaft from her hands to the head: the video's blurred, broken shaft past her hands
+    # is cleared and the line drawn over the whole length
+    stray = (pts - hands) @ d > 6
+    arr = np.array(img)
+    arr[ys[stray] + PAD, xs[stray] + PAD, 3] = 0
+    img = Image.fromarray(arr)
     from PIL import ImageDraw
-    draw = ImageDraw.Draw(img)
-    p0 = e - d * 3 + PAD
+    p0 = hands + d * 6 + PAD
     p1 = hosel + PAD
-    draw.line([tuple(p0), tuple(p1)], fill=col, width=4)
+    ImageDraw.Draw(img).line([tuple(p0), tuple(p1)], fill=col, width=4)
     # head: turned so its hosel's shaft lines up with this shaft
     d0 = np.array([HOSEL0[0] - HANDS0[0], HOSEL0[1] - HANDS0[1]])
     turn = np.degrees(np.arctan2(d0[1], d0[0]) - np.arctan2(d[1], d[0]))
