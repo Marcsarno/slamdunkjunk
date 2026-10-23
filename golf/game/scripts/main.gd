@@ -747,7 +747,7 @@ func _shot_done() -> void:
 		BallSim.State.WATER:
 			strokes += 1
 			ball = last_ball
-			hud.flash("Splash! +1 stroke")
+			hud.flash("Into the ravine! +1 stroke" if view.theme.get("ravine", false) else "Splash! +1 stroke")
 		BallSim.State.OOB:
 			strokes += 1
 			ball = last_ball

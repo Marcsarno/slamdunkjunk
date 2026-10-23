@@ -641,6 +641,7 @@ LIGHT_PROPS = {
     "light_witchs_cauldron": (1.2, 0.0, 0.55), "light_grave_candles": (0.9, 0.0, 0.35),
     "light_moon_mushrooms": (1.3, 0.0, 0.4), "light_hollow_heart_tree": (2.4, 0.0, 0.6),
     "light_skeleton_groundskeeper": (1.65, 0.0, 0.3),
+    "statue_horseman": (4.2, 0.0, 1.6),       # Marc's statue (concept sheet, option B), a landmark
 }
 LIGHT_SCALE = 1.6      # storybook scale, bigger than life, so they read from the tee and the fairway
 glows = []

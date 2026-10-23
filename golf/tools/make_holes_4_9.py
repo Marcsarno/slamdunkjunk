@@ -4,6 +4,7 @@ Course coords in meters: x right, y down-range, z up; tee at the origin. Edit a 
 then rebuild it with build_hole.py.
 """
 import json
+import math
 import sys
 
 OUT = sys.argv[1]
@@ -14,6 +15,19 @@ TEE_PUMPKINS = [{"center": [4.9, 3.4], "carved": 2, "plain": 1, "radius": 1.1},
 
 def painted(hole, yaw=0, span=95, horizon_v=0.8, variant="a"):
     return {"hole": hole, "variant": variant, "span": span, "yaw": yaw, "horizon_v": horizon_v}
+
+
+def ravine(points, half_width=5.0, depth=4.2):
+    """A rocky ravine with a creek at its bottom, along a polyline: one deep, narrow water piece per
+    segment (their banks fall away steeply under the waterline, and steep ground draws as rock)."""
+    out = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        dx, dy = x1 - x0, y1 - y0
+        ln = (dx * dx + dy * dy) ** 0.5
+        out.append({"center": [round((x0 + x1) / 2, 2), round((y0 + y1) / 2, 2)],
+                    "radius": [round(ln / 2 + 4.0, 2), half_width],
+                    "rotation": round(math.atan2(dy, dx), 4), "level_offset": -depth})
+    return out
 
 
 def pines(radius=420, haze=0.5):
@@ -213,37 +227,41 @@ holes = [
     },
     {
         "id": "h08_headless_trail", "name": "Headless Trail", "number": 8, "par": 4, "seed": 808,
-        "note": "The Horseman's Ride: an S along a sidehill ridge in a gusting storm. The drive bends left "
-                "past a pot bunker, then the hole swings right and drops across a ravine creek before "
-                "climbing to the green under the crag." + NOTE_TAIL,
-        "path": [[0, 0], [-8, 60], [-30, 120], [-34, 180], [-12, 235], [22, 280], [40, 330], [34, 370]],
-        "fairway_start": 40,
-        "fairway_width": [22, 24, 26, 26, 26, 24, 22, 20],
-        "rough_width": 13, "deep_rough_width": 15,
+        "note": "Headless Trail: up the valley and across a rocky ravine to a green under the crag. Lay up "
+                "short of the ravine and fly it where it narrows, or drive the left pad by the old bridge and "
+                "the Horseman's statue and go straight over. The ravine swallows anything that comes up short."
+                + NOTE_TAIL,
+        "path": [[0, 0], [6, 80], [14, 150], [12, 200], [4, 260], [-2, 318]],
+        "fairway_start": 36,
+        "fairway_width": [24, 28, 30, 28, 26, 22],
+        "rough_width": 12, "deep_rough_width": 14,
         "tee": {"center": [0, 0], "size": [8, 10]},
-        "green": {"center": [34, 370], "radius": [12, 10], "rotation": -0.3, "slope": [0.016, 0.016]},
-        "pin": [36, 373],
-        "bunkers": [{"center": [-46, 104], "radius": [7, 3.2], "rotation": 1.1, "depth": 0.45},
-                    {"center": [-30, 206], "radius": [3.2, 2.6], "rotation": 0.4, "depth": 0.55},
-                    {"center": [48, 362], "radius": [5, 2.6], "rotation": 1.0, "depth": 0.5},
-                    {"center": [22, 380], "radius": [4.4, 2.4], "rotation": 0.4, "depth": 0.45}],
-        "water": [{"center": [-1, 250], "radius": [20, 5], "rotation": -0.65, "level_offset": -0.7},
-                  {"center": [-34, 270], "radius": [16, 4.5], "rotation": -0.4, "level_offset": -0.7},
-                  {"center": [30, 224], "radius": [16, 4.5], "rotation": -0.9, "level_offset": -0.7}],
-        "elevation": {"tee": 10.0, "green": 8.0,
-                      "profile": [[0, 10.0], [120, 9.0], [200, 7.6], [250, 5.6], [262, 5.0], [276, 5.6], [330, 7.4], [394, 8.0]],
-                      "cross_tilt": 0.024, "roll_height": 0.4, "bank_height": 6.0,
-                      "mounds": [{"center": [20, 80], "radius": 24, "height": 2.6},
-                                 {"center": [-70, 200], "radius": 24, "height": 2.6},
-                                 {"center": [70, 320], "radius": 20, "height": 2.2}]},
-        "carry": [248, 274],
-        "wind": {"min": 3, "max": 8},
-        "graveyards": [{"center": [16, 150], "radius": 7, "count": 7, "fence": False},
-                       {"center": [-56, 236], "radius": 6, "count": 6, "fence": True}],
-        "lantern_spacing": 15, "trees_spacing": 8.0,
-        "pumpkin_clusters": TEE_PUMPKINS + [{"center": [8, 300], "carved": 3, "plain": 1}],
-        "cart_path": {"side": 1, "offset": 6.0},
+        "green": {"center": [-2, 320], "radius": [13, 11], "rotation": 0.1, "slope": [0.01, 0.02]},
+        "pin": [0, 322],
+        "bunkers": [{"center": [-22, 140], "radius": [3, 7], "rotation": 0.1, "depth": 0.5},
+                    {"center": [30, 176], "radius": [3, 6], "rotation": -0.3, "depth": 0.45},
+                    {"center": [-18, 286], "radius": [3, 6], "rotation": 0.2, "depth": 0.5},
+                    {"center": [14, 330], "radius": [4.6, 2.6], "rotation": 0.4, "depth": 0.5},
+                    {"center": [-20, 326], "radius": [4.2, 2.4], "rotation": -0.4, "depth": 0.45}],
+        "water": ravine([[-110, 262], [-60, 240], [-10, 224], [40, 204], [90, 186], [140, 176]]),
+        "carry": [204, 236],
+        "pads": [{"center": [-34, 178], "radius": [14, 11], "rotation": 0.2}],
+        "zones": [{"center": [-30, 175], "radius": [26, 44], "rotation": 0.1, "surface": "rough"},
+                  {"center": [-36, 262], "radius": [20, 14], "rotation": 0.0, "surface": "rough"}],
+        "features": [{"image": "statue_horseman", "pos": [-36, 256], "scale": 1.4, "clear": 9}],
+        "elevation": {"tee": 3.0, "green": 6.5, "cross_tilt": 0.008, "roll_height": 0.35, "bank_height": 3.0,
+                      "profile": [[0, 3.0], [150, 3.6], [200, 4.0], [240, 4.6], [330, 6.5]],
+                      "mounds": [{"center": [60, 100], "radius": 24, "height": 2.4},
+                                 {"center": [-70, 120], "radius": 22, "height": 2.2},
+                                 {"center": [40, 300], "radius": 24, "height": 3.0}]},
+        "wind": {"min": 1, "max": 6},
+        "graveyards": [{"center": [44, 260], "radius": 6, "count": 6, "fence": False}],
+        "plan": {"safe": [[12, 168], [0, 322]], "risk": [[-34, 178], [0, 322]]},
+        "lantern_spacing": 17, "trees_spacing": 7.0,
+        "pumpkin_clusters": TEE_PUMPKINS,
+        "cart_path": {"side": -1, "offset": 6.0},
         "theme": {
+            "ravine": True,
             "light_props_spacing": 22,
             "light_props": ["light_classic_jack", "light_skull_lantern", "light_haunted_lamppost",
                             "light_glowing_ghoul", "light_lantern_ghost", "light_pumpkin_totem"],

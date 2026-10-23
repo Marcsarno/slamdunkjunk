@@ -21,6 +21,8 @@ uniform sampler2D tex_rough : source_color, filter_linear_mipmap_anisotropic, re
 uniform sampler2D tex_fairway : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_green : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_sand : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D tex_cliff : source_color, filter_linear_mipmap_anisotropic, repeat_enable;   // steep rock faces
+uniform float tile_cliff = 6.0;
 uniform sampler2D blotch : filter_linear_mipmap, repeat_enable;
 uniform vec3 leaf_color : source_color = vec3(0.42, 0.2, 0.07);
 uniform float leaf_amount = 0.55;
@@ -48,9 +50,11 @@ uniform float pool_radius = 1.5;
 uniform float pool_range = 9.0;
 
 varying vec3 wpos;
+varying vec3 wnorm;
 
 void vertex() {
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wnorm = (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz;
 }
 
 vec3 tex2(sampler2D t, vec2 p, float tile) {
@@ -125,6 +129,14 @@ void fragment() {
 	float leaves = smoothstep(0.55, 0.72, small * 0.6 + big * 0.5) * rough_w * leaf_amount;
 	c = mix(c, leaf_color * (0.8 + 0.4 * small) * mix(1.0, grain, 0.6), leaves);
 	c *= mix(vec3(1.0), dark_tint, w.a);
+	// steep ground (a ravine's walls, a pond's banks) is bare rock, mapped onto the face it's on
+	vec3 nw = normalize(wnorm);
+	float steep = (1.0 - smoothstep(0.6, 0.78, nw.y)) * (1.0 - w.g) * (1.0 - w.b);
+	if (steep > 0.01) {
+		vec2 face_uv = abs(nw.x) > abs(nw.z) ? wpos.zy : wpos.xy;
+		vec3 rock = texture(tex_cliff, face_uv / tile_cliff).rgb * 0.75;
+		c = mix(c, rock, steep);
+	}
 	// the cart path: worn paving, a little lighter down the middle where the carts run
 	float pm = texture(path_mask, uv).r;
 	if (pm > 0.0) {

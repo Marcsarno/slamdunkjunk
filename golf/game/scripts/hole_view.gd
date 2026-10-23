@@ -193,6 +193,7 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("tex_fairway", _texture("fairway"))
 	m.set_shader_parameter("tex_green", _texture("green"))
 	m.set_shader_parameter("tex_sand", _texture("sand"))
+	m.set_shader_parameter("tex_cliff", _texture("ravine"))
 	if terrain.meta.splat.has("path"):
 		m.set_shader_parameter("path_mask", load(dir.path_join(terrain.meta.splat.path)))
 		m.set_shader_parameter("tex_path", _texture("stone"))
