@@ -54,6 +54,17 @@ func _apply() -> void:
 	_apply_scale(STEPS[step])
 
 
+## The opening flyover sweeps the whole hole at speed: drawn at FLYOVER_SCALE (motion hides the
+## softness) it stays smooth on a phone; then back to the step the frame rate chose.
+const FLYOVER_SCALE := 0.6
+
+
+func flyover(on: bool) -> void:
+	if step < 0:
+		return                      # fixed with --quality
+	_apply_scale(minf(STEPS[step], FLYOVER_SCALE) if on and adaptive else STEPS[step])
+
+
 func _remember() -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(SETTINGS)

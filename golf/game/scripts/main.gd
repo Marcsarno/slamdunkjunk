@@ -58,6 +58,7 @@ const CHASE_SIDE := 1.8         # ... to the side ...
 const CHASE_UP := 1.8           # ... and above
 const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
 const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
+const CLUB_FACE := 0.13         # m from the middle of a driver or iron head in her sprite to its face
 const BALL_LOOK_GROUND := 0.03  # the ball's drawn width as a share of its distance from the camera ...
 const BALL_LOOK_AIR := 0.11     # ... and in the air, where its face is the show
 const STREAKS_PER_S := 40.0     # wind streaks round the ball in flight ...
@@ -193,6 +194,13 @@ func _ready() -> void:
 var _intro_id := 0              # the current opening, so a restarted one's title timer is the only one shown
 
 
+## The opening flyover is drawn softer and without the moon's shadows (from up there they barely
+## show, and redrawing the shadow map every frame costs a phone); the aiming view gets both back.
+func _flyover(on: bool) -> void:
+	Quality.flyover(on)
+	view.moon_light.shadow_enabled = not on
+
+
 ## Every material, texture and effect is drawn once behind a dark title card before the hole is
 ## shown: a phone's browser builds each shader (and uploads each texture) the first time it's
 ## drawn, and doing that during the flyover is what made the opening stutter.
@@ -207,6 +215,7 @@ func _prewarm() -> void:
 	var span := Vector2(terrain.nx, terrain.ny) * terrain.cell
 	var mid := terrain.origin + span * 0.5
 	var top := Terrain.to_world(Vector3(mid.x, mid.y, terrain.height(mid.x, mid.y) + 400.0))
+	view.moon_light.shadow_enabled = false          # the flyover's look first, then the aiming view's
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 	cam.size = maxf(span.x, span.y)
 	cam.look_at_from_position(top, top + Vector3.DOWN, Terrain.to_world(Vector3(0, 1, 0)) - Terrain.to_world(Vector3.ZERO))
@@ -217,6 +226,8 @@ func _prewarm() -> void:
 	_apply_cam(0.0)
 	await _drawn(1)
 	# the aiming view with its markers, a ball trail, and every landing effect (out of sight underground)
+	view.moon_light.shadow_enabled = true
+	await _drawn(1)
 	phase = Phase.AIM
 	_aim_cam()
 	cam_pos = _want_pos
@@ -297,6 +308,7 @@ func _start_hole() -> void:
 	phase = Phase.INTRO
 	phase_t = 0.0
 	hud.hide_aim_map()
+	_flyover(true)
 	hud.hint.text = "Tap to skip"
 	_place_lantern()
 	# the hole's name once the camera has swung round the lantern and starts down the hole
@@ -543,7 +555,10 @@ func _sprite_set(view_name: String) -> String:
 func _place_golfer_back(pose := true) -> void:
 	var set_name := _sprite_set("back")
 	var off := golfer.club_offset(set_name)
-	var g2 := Vector2(ball.x, ball.y) - _right() * off.x - aim * 0.12
+	# her club's face on the ball (the sprite's club point is the middle of the head; full swings'
+	# heads are long, so she stands a little further along)
+	var face: float = 0.0 if club.id == "putter" else CLUB_FACE
+	var g2 := Vector2(ball.x, ball.y) - _right() * (off.x + face) - aim * 0.12
 	golfer.position = Terrain.to_world(Vector3(g2.x, g2.y, terrain.height(g2.x, g2.y)))
 	if pose:
 		golfer.address(set_name)
@@ -883,6 +898,7 @@ func _process(delta: float) -> void:
 
 func _end_intro() -> void:
 	phase = Phase.AIM
+	_flyover(false)
 	Quality.watching = true          # the scene's sharpness adapts from here on, never mid-flyover
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
@@ -1252,7 +1268,9 @@ func _update_ball_visual() -> void:
 	# at her feet, more in the air where the camera chases it
 	var flying := phase == Phase.FLIGHT and sim != null and sim.state == BallSim.State.FLYING
 	var rolling_fast := phase == Phase.FLIGHT and sim != null and sim.vel.length() > 3.0
-	_ball_look = lerpf(_ball_look, BALL_LOOK_AIR if flying else BALL_LOOK_GROUND, 0.12)
+	# it grows as it climbs and shrinks back as it comes down, so it's ball size again as it lands
+	var up := b.z - terrain.height(b.x, b.y) if flying else 0.0
+	_ball_look = lerpf(BALL_LOOK_GROUND, BALL_LOOK_AIR, smoothstep(0.3, BALL_GROW_HEIGHT, up))
 	var size := maxf(2.0 * BallSim.RADIUS, d * _ball_look)       # the ball's own width on screen, in metres here
 	if phase == Phase.FLIGHT or phase == Phase.SWING:
 		_ball_pose = "launch" if (flying or rolling_fast or phase == Phase.SWING) else "still"
@@ -1292,6 +1310,7 @@ func _update_ball_visual() -> void:
 
 
 var _ball_look := BALL_LOOK_GROUND
+const BALL_GROW_HEIGHT := 9.0   # m above the ground where the ball is drawn at its biggest
 
 
 ## Air rushing past the ball in flight: thin pale streaks round it that slide back past its face and
