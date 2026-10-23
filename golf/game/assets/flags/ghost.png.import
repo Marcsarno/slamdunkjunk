@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://i87iyipa3e6n"
-path="res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.ctex"
+path.s3tc="res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.s3tc.ctex"
+path.etc2="res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/flags/ghost.png"
-dest_files=["res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.ctex"]
+dest_files=["res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.s3tc.ctex", "res://.godot/imported/ghost.png-2872f35600c26e686a30a7bf23b44cbe.etc2.ctex"]
 
 [params]
 
-compress/mode=1
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

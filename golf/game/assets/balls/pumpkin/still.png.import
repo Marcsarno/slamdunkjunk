@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3gqpyct63lh7"
-path="res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.ctex"
+path.s3tc="res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.s3tc.ctex"
+path.etc2="res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/balls/pumpkin/still.png"
-dest_files=["res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.ctex"]
+dest_files=["res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.s3tc.ctex", "res://.godot/imported/still.png-b6b841b93f001b32391e82ef2f9fcba5.etc2.ctex"]
 
 [params]
 
-compress/mode=1
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

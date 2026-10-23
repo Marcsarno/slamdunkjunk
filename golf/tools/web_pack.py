@@ -1,6 +1,11 @@
 """Pack Godot's web export for a host that caps each file (15 MB) and serves files as they are.
 
-usage: python3 -I golf/tools/web_pack.py golf/build/web golf/build/web_host
+usage: python3 -I golf/tools/web_pack.py golf/build/web golf/build/web_host [golf/build/web_desktop]
+
+(tools/build_web.sh runs the whole thing.) Textures are compressed for the graphics chip, and phones
+and desktops read different formats (ETC2 / S3TC), so the game data is exported twice: build/web with
+the phone format and, given a third directory, its index.pck with the desktop one. The page picks the
+one this device's WebGL reads, so each device downloads one.
 
 The engine (index.wasm, ~38 MB) is shipped gzipped (~9 MB) and the game data (index.pck) in parts under
 the cap. The page's own loader is untouched: a small fetch shim, run before index.js, answers Godot's
@@ -20,6 +25,7 @@ import sys
 PART = 12 * 1024 * 1024
 
 src, out = sys.argv[1], sys.argv[2]
+desktop = sys.argv[3] if len(sys.argv) > 3 else None
 shutil.rmtree(out, ignore_errors=True)
 os.makedirs(out)
 
@@ -37,8 +43,12 @@ wasm = open(os.path.join(src, 'index.wasm'), 'rb').read()
 pck = open(os.path.join(src, 'index.pck'), 'rb').read()
 plan = {
     'index.wasm': {'parts': parts('index.wasm.gz', gzip.compress(wasm, 9)), 'gzip': True, 'type': 'application/wasm'},
-    'index.pck': {'parts': parts('index.pck', pck), 'gzip': False, 'type': 'application/octet-stream'},
+    'index.pck': {'parts': parts('index.pck.etc2.gz', gzip.compress(pck, 6)), 'gzip': True, 'type': 'application/octet-stream'},
 }
+if desktop:
+    dpck = open(os.path.join(desktop, 'index.pck'), 'rb').read()
+    plan['index.pck@desktop'] = {'parts': parts('index.pck.s3tc.gz', gzip.compress(dpck, 6)), 'gzip': True,
+                                 'type': 'application/octet-stream'}
 for f in os.listdir(src):
     if f.startswith('hole_') and f.endswith('.pck'):
         # a hole's own pack (tools/pack_holes.gd), fetched by the game when the round reaches it;
@@ -66,7 +76,7 @@ checks = """<div id="diag" style="position:fixed;left:8px;right:8px;bottom:8px;z
   if (typeof WebAssembly !== 'object') line('WebAssembly: NO (the game engine needs it)');
   else WebAssembly.instantiate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))
     .then(() => line('WebAssembly: yes'), (e) => line('WebAssembly: BLOCKED - ' + e.message));
-  fetch('index.pck.1.wasm', { method: 'HEAD' }).then((r) => line('Game files reachable: ' + (r.ok ? 'yes' : 'NO (' + r.status + ')')),
+  fetch('index.pck.etc2.gz.0.wasm', { method: 'HEAD' }).then((r) => line('Game files reachable: ' + (r.ok ? 'yes' : 'NO (' + r.status + ')')),
     (e) => line('Game files reachable: NO - ' + e.message));
 }());
 </script>
@@ -82,6 +92,14 @@ shim = """<script>
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
   const PLAN = %s;
+  // the game data with textures in the format this device's graphics chip reads: phones (and Macs with
+  // Apple chips) ETC2, other desktops S3TC
+  let etc2 = true;
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    etc2 = !gl || !!gl.getExtension('WEBGL_compressed_texture_etc');
+  } catch (e) {}
+  if (!etc2 && PLAN['index.pck@desktop']) PLAN['index.pck'] = PLAN['index.pck@desktop'];
   const realFetch = window.fetch.bind(window);
   function joined(urls) {
     return new ReadableStream({

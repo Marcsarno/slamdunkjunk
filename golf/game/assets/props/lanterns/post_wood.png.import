@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://do7w7hharoaio"
-path="res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.ctex"
+path.s3tc="res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.s3tc.ctex"
+path.etc2="res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "1becc2ef1760c767d7c0f145047e13d5"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/props/lanterns/post_wood.png"
-dest_files=["res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.ctex"]
+dest_files=["res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.s3tc.ctex", "res://.godot/imported/post_wood.png-a41286c18f6232f2ac730fda5e902814.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

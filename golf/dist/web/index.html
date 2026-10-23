@@ -118,7 +118,7 @@ body {
   if (typeof WebAssembly !== 'object') line('WebAssembly: NO (the game engine needs it)');
   else WebAssembly.instantiate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))
     .then(() => line('WebAssembly: yes'), (e) => line('WebAssembly: BLOCKED - ' + e.message));
-  fetch('index.pck.1.wasm', { method: 'HEAD' }).then((r) => line('Game files reachable: ' + (r.ok ? 'yes' : 'NO (' + r.status + ')')),
+  fetch('index.pck.etc2.gz.0.wasm', { method: 'HEAD' }).then((r) => line('Game files reachable: ' + (r.ok ? 'yes' : 'NO (' + r.status + ')')),
     (e) => line('Game files reachable: NO - ' + e.message));
 }());
 </script>
@@ -131,7 +131,15 @@ body {
 }());
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
-  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm"}, "index.pck": {"parts": ["index.pck.0.wasm", "index.pck.1.wasm"], "gzip": false, "type": "application/octet-stream"}};
+  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm"}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm"], "gzip": true, "type": "application/octet-stream"}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm"], "gzip": true, "type": "application/octet-stream"}};
+  // the game data with textures in the format this device's graphics chip reads: phones (and Macs with
+  // Apple chips) ETC2, other desktops S3TC
+  let etc2 = true;
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    etc2 = !gl || !!gl.getExtension('WEBGL_compressed_texture_etc');
+  } catch (e) {}
+  if (!etc2 && PLAN['index.pck@desktop']) PLAN['index.pck'] = PLAN['index.pck@desktop'];
   const realFetch = window.fetch.bind(window);
   function joined(urls) {
     return new ReadableStream({
@@ -161,7 +169,7 @@ body {
 </script>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":25041952,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":81486424,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

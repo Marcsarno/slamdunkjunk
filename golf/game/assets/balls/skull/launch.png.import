@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://87d176reykf4"
-path="res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.ctex"
+path.s3tc="res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.s3tc.ctex"
+path.etc2="res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/balls/skull/launch.png"
-dest_files=["res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.ctex"]
+dest_files=["res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.s3tc.ctex", "res://.godot/imported/launch.png-9211f466f7c81fd36026e77abd267253.etc2.ctex"]
 
 [params]
 
-compress/mode=1
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

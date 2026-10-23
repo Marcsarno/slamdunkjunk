@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyh7uu65w4x71"
-path="res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.ctex"
+path.s3tc="res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.s3tc.ctex"
+path.etc2="res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/sky/moon_white.png"
-dest_files=["res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.ctex"]
+dest_files=["res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.s3tc.ctex", "res://.godot/imported/moon_white.png-5791feb2ded87ec6e7fb7450f080df5e.etc2.ctex"]
 
 [params]
 
-compress/mode=1
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

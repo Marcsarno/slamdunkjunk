@@ -1,7 +1,8 @@
 extends SceneTree
 ## Memory at the menu and on a hole (graphics memory: textures and mesh buffers; and the engine's own
 ## heap), for checking a build stays inside what a phone's browser allows:
-##   xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 780x1690 --script res://tests/mem_probe.gd -- [--hole=h03]
+##   xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 780x1690 --script res://tests/mem_probe.gd -- [--hole=h03] [--list]
+## (--list: the biggest textures in memory)
 var t := 0.0
 var stage := 0
 var main: Node
@@ -37,6 +38,12 @@ func _process(d: float) -> bool:
 		1:
 			if t > 14.0:
 				_report("hole, aiming")
+				if "--list" in OS.get_cmdline_user_args():
+					var tex: Array = RenderingServer.texture_debug_usage()
+					tex.sort_custom(func(a, b): return a.bytes > b.bytes)
+					for i in mini(25, tex.size()):
+						var u: Dictionary = tex[i]
+						print("   %5.1f MB  %dx%d fmt %d  %s" % [u.bytes / 1048576.0, u.width, u.height, u.format, u.path])
 				stage = 2
 				t = 0.0
 		2:
