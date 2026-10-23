@@ -11,6 +11,9 @@ render_mode diffuse_lambert;
 
 uniform sampler2D splat : filter_linear, repeat_disable;
 uniform sampler2D detail : filter_linear, repeat_disable;
+uniform sampler2D path_mask : hint_default_black, filter_linear, repeat_disable;   // the cart path
+uniform sampler2D tex_path : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform vec3 col_path : source_color = vec3(0.33, 0.31, 0.28);
 uniform sampler2D tex_rough : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_fairway : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_green : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -84,6 +87,13 @@ void fragment() {
 	float leaves = smoothstep(0.55, 0.72, small * 0.6 + big * 0.5) * rough_w * leaf_amount;
 	c = mix(c, leaf_color * (0.8 + 0.4 * small) * mix(1.0, grain, 0.6), leaves);
 	c *= mix(vec3(1.0), dark_tint, w.a);
+	// the cart path: worn paving, a little lighter down the middle where the carts run
+	float pm = texture(path_mask, uv).r;
+	if (pm > 0.0) {
+		vec3 pave = col_path * (0.75 + 0.5 * lum(tex2(tex_path, cxy, 2.2)) / 0.45);
+		pave *= 0.92 + 0.16 * smoothstep(0.55, 1.0, pm) + (big - 0.5) * 0.2;
+		c = mix(c, pave, smoothstep(0.15, 0.6, pm));
+	}
 	c *= det * brightness;
 	ALBEDO = c;
 	ROUGHNESS = 0.95;

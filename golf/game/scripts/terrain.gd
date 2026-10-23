@@ -5,10 +5,10 @@ extends RefCounted
 ## Everything here works in course coordinates (meters): x right, y down-range, z up.
 ## Godot world space is x right, y up, z toward the tee, so world = (x, z, -y).
 
-enum Surface { OOB, ROUGH, FAIRWAY, GREEN, SAND, WATER, TEE, FRINGE, DEEP }
+enum Surface { OOB, ROUGH, FAIRWAY, GREEN, SAND, WATER, TEE, FRINGE, DEEP, PATH }
 
 const SURFACE_LABELS := ["Out of bounds", "Rough", "Fairway", "Green", "Bunker", "Water", "Tee",
-	"Fringe", "Deep rough"]
+	"Fringe", "Deep rough", "Cart path"]
 
 var meta: Dictionary
 var origin := Vector2.ZERO

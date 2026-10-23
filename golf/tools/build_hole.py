@@ -162,6 +162,43 @@ def free(x, y, r):
     return all((x - a) ** 2 + (y - b) ** 2 > (r + c) ** 2 for a, b, c in taken)
 
 
+# ---------- the cart path: kept clear of everything, with a plank bridge wherever it crosses water ----------
+bridges = 0
+if hole.cart is not None:
+    cw = hole.cart_width
+    for p in hole.cart[::4]:
+        taken.append((float(p[0]), float(p[1]), cw / 2 + 0.8))
+    wet = [surf_at(float(p[0]), float(p[1])) == hole_gen.WATER for p in hole.cart]
+    runs, i = [], 0
+    while i < len(wet):
+        if wet[i]:
+            j = i
+            while j + 1 < len(wet) and (wet[j + 1] or any(wet[j + 1:j + 8])):    # gaps under 4 m join up
+                j += 1
+            runs.append((max(0, i - 6), min(len(wet) - 1, j + 6)))              # 3 m onto each bank
+            i = j + 1
+        else:
+            i += 1
+    for k, (i0, i1) in enumerate(runs):
+        seg = hole.cart[i0:i1 + 1]
+        mid = seg[len(seg) // 2]
+        level = max((w["level"] for w in spec.get("water", [])
+                     if hole_gen.ellipse_r(np.array([mid[0]]), np.array([mid[1]]), w)[0][0] < 1.6), default=h_at(*mid))
+        za, zb = h_at(*seg[0]) + 0.12, h_at(*seg[-1]) + 0.12
+        span = float(np.sum(np.linalg.norm(np.diff(seg, axis=0), axis=1)))
+        deck = []
+        for q, p in enumerate(seg[::2]):
+            t = q / max(1, len(seg[::2]) - 1)
+            z = za + (zb - za) * t + min(1.0, span / 14.0) * 0.6 * math.sin(math.pi * t)   # a gentle hump
+            z = max(z, level + 0.45 + 0.3 * math.sin(math.pi * t))
+            deck.append((float(p[0]), float(p[1]), z))
+        _, lamps = props.bridge(col, f"Bridge_{k}", deck, h_at, width=cw + 0.4)
+        for lx, ly, lz in lamps:
+            lanterns.append([round(lx, 2), round(ly, 2), round(lz, 2)])
+        bridges += 1
+    print(f"cart path {len(hole.cart) * 0.5:.0f} m, bridges {bridges}")
+
+
 def face_tee(x, y):
     """rot_z that turns a prop's front (-Y) toward the tee, where the player looks from."""
     tx, ty = spec["tee"]["center"]

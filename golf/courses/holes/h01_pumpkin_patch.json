@@ -345,5 +345,9 @@
       "carved": 1,
       "plain": 3
     }
-  ]
+  ],
+  "cart_path": {
+    "side": 1,
+    "offset": 6.0
+  }
 }

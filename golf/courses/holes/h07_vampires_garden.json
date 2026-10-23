@@ -4,7 +4,7 @@
   "number": 7,
   "par": 4,
   "seed": 707,
-  "note": "The Count's Lawn: a dogleg left through the castle gardens. A crypt sits in the fairway at the turn, a blood-red pond guards the inside of the corner, and the green is ringed with bunkers like a rose bed. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Count's Lawn: the drive drifts right past a fenced crypt in the fairway, then the hole turns hard left round a blood-red pond. A moat crosses in front of the green, which is ringed with bunkers like a rose bed. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
@@ -12,33 +12,38 @@
     ],
     [
       2,
-      60
+      55
     ],
     [
-      0,
-      125
+      18,
+      115
     ],
     [
-      -14,
-      182
+      22,
+      170
     ],
     [
-      -40,
-      228
+      6,
+      220
     ],
     [
-      -70,
+      -24,
       262
     ],
     [
-      -86,
+      -50,
       292
+    ],
+    [
+      -62,
+      318
     ]
   ],
   "fairway_start": 36,
   "fairway_width": [
     22,
     26,
+    28,
     28,
     26,
     24,
@@ -50,14 +55,14 @@
   "rough_islands": [
     {
       "center": [
-        -6,
-        176
+        20,
+        148
       ],
       "radius": [
-        7,
-        9
+        6,
+        8
       ],
-      "rotation": 0.4
+      "rotation": 0.2
     }
   ],
   "tee": {
@@ -72,28 +77,28 @@
   },
   "green": {
     "center": [
-      -86,
-      292
+      -62,
+      318
     ],
     "radius": [
       12,
       10.5
     ],
-    "rotation": 0.7,
+    "rotation": 0.8,
     "slope": [
       -0.014,
       0.018
     ]
   },
   "pin": [
-    -89,
-    295
+    -64,
+    321
   ],
   "bunkers": [
     {
       "center": [
-        -72,
-        300
+        -49,
+        326
       ],
       "radius": [
         5,
@@ -104,8 +109,8 @@
     },
     {
       "center": [
-        -98,
-        282
+        -75,
+        310
       ],
       "radius": [
         5,
@@ -116,8 +121,8 @@
     },
     {
       "center": [
-        -92,
-        306
+        -68,
+        333
       ],
       "radius": [
         4.6,
@@ -128,11 +133,11 @@
     },
     {
       "center": [
-        -80,
-        278
+        -58,
+        304
       ],
       "radius": [
-        4.2,
+        4.0,
         2.2
       ],
       "rotation": 0.8,
@@ -140,8 +145,8 @@
     },
     {
       "center": [
-        18,
-        150
+        36,
+        132
       ],
       "radius": [
         7,
@@ -149,51 +154,51 @@
       ],
       "rotation": -0.3,
       "depth": 0.45
-    },
-    {
-      "center": [
-        -26,
-        230
-      ],
-      "radius": [
-        6,
-        3
-      ],
-      "rotation": 0.6,
-      "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -40,
-        160
+        -22,
+        206
       ],
       "radius": [
-        14,
-        22
+        11,
+        15
       ],
-      "rotation": 0.4
+      "rotation": 0.3
+    },
+    {
+      "center": [
+        -43,
+        288
+      ],
+      "radius": [
+        24,
+        4.5
+      ],
+      "rotation": 0.71,
+      "level_offset": -0.7
     }
   ],
   "elevation": {
     "tee": 4.0,
-    "green": 7.0,
+    "green": 6.0,
     "cross_tilt": 0.01,
     "roll_height": 0.4,
     "bank_height": 3.5,
     "mounds": [
       {
         "center": [
-          36,
-          100
+          44,
+          80
         ],
         "radius": 22,
         "height": 2.2
       },
       {
         "center": [
-          -100,
+          -70,
           240
         ],
         "radius": 22,
@@ -201,14 +206,18 @@
       },
       {
         "center": [
-          -116,
-          316
+          -92,
+          336
         ],
         "radius": 22,
         "height": 2.6
       }
     ]
   },
+  "carry": [
+    296,
+    314
+  ],
   "wind": {
     "min": 0,
     "max": 4
@@ -216,8 +225,8 @@
   "graveyards": [
     {
       "center": [
-        -6,
-        176
+        20,
+        148
       ],
       "radius": 5.5,
       "count": 7,
@@ -225,8 +234,8 @@
     },
     {
       "center": [
-        30,
-        220
+        60,
+        210
       ],
       "radius": 8,
       "count": 9,
@@ -255,6 +264,10 @@
       "radius": 1.0
     }
   ],
+  "cart_path": {
+    "side": -1,
+    "offset": 6.0
+  },
   "theme": {
     "light_props_spacing": 20,
     "light_props": [

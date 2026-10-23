@@ -87,6 +87,9 @@ func land(at: Vector3, surface: int, water_tint := Color(0.6, 0.8, 1.0)) -> void
 				[Color(0.86, 0.74, 0.55, 0.9), Color(0.8, 0.68, 0.5, 0.0)])
 		Terrain.Surface.WATER:
 			splash(at, water_tint)
+		Terrain.Surface.PATH:
+			_particles(at, 16, 0.8, Vector2(0.12, 0.3), Vector2(0.8, 1.8), 60.0, Vector3(0, -2.0, 0),
+				[Color(0.62, 0.58, 0.52, 0.7), Color(0.5, 0.47, 0.42, 0.0)])
 		Terrain.Surface.GREEN, Terrain.Surface.FRINGE:
 			_particles(at, 14, 0.7, Vector2(0.08, 0.16), Vector2(1.0, 2.2), 50.0, Vector3(0, -6.0, 0),
 				[Color(0.5, 0.8, 0.35, 1.0), Color(0.4, 0.7, 0.3, 0.0)])

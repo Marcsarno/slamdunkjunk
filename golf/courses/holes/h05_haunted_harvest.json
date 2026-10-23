@@ -4,45 +4,55 @@
   "number": 5,
   "par": 5,
   "seed": 505,
-  "note": "The Long Furrow: a par 5 down the farm between the cornfield and the orchard. The farm pond waits right of the second shot, a hay-bale island splits the lay-up, and the green sits in the pumpkin patch below the windmill. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Long Furrow: a big S through the farm. The farm pond sits inside the first bend, so a brave drive can cut the corner; a stream crosses the lay-up zone, a hay-bale island and a cross bunker wait beyond it, and the green sits in the pumpkin patch. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      -2,
-      70
+      4,
+      60
     ],
     [
-      2,
-      150
+      24,
+      125
+    ],
+    [
+      52,
+      180
+    ],
+    [
+      60,
+      240
+    ],
+    [
+      44,
+      300
     ],
     [
       14,
-      228
+      350
     ],
     [
-      22,
-      298
+      -2,
+      400
     ],
     [
-      12,
-      368
-    ],
-    [
-      -6,
-      428
+      0,
+      440
     ]
   ],
   "fairway_start": 38,
   "fairway_width": [
     24,
+    28,
     30,
-    32,
     30,
-    30,
-    26,
+    28,
+    28,
+    28,
+    24,
     22
   ],
   "rough_width": 16,
@@ -50,14 +60,14 @@
   "rough_islands": [
     {
       "center": [
-        16,
-        300
+        57,
+        252
       ],
       "radius": [
         6,
         9
       ],
-      "rotation": 0.2
+      "rotation": 0.1
     }
   ],
   "tee": {
@@ -72,52 +82,64 @@
   },
   "green": {
     "center": [
-      -6,
-      428
+      0,
+      440
     ],
     "radius": [
       13,
       11
     ],
-    "rotation": -0.3,
+    "rotation": -0.2,
     "slope": [
       0.012,
       0.02
     ]
   },
   "pin": [
-    -3,
-    431
+    3,
+    443
   ],
   "bunkers": [
     {
       "center": [
-        -14,
-        212
+        36,
+        268
       ],
       "radius": [
-        8,
-        3.8
-      ],
-      "rotation": -0.4,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        8,
-        410
-      ],
-      "radius": [
-        5,
-        3
+        7,
+        3.5
       ],
       "rotation": 0.9,
       "depth": 0.45
     },
     {
       "center": [
-        -20,
-        440
+        -6,
+        388
+      ],
+      "radius": [
+        10,
+        3.0
+      ],
+      "rotation": 0.15,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        14,
+        442
+      ],
+      "radius": [
+        5,
+        3
+      ],
+      "rotation": 1.1,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -15,
+        450
       ],
       "radius": [
         5,
@@ -130,26 +152,62 @@
   "water": [
     {
       "center": [
-        46,
-        262
+        62,
+        118
       ],
       "radius": [
         15,
-        26
+        22
       ],
-      "rotation": 0.15
+      "rotation": 0.3
+    },
+    {
+      "center": [
+        12,
+        302
+      ],
+      "radius": [
+        14,
+        4.5
+      ],
+      "rotation": 0.75,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        35,
+        316
+      ],
+      "radius": [
+        15,
+        5
+      ],
+      "rotation": 0.55,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        60,
+        326
+      ],
+      "radius": [
+        15,
+        4.5
+      ],
+      "rotation": 0.3,
+      "level_offset": -0.7
     }
   ],
   "elevation": {
     "tee": 3.0,
     "green": 5.0,
     "cross_tilt": 0.012,
-    "roll_height": 0.6,
+    "roll_height": 0.5,
     "bank_height": 3.0,
     "mounds": [
       {
         "center": [
-          -40,
+          -30,
           110
         ],
         "radius": 24,
@@ -157,8 +215,8 @@
       },
       {
         "center": [
-          44,
-          180
+          96,
+          200
         ],
         "radius": 22,
         "height": 2.2
@@ -166,13 +224,17 @@
       {
         "center": [
           -36,
-          380
+          400
         ],
         "radius": 24,
         "height": 2.6
       }
     ]
   },
+  "carry": [
+    302,
+    328
+  ],
   "wind": {
     "min": 1,
     "max": 5
@@ -180,7 +242,7 @@
   "graveyards": [
     {
       "center": [
-        -34,
+        -26,
         300
       ],
       "radius": 6,
@@ -219,37 +281,41 @@
     },
     {
       "center": [
-        -14,
-        150
+        0,
+        160
       ],
       "carved": 1,
       "plain": 3
     },
     {
       "center": [
-        24,
-        400
+        22,
+        410
       ],
       "carved": 2,
       "plain": 3
     },
     {
       "center": [
-        -24,
-        420
+        -22,
+        426
       ],
       "carved": 2,
       "plain": 2
     },
     {
       "center": [
-        -30,
+        84,
         250
       ],
       "carved": 1,
       "plain": 3
     }
   ],
+  "cart_path": {
+    "side": 1,
+    "offset": 7.0
+  },
   "theme": {
     "light_props_spacing": 26,
     "light_props": [

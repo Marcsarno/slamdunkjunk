@@ -4,7 +4,7 @@
   "number": 4,
   "par": 4,
   "seed": 404,
-  "note": "The Web: a narrow dogleg right through dark, misty woods, falling into a ravine where a creek crosses in front of the green. Lay up short of it, or carry it and climb to the green on the far bank. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Web: the tee shot runs out into a bend to the left, then the hole swings hard right, down across a ravine creek to a green tucked into the woods. A pot bunker sits in the middle of the landing area, and a rough island splits the fairway off the tee. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
@@ -12,37 +12,42 @@
     ],
     [
       0,
-      60
+      55
     ],
     [
-      4,
-      130
+      -6,
+      115
     ],
     [
-      20,
-      190
+      -26,
+      170
     ],
     [
-      46,
-      238
+      -40,
+      215
     ],
     [
-      74,
-      282
+      -30,
+      262
     ],
     [
-      88,
-      320
+      -2,
+      300
+    ],
+    [
+      22,
+      330
     ]
   ],
   "fairway_start": 40,
   "fairway_width": [
     20,
-    22,
     24,
+    26,
+    26,
     24,
     22,
-    20,
+    22,
     20
   ],
   "rough_width": 13,
@@ -59,110 +64,142 @@
   },
   "green": {
     "center": [
-      88,
-      320
+      22,
+      330
     ],
     "radius": [
       12,
       10
     ],
-    "rotation": 0.6,
+    "rotation": 0.9,
     "slope": [
-      -0.01,
-      0.022
+      -0.012,
+      0.02
     ]
   },
   "pin": [
-    91,
-    323
+    25,
+    333
   ],
   "bunkers": [
     {
       "center": [
-        101,
-        309
+        -34,
+        200
       ],
       "radius": [
-        5,
-        2.8
-      ],
-      "rotation": 0.9,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        76,
-        333
-      ],
-      "radius": [
-        4.5,
+        3.2,
         2.6
       ],
-      "rotation": 0.4,
-      "depth": 0.45
+      "rotation": 0.3,
+      "depth": 0.55
     },
     {
       "center": [
-        -8,
-        176
+        -12,
+        186
       ],
       "radius": [
         7,
         3.2
       ],
-      "rotation": 0.3,
+      "rotation": 1.0,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        34,
+        324
+      ],
+      "radius": [
+        5,
+        2.8
+      ],
+      "rotation": 0.6,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        12,
+        344
+      ],
+      "radius": [
+        4.6,
+        2.6
+      ],
+      "rotation": -0.3,
       "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        62,
-        266
+        -62,
+        236
       ],
       "radius": [
-        40,
-        6.5
+        18,
+        5
       ],
-      "rotation": -0.75,
+      "rotation": -0.5,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -36,
+        241
+      ],
+      "radius": [
+        18,
+        5.5
+      ],
+      "rotation": -0.1,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -10,
+        236
+      ],
+      "radius": [
+        16,
+        5
+      ],
+      "rotation": 0.35,
       "level_offset": -0.7
     }
   ],
   "carry": [
-    252,
-    276
+    228,
+    254
   ],
   "elevation": {
-    "tee": 6.0,
-    "green": 4.5,
+    "tee": 7.0,
+    "green": 5.0,
     "profile": [
       [
         0,
+        7.0
+      ],
+      [
+        150,
         6.0
       ],
       [
-        120,
-        5.3
+        222,
+        4.4
       ],
       [
-        200,
-        4.2
+        241,
+        3.3
       ],
       [
-        240,
-        3.0
+        262,
+        3.8
       ],
       [
-        266,
-        2.4
-      ],
-      [
-        294,
-        3.4
-      ],
-      [
-        320,
-        4.2
+        352,
+        5.0
       ]
     ],
     "cross_tilt": 0.01,
@@ -171,7 +208,7 @@
     "mounds": [
       {
         "center": [
-          -34,
+          34,
           120
         ],
         "radius": 22,
@@ -179,15 +216,15 @@
       },
       {
         "center": [
-          50,
-          160
+          -80,
+          190
         ],
         "radius": 24,
         "height": 2.6
       },
       {
         "center": [
-          120,
+          50,
           300
         ],
         "radius": 22,
@@ -195,6 +232,19 @@
       }
     ]
   },
+  "rough_islands": [
+    {
+      "center": [
+        3,
+        132
+      ],
+      "radius": [
+        5,
+        9
+      ],
+      "rotation": 0.1
+    }
+  ],
   "wind": {
     "min": 0,
     "max": 3
@@ -202,8 +252,8 @@
   "graveyards": [
     {
       "center": [
-        -24,
-        214
+        -74,
+        160
       ],
       "radius": 6,
       "count": 6,
@@ -232,6 +282,10 @@
       "radius": 1.0
     }
   ],
+  "cart_path": {
+    "side": 1,
+    "offset": 6.0
+  },
   "theme": {
     "light_props_spacing": 20,
     "light_props": [

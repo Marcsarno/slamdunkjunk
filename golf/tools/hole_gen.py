@@ -28,8 +28,8 @@ SPLAT_PX_PER_M = 4.0
 MARGIN = 8.0
 MAX_TEXTURE = 4096
 
-OOB, ROUGH, FAIRWAY, GREEN, SAND, WATER, TEE, FRINGE, DEEP = range(9)
-SURFACE_NAMES = ["oob", "rough", "fairway", "green", "sand", "water", "tee", "fringe", "deep_rough"]
+OOB, ROUGH, FAIRWAY, GREEN, SAND, WATER, TEE, FRINGE, DEEP, PATH = range(10)
+SURFACE_NAMES = ["oob", "rough", "fairway", "green", "sand", "water", "tee", "fringe", "deep_rough", "cart_path"]
 
 
 def smoothstep(e0, e1, x):
@@ -117,6 +117,45 @@ class Hole:
         for w in spec.get("water", []):
             c = np.array([[w["center"][0]]], float), np.array([[w["center"][1]]], float)
             w["level"] = round(float(self.base_height(*c)[0, 0]) + w.get("level_offset", -0.6), 3)
+        self.cart = self._cart_path()
+
+    def _cart_path(self):
+        """The cart path: from beside the tee box down one side of the hole in the rough, a few metres
+        off the fairway, to beside the green. spec "cart_path": {"side": 1 (right of the line) or -1,
+        "offset": metres beyond the fairway edge, "width": metres, "switch": [[metres along, side], ...]
+        (it crosses over there)}. Returns the centreline as dense points, or None."""
+        cp = self.spec.get("cart_path")
+        if not cp:
+            return None
+        switches = sorted(cp.get("switch", []))
+        tee_hw = self.spec["tee"]["size"][0] / 2
+        pts = []
+        for s in np.arange(0.0, self.length, 1.0):
+            side = float(cp.get("side", 1))
+            for s0, sd in switches:                       # crossings ease over ~40 m
+                side = side + (sd - side) * smoothstep(s0 - 20.0, s0 + 20.0, s)
+            i = int(np.clip(np.searchsorted(self.path_s, s), 0, len(self.path) - 1))
+            t = self.tangent[i]
+            n = np.array([t[1], -t[0]])                   # right of the line of play
+            off = self.half_width(s) + cp.get("offset", 6.0)
+            off = tee_hw + 3.0 + (off - tee_hw - 3.0) * smoothstep(0.0, self.spec["fairway_start"], s)
+            near_green = max(self.spec["green"]["radius"]) + 3.0          # it finishes beside the green
+            off = off + (near_green - off) * smoothstep(self.length - 45.0, self.length - 5.0, s)
+            pts.append(self.path[i] + n * side * off)
+        pts = np.array(pts)
+        pts = ndimage.gaussian_filter1d(pts, 6.0, axis=0, mode="nearest")
+        # dense, even spacing for the distance lookups
+        seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        acc = np.concatenate([[0], np.cumsum(seg)])
+        even = np.arange(0.0, acc[-1], 0.5)
+        dense = np.stack([np.interp(even, acc, pts[:, 0]), np.interp(even, acc, pts[:, 1])], axis=1)
+        self.cart_tree = cKDTree(dense)
+        self.cart_width = cp.get("width", 2.6)
+        return dense
+
+    def cart_distance(self, x, y):
+        d, _ = self.cart_tree.query(np.stack([np.ravel(x), np.ravel(y)], axis=1))
+        return d.reshape(np.shape(x))
 
     # --- geometry helpers -------------------------------------------------------------------
     def path_query(self, x, y):
@@ -252,6 +291,8 @@ class Hole:
         for r in sp.get("rough_islands", []):
             ir, _ = ellipse_r(x, y, r)
             out[(ir < 1.0) & (out == FAIRWAY)] = ROUGH
+        if self.cart is not None:
+            out[self.cart_distance(x, y) < self.cart_width / 2] = PATH
         tx, ty = sp["tee"]["center"]
         out[(np.abs(x - tx) <= sp["tee"]["size"][0] / 2) & (np.abs(y - ty) <= sp["tee"]["size"][1] / 2)] = TEE
         gr, _ = ellipse_r(x, y, sp["green"])
@@ -277,7 +318,7 @@ def grid(h, cell):
 PALETTE = {
     OOB: (34, 46, 30), ROUGH: (58, 92, 38), FAIRWAY: (104, 152, 52), GREEN: (122, 176, 62),
     SAND: (214, 186, 132), WATER: (24, 44, 58), TEE: (112, 160, 56), FRINGE: (90, 138, 48),
-    DEEP: (42, 66, 32),
+    DEEP: (42, 66, 32), PATH: (112, 104, 94),
 }
 
 
@@ -385,6 +426,9 @@ def paint_splat(hole, out_dir):
     w[..., 3] = 0.45 * (surf == DEEP) + 0.75 * (surf == OOB) + 0.6 * (surf == WATER)
     for c in range(4):
         w[..., c] = ndimage.gaussian_filter(w[..., c], 0.6)
+    # path.png: where the cart path is (the shader lays paving there)
+    pm = ndimage.gaussian_filter((surf == PATH).astype(np.float32), 0.5)
+    Image.fromarray(np.clip(pm[::-1] * 255, 0, 255).astype(np.uint8), "L").save(os.path.join(out_dir, "path.png"))
     lat, s = hole.lateral(gx, gy)
     det = np.full(gx.shape, 1.0, np.float32)
     lanes = np.where(np.floor(lat / 6.0) % 2 == 0, 1.07, 0.93)
@@ -404,6 +448,7 @@ GROUND = {  # calm night-course palette (sRGB), tuned on the Blender style test
     OOB: (0.11, 0.18, 0.08), ROUGH: (0.19, 0.31, 0.11), DEEP: (0.14, 0.23, 0.09),
     FAIRWAY: (0.37, 0.58, 0.18), TEE: (0.38, 0.60, 0.19), FRINGE: (0.30, 0.50, 0.15),
     GREEN: (0.42, 0.65, 0.21), SAND: (0.84, 0.72, 0.50), WATER: (0.06, 0.08, 0.08),
+    PATH: (0.45, 0.42, 0.38),
 }
 GROUND_PX_PER_M = 5.0
 
@@ -464,7 +509,7 @@ def build(spec_path, out_dir, preview_dir=None):
         "phys": {"cell": PHYS_CELL, "nx": int(px.shape[1]), "ny": int(px.shape[0]), "file": "heights.bin"},
         "surf": {"cell": SURF_CELL, "nx": int(sx.shape[1]), "ny": int(sx.shape[0]), "file": "surface.bin",
                  "names": SURFACE_NAMES},
-        "splat": {"file": "splat.png", "detail": "detail.png", "size": splat_size},
+        "splat": {"file": "splat.png", "detail": "detail.png", "path": "path.png", "size": splat_size},
         "ground": {"file": "ground.jpg", "size": ground_size},
         "theme": spec.get("theme", {}),
         "tee": [0.0, 0.0, tee_h], "pin": [pin[0], pin[1], pin_h],
@@ -472,6 +517,8 @@ def build(spec_path, out_dir, preview_dir=None):
         "path": [[round(float(a), 2), round(float(b), 2)] for a, b in hole.path[::20]],
         "water": spec.get("water", []), "wind": spec.get("wind", {"min": 0, "max": 0}),
     }
+    if hole.cart is not None:
+        meta["cart_path"] = [[round(float(a), 2), round(float(b), 2)] for a, b in hole.cart[::4]]
     json.dump(meta, open(os.path.join(out_dir, "terrain.json"), "w"), indent=1)
     counts = {SURFACE_NAMES[k]: int((surface == k).sum()) for k in range(len(SURFACE_NAMES))}
     print(f"{spec['id']}: length {hole.length:.0f} m, grid {px.shape[1]}x{px.shape[0]}, "

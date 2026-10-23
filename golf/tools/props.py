@@ -234,6 +234,95 @@ def fence(col, name, points, height_at, post_gap=1.0):
     return link(name, bm, [material("iron_vc", 0.45)], col)
 
 
+# ---------- wooden bridge ----------------------------------------------------------------------
+WOOD, WOOD_DK, WOOD_LT = (0.36, 0.24, 0.15), (0.20, 0.13, 0.09), (0.48, 0.34, 0.22)
+
+
+def bridge(col, name, deck, floor_at, width=2.8, lanterns=True):
+    """A plank bridge (a cart path over water): deck = [(x, y, z), ...] along its centreline (z = the
+    deck's top), floor_at(x, y) = the ground or water bed below for the piles. Planks across, two
+    stringers, posts with a top rail and a mid rail each side, piles down to the bed, and a little
+    lantern on the first and last posts. Returns (object, lantern positions)."""
+    bm = bmesh.new()
+    pts = [Vector(p) for p in deck]
+    lens = [0.0]
+    for a, b in zip(pts[:-1], pts[1:]):
+        lens.append(lens[-1] + (b - a).length)
+    total = lens[-1]
+
+    def at(d):
+        for i in range(1, len(pts)):
+            if lens[i] >= d or i == len(pts) - 1:
+                t = (d - lens[i - 1]) / max(1e-6, lens[i] - lens[i - 1])
+                p = pts[i - 1].lerp(pts[i], min(max(t, 0.0), 1.0))
+                tan = (pts[i] - pts[i - 1]).normalized()
+                return p, tan
+        return pts[-1], (pts[-1] - pts[-2]).normalized()
+
+    plank_faces, rail_faces, post_faces = [], [], []
+    hw = width / 2
+    n = max(2, int(total / 0.34))
+    for k in range(n + 1):
+        d = total * k / n
+        p, tan = at(d)
+        side = Vector((tan.y, -tan.x, 0)).normalized()
+        jag = 0.06 * math.sin(k * 2.3)                    # uneven plank ends
+        a = p - side * (hw + jag) - Vector((0, 0, 0.04))
+        b = p + side * (hw - jag) - Vector((0, 0, 0.04))
+        ret = bmesh.ops.create_cube(bm, size=1.0)
+        v = ret["verts"]
+        L = (b - a).length
+        bmesh.ops.scale(bm, vec=(L, 0.3, 0.08), verts=v)
+        rot = Vector((tan.y, -tan.x, 0)).to_track_quat("X", "Z").to_matrix().to_4x4()
+        bmesh.ops.transform(bm, matrix=Matrix.Translation((a + b) / 2) @ rot, verts=v)
+        plank_faces += list({f for vv in v for f in vv.link_faces})
+    # stringers under the deck
+    for sd in (-0.8, 0.8):
+        for d0, d1 in zip(lens[:-1], lens[1:]):
+            p0, t0 = at(d0)
+            p1, _ = at(d1)
+            off = Vector((t0.y, -t0.x, 0)).normalized() * hw * sd
+            rail_faces += [f for vv in tube(bm, p0 + off - Vector((0, 0, 0.18)), p1 + off - Vector((0, 0, 0.18)), 0.09, 0.09, 6)
+                           for f in vv.link_faces]
+    # posts, rails and piles
+    posts = max(2, int(total / 1.8) + 1)
+    tops = {-1: [], 1: []}
+    for k in range(posts):
+        d = total * k / (posts - 1)
+        p, tan = at(d)
+        side = Vector((tan.y, -tan.x, 0)).normalized()
+        for sd in (-1, 1):
+            q = p + side * (hw + 0.05) * sd
+            top = q + Vector((0, 0, 1.0))
+            post_faces += [f for vv in tube(bm, q - Vector((0, 0, 0.2)), top, 0.07, 0.06, 6) for f in vv.link_faces]
+            bed = floor_at(q.x, q.y)
+            if bed < q.z - 0.5:
+                post_faces += [f for vv in tube(bm, Vector((q.x, q.y, bed - 0.3)), q - Vector((0, 0, 0.15)), 0.11, 0.1, 6)
+                               for f in vv.link_faces]
+            tops[sd].append(top)
+    for sd in (-1, 1):
+        for a, b in zip(tops[sd][:-1], tops[sd][1:]):
+            for dz in (0.0, -0.45):
+                rail_faces += [f for vv in tube(bm, a + Vector((0, 0, dz)), b + Vector((0, 0, dz)), 0.045, 0.045, 5)
+                               for f in vv.link_faces]
+    bm.normal_update()
+    lay = vcol_layer(bm)
+    rail_set, post_set = set(rail_faces), set(post_faces)
+    for f in bm.faces:
+        tone = WOOD_LT if f in rail_set else (WOOD_DK if f in post_set else WOOD)
+        k = 0.85 + 0.3 * noise.noise(f.calc_center_median() * 3.1)
+        for lp in f.loops:
+            lp[lay] = (*(min(1.0, c * k) for c in tone), 1.0)
+    obj = link(name, bm, [material("wood_vc", 0.8)], col)
+    lamp_pts = []
+    if lanterns:
+        for sd, i in ((1, 0), (-1, -1)):
+            t = tops[sd][i]
+            lamp_pts.append((t.x, t.y, t.z + 0.12))
+            jack(col, f"{name}_Lamp{i}", (t.x, t.y, t.z - 0.02), r=0.16, rot_z=random.uniform(0, math.tau))
+    return obj, lamp_pts
+
+
 # ---------- skeleton arm out of a grave ---------------------------------------------------------
 BONE, BONE_DK, DIRT = (0.86, 0.82, 0.70), (0.45, 0.40, 0.32), (0.36, 0.25, 0.17)
 

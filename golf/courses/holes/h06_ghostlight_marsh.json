@@ -4,26 +4,26 @@
   "number": 6,
   "par": 3,
   "seed": 606,
-  "note": "Will-o'-the-Wisp: from a boardwalk tee, carry the glowing lagoon to a green on the far shore. Bail out short-left on the reed bank, but the wisps keep watch. Course coords in meters: x right, y down-range, z up.",
+  "note": "Will-o'-the-Wisp: a curling par 3 over the glowing lagoon to a green on a spit of land, with more water right of it. The cart path crosses the lagoon on a long boardwalk. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      -4,
+      4,
       50
     ],
     [
-      -9,
-      105
+      14,
+      100
     ],
     [
-      -12,
-      158
+      28,
+      150
     ]
   ],
-  "fairway_start": 118,
+  "fairway_start": 120,
   "fairway_width": [
     18,
     20,
@@ -44,66 +44,78 @@
   },
   "green": {
     "center": [
-      -12,
-      158
+      28,
+      150
     ],
     "radius": [
       12,
       10
     ],
-    "rotation": -0.2,
+    "rotation": 0.5,
     "slope": [
-      -0.012,
-      0.02
+      -0.014,
+      0.018
     ]
   },
   "pin": [
-    -10,
-    161
+    30,
+    153
   ],
   "bunkers": [
     {
       "center": [
-        2,
-        166
+        14,
+        160
       ],
       "radius": [
         4.5,
         2.6
       ],
-      "rotation": 0.6,
+      "rotation": -0.4,
       "depth": 0.5
     },
     {
       "center": [
-        -27,
-        170
+        36,
+        166
       ],
       "radius": [
         4.2,
         2.4
       ],
-      "rotation": -0.8,
+      "rotation": 0.8,
       "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -4,
-        66
+        6,
+        70
       ],
       "radius": [
-        32,
-        36
+        34,
+        34
       ],
-      "rotation": -0.08,
+      "rotation": -0.1,
+      "level_offset": -0.5
+    },
+    {
+      "center": [
+        58,
+        142
+      ],
+      "radius": [
+        14,
+        22
+      ],
+      "rotation": 0.2,
       "level_offset": -0.5
     }
   ],
   "carry": [
     10,
-    116
+    120
   ],
   "elevation": {
     "tee": 2.4,
@@ -114,7 +126,7 @@
     "mounds": [
       {
         "center": [
-          -46,
+          -50,
           40
         ],
         "radius": 18,
@@ -122,16 +134,16 @@
       },
       {
         "center": [
-          36,
-          120
+          -20,
+          140
         ],
         "radius": 20,
         "height": 2.0
       },
       {
         "center": [
-          -12,
-          214
+          30,
+          196
         ],
         "radius": 24,
         "height": 2.4
@@ -145,7 +157,7 @@
   "graveyards": [
     {
       "center": [
-        -40,
+        -26,
         128
       ],
       "radius": 5,
@@ -175,6 +187,10 @@
       "radius": 1.0
     }
   ],
+  "cart_path": {
+    "side": -1,
+    "offset": 6.0
+  },
   "theme": {
     "light_props_spacing": 14,
     "light_props": [

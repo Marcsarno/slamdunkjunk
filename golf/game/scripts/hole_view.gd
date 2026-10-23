@@ -191,6 +191,9 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("tex_fairway", _texture("fairway"))
 	m.set_shader_parameter("tex_green", _texture("green"))
 	m.set_shader_parameter("tex_sand", _texture("sand"))
+	if terrain.meta.splat.has("path"):
+		m.set_shader_parameter("path_mask", load(dir.path_join(terrain.meta.splat.path)))
+		m.set_shader_parameter("tex_path", _texture("stone"))
 	m.set_shader_parameter("origin", Vector2(terrain.meta.origin[0], terrain.meta.origin[1]))
 	m.set_shader_parameter("extent", Vector2(terrain.meta.extent[0], terrain.meta.extent[1]))
 	m.set_shader_parameter("texture_strength", float(theme.get("texture_strength", 0.35)))
@@ -262,6 +265,7 @@ func _apply_materials(root: Node) -> void:
 		"pumpkin_vc": _pumpkin_material(),
 		"bone_vc": _textured_vc("", 1.0, 1.0, 0.7),
 		"iron_vc": _textured_vc("", 1.0, 1.0, 0.45),
+		"wood_vc": _textured_vc("wood", 0.7, 1.6, 0.85),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D

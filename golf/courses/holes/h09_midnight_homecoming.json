@@ -4,40 +4,45 @@
   "number": 9,
   "par": 4,
   "seed": 909,
-  "note": "The Walk Home: a wide, welcoming finale climbing toward the village lights, lined with lanterns all the way. A pond waits short-left of the green and a big bunker short-right, so the last shot still asks something. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Walk Home: a winding, lantern-lined finale climbing toward the village lights. A stream wanders down the left side and cuts across in front of the green, and the cart path crosses it on a bridge. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      -2,
-      60
+      -4,
+      55
+    ],
+    [
+      -22,
+      110
+    ],
+    [
+      -20,
+      165
     ],
     [
       2,
-      130
+      215
     ],
     [
-      12,
-      196
+      24,
+      262
     ],
     [
-      16,
-      252
-    ],
-    [
-      10,
-      298
+      26,
+      305
     ]
   ],
   "fairway_start": 34,
   "fairway_width": [
     26,
-    32,
-    34,
-    32,
+    30,
+    30,
+    30,
     28,
+    26,
     24
   ],
   "rough_width": 16,
@@ -54,8 +59,8 @@
   },
   "green": {
     "center": [
-      10,
-      298
+      26,
+      305
     ],
     "radius": [
       14,
@@ -68,26 +73,26 @@
     ]
   },
   "pin": [
-    13,
-    301
+    29,
+    308
   ],
   "bunkers": [
     {
       "center": [
-        28,
-        280
+        42,
+        296
       ],
       "radius": [
-        7,
-        3.4
+        6,
+        3.2
       ],
-      "rotation": 0.5,
+      "rotation": 0.6,
       "depth": 0.5
     },
     {
       "center": [
-        26,
-        312
+        14,
+        320
       ],
       "radius": [
         4.4,
@@ -98,40 +103,101 @@
     },
     {
       "center": [
-        -12,
-        186
+        -2,
+        150
       ],
       "radius": [
         7,
         3.4
       ],
-      "rotation": -0.3,
+      "rotation": -0.2,
       "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -14,
-        268
+        -50,
+        96
       ],
       "radius": [
-        12,
-        16
+        26,
+        4.5
       ],
-      "rotation": 0.3
+      "rotation": 1.75,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -47,
+        142
+      ],
+      "radius": [
+        27,
+        4.5
+      ],
+      "rotation": 1.5,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -35,
+        184
+      ],
+      "radius": [
+        22,
+        4.5
+      ],
+      "rotation": 1.05,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -23,
+        222
+      ],
+      "radius": [
+        20,
+        4.5
+      ],
+      "rotation": 1.25,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -12,
+        250
+      ],
+      "radius": [
+        10,
+        4.5
+      ],
+      "rotation": 1.0,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        16,
+        247
+      ],
+      "radius": [
+        26,
+        5
+      ],
+      "rotation": -0.44,
+      "level_offset": -0.7
     }
   ],
   "elevation": {
     "tee": 2.0,
-    "green": 7.0,
+    "green": 6.0,
     "cross_tilt": 0.01,
     "roll_height": 0.35,
     "bank_height": 3.0,
     "mounds": [
       {
         "center": [
-          44,
+          36,
           110
         ],
         "radius": 24,
@@ -139,7 +205,7 @@
       },
       {
         "center": [
-          -42,
+          -80,
           160
         ],
         "radius": 22,
@@ -147,7 +213,7 @@
       },
       {
         "center": [
-          44,
+          60,
           330
         ],
         "radius": 22,
@@ -155,6 +221,10 @@
       }
     ]
   },
+  "carry": [
+    238,
+    262
+  ],
   "wind": {
     "min": 1,
     "max": 3
@@ -162,7 +232,7 @@
   "graveyards": [
     {
       "center": [
-        -40,
+        -74,
         230
       ],
       "radius": 7,
@@ -201,15 +271,15 @@
     },
     {
       "center": [
-        -20,
-        120
+        12,
+        118
       ],
       "carved": 2,
       "plain": 2
     },
     {
       "center": [
-        32,
+        50,
         250
       ],
       "carved": 3,
@@ -217,21 +287,25 @@
     },
     {
       "center": [
-        -8,
-        322
+        8,
+        330
       ],
       "carved": 3,
       "plain": 2
     },
     {
       "center": [
-        30,
-        296
+        46,
+        316
       ],
       "carved": 2,
       "plain": 1
     }
   ],
+  "cart_path": {
+    "side": 1,
+    "offset": 6.0
+  },
   "theme": {
     "light_props_spacing": 13,
     "light_props": [

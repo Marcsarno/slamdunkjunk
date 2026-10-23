@@ -4,41 +4,46 @@
   "number": 8,
   "par": 4,
   "seed": 808,
-  "note": "The Horseman's Ride: an S-shaped par 4 along a sidehill ridge in a storm. The ground falls away to the right off the tee and to the left at the green, the wind gusts, and the horseman watches from the crag. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Horseman's Ride: an S along a sidehill ridge in a gusting storm. The drive bends left past a pot bunker, then the hole swings right and drops across a ravine creek before climbing to the green under the crag. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      6,
-      70
+      -8,
+      60
     ],
     [
-      24,
-      140
+      -30,
+      120
     ],
     [
-      32,
-      205
+      -34,
+      180
     ],
     [
-      18,
-      265
+      -12,
+      235
     ],
     [
-      -6,
-      318
+      22,
+      280
     ],
     [
-      -16,
-      360
+      40,
+      330
+    ],
+    [
+      34,
+      370
     ]
   ],
   "fairway_start": 40,
   "fairway_width": [
     22,
     24,
+    26,
     26,
     26,
     24,
@@ -59,62 +64,111 @@
   },
   "green": {
     "center": [
-      -16,
-      360
+      34,
+      370
     ],
     "radius": [
       12,
       10
     ],
-    "rotation": -0.4,
+    "rotation": -0.3,
     "slope": [
       0.016,
       0.016
     ]
   },
   "pin": [
-    -13,
-    363
+    36,
+    373
   ],
   "bunkers": [
     {
       "center": [
-        44,
-        192
+        -46,
+        104
       ],
       "radius": [
         7,
         3.2
       ],
-      "rotation": -0.2,
+      "rotation": 1.1,
       "depth": 0.45
     },
     {
       "center": [
         -30,
-        350
+        206
+      ],
+      "radius": [
+        3.2,
+        2.6
+      ],
+      "rotation": 0.4,
+      "depth": 0.55
+    },
+    {
+      "center": [
+        48,
+        362
       ],
       "radius": [
         5,
         2.6
       ],
-      "rotation": -1.0,
+      "rotation": 1.0,
       "depth": 0.5
     },
     {
       "center": [
-        -2,
-        372
+        22,
+        380
       ],
       "radius": [
         4.4,
         2.4
       ],
-      "rotation": 0.7,
+      "rotation": 0.4,
       "depth": 0.45
     }
   ],
-  "water": [],
+  "water": [
+    {
+      "center": [
+        -1,
+        250
+      ],
+      "radius": [
+        20,
+        5
+      ],
+      "rotation": -0.65,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        -34,
+        270
+      ],
+      "radius": [
+        16,
+        4.5
+      ],
+      "rotation": -0.4,
+      "level_offset": -0.7
+    },
+    {
+      "center": [
+        30,
+        224
+      ],
+      "radius": [
+        16,
+        4.5
+      ],
+      "rotation": -0.9,
+      "level_offset": -0.7
+    }
+  ],
   "elevation": {
     "tee": 10.0,
     "green": 8.0,
@@ -124,23 +178,31 @@
         10.0
       ],
       [
-        90,
-        8.6
+        120,
+        9.0
       ],
       [
-        170,
-        7.0
-      ],
-      [
-        230,
+        200,
         7.6
       ],
       [
-        300,
-        8.4
+        250,
+        5.6
       ],
       [
-        360,
+        262,
+        5.0
+      ],
+      [
+        276,
+        5.6
+      ],
+      [
+        330,
+        7.4
+      ],
+      [
+        394,
         8.0
       ]
     ],
@@ -150,30 +212,34 @@
     "mounds": [
       {
         "center": [
-          -30,
-          90
+          20,
+          80
         ],
         "radius": 24,
         "height": 2.6
       },
       {
         "center": [
-          60,
-          260
+          -70,
+          200
         ],
         "radius": 24,
         "height": 2.6
       },
       {
         "center": [
-          -46,
-          300
+          70,
+          320
         ],
         "radius": 20,
         "height": 2.2
       }
     ]
   },
+  "carry": [
+    248,
+    274
+  ],
   "wind": {
     "min": 3,
     "max": 8
@@ -181,8 +247,8 @@
   "graveyards": [
     {
       "center": [
-        58,
-        130
+        16,
+        150
       ],
       "radius": 7,
       "count": 7,
@@ -190,8 +256,8 @@
     },
     {
       "center": [
-        -34,
-        240
+        -56,
+        236
       ],
       "radius": 6,
       "count": 6,
@@ -221,13 +287,17 @@
     },
     {
       "center": [
-        12,
+        8,
         300
       ],
       "carved": 3,
       "plain": 1
     }
   ],
+  "cart_path": {
+    "side": 1,
+    "offset": 6.0
+  },
   "theme": {
     "light_props_spacing": 22,
     "light_props": [
@@ -292,6 +362,16 @@
     "moon_elevation": 16,
     "light_azimuth": 150,
     "light_elevation": 34,
+    "water_deep": [
+      0.01,
+      0.02,
+      0.05
+    ],
+    "water_glow": [
+      0.35,
+      0.55,
+      1.0
+    ],
     "wisp_color": [
       1.0,
       0.55,

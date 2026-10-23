@@ -30,6 +30,7 @@ const SURF := {
 	Terrain.Surface.TEE: [0.30, 0.55, 2.2],
 	Terrain.Surface.FRINGE: [0.25, 0.50, 1.6],
 	Terrain.Surface.DEEP: [0.12, 0.35, 6.0],
+	Terrain.Surface.PATH: [0.5, 0.75, 1.4],        # paving: a big kick and a long run
 }
 # backspin "checks" the ball for a moment after it lands: extra braking ~ the club's lift
 const SKID_TIME := 0.7

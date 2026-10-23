@@ -280,7 +280,31 @@ func _default_target() -> Vector2:
 		if err < best_err:
 			best_err = err
 			best = v
-	return b + best
+	return _safe_layup(b + best)
+
+
+## Start the aim somewhere the shot finishes safely: if a shot to `t` would roll into water, out of
+## bounds or a bunker, or its margin of error reaches water or out of bounds, the target comes back
+## down the line 8 m at a time (as a good caddie would say: lay up short of the creek).
+func _safe_layup(t: Vector2) -> Vector2:
+	var b := Vector2(ball.x, ball.y)
+	var dir := (t - b).normalized()
+	var d := b.distance_to(t)
+	var right := Vector2(dir.y, -dir.x)
+	for k in 10:
+		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
+			Clubs.launch_velocity(club, _power_for(d, dir), dir), club.lift)
+		var e := Vector2(r.end.x, r.end.y)
+		var m := _spread(d)
+		var ok: bool = r.state != BallSim.State.WATER and r.state != BallSim.State.OOB \
+			and terrain.surface_at(e.x, e.y) != Terrain.Surface.SAND
+		for q in [e + dir * m * SPREAD_LONG, e + right * m * 0.8, e - right * m * 0.8]:
+			var sq := terrain.surface_at(q.x, q.y)
+			ok = ok and sq != Terrain.Surface.WATER and sq != Terrain.Surface.OOB
+		if ok or d < club.carry_m * 0.45:
+			break
+		d -= 8.0
+	return b + dir * d
 
 
 ## The landing spot short of `spot` that the roll (no wind) carries on from to finish there.
@@ -391,16 +415,42 @@ func _place_golfer_back(pose := true) -> void:
 ## The caddie and the cat stand to her left a few steps up the line, in sight from behind her and in
 ## the swing shot (moved when the aim settles, while the view is up high and they're too small to see).
 func _place_pals() -> void:
+	# to her left, or her right if the left is water or sand (by a green, say)
+	var side := 1.0 if _dry(Vector2(ball.x, ball.y) - _right() * 2.4 + aim * 1.7) else -1.0
 	for p in [[caddie, Vector2(2.4, 1.7)], [cat, Vector2(1.7, 1.1)]]:
-		var c2: Vector2 = Vector2(ball.x, ball.y) - _right() * p[1].x + aim * p[1].y
+		var c2: Vector2 = Vector2(ball.x, ball.y) - _right() * p[1].x * side + aim * p[1].y
 		p[0].position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
-	# the cart parked up the line behind the caddie, nosed down the hole, angled in toward the line
-	var k2 := Vector2(ball.x, ball.y) - _right() * 3.4 + aim * 5.2
+	# the cart: parked on the cart path when it runs close by, nosed on toward the green; otherwise up
+	# the line behind the caddie, angled in toward the line (never in sand or water)
+	var b2 := Vector2(ball.x, ball.y)
+	var k2 := b2 - _right() * 3.4 * side + aim * 5.2
+	var heading := aim.rotated(-0.35 * side)
+	var cp: Array = terrain.meta.get("cart_path", [])
+	var best := INF
+	for i in range(1, cp.size() - 1):
+		var q := Vector2(cp[i][0], cp[i][1])
+		var d := q.distance_to(b2)
+		if d < best and d > 4.0 and (q - b2).dot(aim) > -2.0:
+			best = d
+			k2 = q
+			heading = (Vector2(cp[i + 1][0], cp[i + 1][1]) - Vector2(cp[i - 1][0], cp[i - 1][1])).normalized()
+	if best > 16.0:
+		k2 = b2 - _right() * 3.4 * side + aim * 5.2
+		heading = aim.rotated(-0.35 * side)
+		for tries in 6:
+			if _dry(k2):
+				break
+			k2 -= aim * 2.0
 	var kw := Terrain.to_world(Vector3(k2.x, k2.y, terrain.height(k2.x, k2.y)))
-	var heading := aim.rotated(-0.35)
 	var hw := Terrain.to_world(Vector3(heading.x, heading.y, 0)) - Terrain.to_world(Vector3.ZERO)
 	cart.position = kw
 	cart.look_at(kw + hw, Vector3.UP)
+
+
+## Somewhere a cart, a caddie or a cat can stand: not water, sand, the green or out of bounds.
+func _dry(p: Vector2) -> bool:
+	var s := terrain.surface_at(p.x, p.y)
+	return s not in [Terrain.Surface.WATER, Terrain.Surface.SAND, Terrain.Surface.GREEN, Terrain.Surface.OOB]
 
 
 ## The giant jack-o'-lantern sits off the right of the tee, its face turned back across the tee box.
@@ -694,6 +744,7 @@ func _process(delta: float) -> void:
 				match surf:
 					Terrain.Surface.WATER: Sfx.play("splash", -2.0)
 					Terrain.Surface.SAND: Sfx.play("land_sand", -3.0)
+					Terrain.Surface.PATH: Sfx.play("hit_iron", -14.0, 0.55)      # a clack off the paving
 					_: Sfx.play("land_grass", -4.0, randf_range(0.9, 1.1))
 			if sim.state == BallSim.State.FLYING or sim.state == BallSim.State.ROLLING:
 				var hv := Vector2(sim.vel.x, sim.vel.y)
