@@ -155,7 +155,7 @@ for k, w in enumerate(spec.get("water", [])):
 
 # ---------- props --------------------------------------------------------------------------
 lanterns, obstacles, cards = [], [], []
-taken = []
+taken = [(float(f["pos"][0]), float(f["pos"][1]), 2.5 * f.get("scale", 1.0)) for f in spec.get("features", [])]
 
 
 def free(x, y, r):
@@ -612,6 +612,15 @@ if pool:
                 break
         side = -side
     print(f"light props {len(glows)}")
+# landmarks: one of the painted light props stood at a set spot, bigger ("features" in the layout)
+for f in spec.get("features", []):
+    x, y = f["pos"]
+    ht, lift, r = (v * LIGHT_SCALE * f.get("scale", 1.0) for v in LIGHT_PROPS[f["image"]])
+    z = h_at(x, y)
+    glows.append({"image": f["image"], "pos": [round(float(x), 2), round(float(y), 2), round(z - 0.05, 2)],
+                  "height": round(ht, 2), "lift": round(lift, 2)})
+    if r > 0:
+        obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": r, "h": ht * 0.8})
 
 for o in obstacles:
     o["pos"] = [round(float(v), 3) for v in o["pos"]]

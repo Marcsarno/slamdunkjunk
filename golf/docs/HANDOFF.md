@@ -67,12 +67,16 @@ project's convention), then `--import` again.
   (04-18) and glowing light props (01-15) per hole theme. Graveyards use Marc's three headstones
   (`props.py` `headstone_rip`, `headstone_moon`, `headstone_broken`, ~130-250 tris each) with crosses and
   obelisks; the builder merges small props (stones, pumpkins) into one mesh per 40 m of ground.
-- **Revised holes from Marc's concepts** (`art_src/concepts/`): 3 (loop round a walled graveyard, carry to a
-  pad for eagle), 6 (bend round the ghost-lit marsh or fly it), 9 (curl round a fenced pumpkin patch, or
-  carry it to a pad) are built. Next in order: 2 and 1 (ponds, island pads), then 4, 5, 8 (new ground:
+- **Revised holes from Marc's concepts** (`art_src/concepts/`): 2 (bend right past a giant cauldron round
+  a purple pool that wraps the green; lay up or fly the deep rough at the flag), 3 (loop round a walled
+  graveyard, carry to a pad for eagle), 6 (bend round the ghost-lit marsh or fly it), 9 (curl round a
+  fenced pumpkin patch, or carry it to a pad) are built. Next in order: 1 (pond, island pads), then 4, 5, 8 (new ground:
   web = ball stops dead, corn = very deep rough, ravine = hazard), then 7 (hedge maze, mansion).
   The builder now takes `pads` (fairway ellipses with a rough ring), `zones` (open rough/deep-rough areas,
-  no woods or trees, no framing banks) and `fences` (polylines) in a layout. Check a layout in 2D first:
+  no woods or trees, no framing banks), `fences` (polylines) and `features` (a painted light prop stood
+  at a set spot and scale, as a landmark) in a layout. Water next to a green needs `"island": true`, or
+  its banks (out to 1.5x its radius) tip the green. `capture_hole.gd --target=x,y` makes the bot's first
+  shot go there (to play the safe route). Check a layout in 2D first:
   `python3 -I tools/plan_check.py <layout.json> <out.png>` draws its `plan` ("safe"/"risk" landing
   points) as shots with yards, the club the game picks, and the margin of error at each landing.
 - Clubs (`scripts/clubs.gd`): Driver 205 m, 3 Wood 185, 5/7/9 Iron 165/145/125, P/S/L Wedge 105/82/58,
@@ -93,6 +97,10 @@ project's convention), then `--import` again.
   billboard drawn bigger than life (`BALL_LOOK_GROUND`/`BALL_LOOK_AIR` of its camera distance), calm
   at address, scared as the pull grows and in flight, where the chase camera follows close
   (`CHASE_*`) and thin wind streaks slide past its face (`_update_wind`).
+- Pin flags: Marc's four painted flags (`assets/flags`, cut by `tools/prep_flags.py`), one per hole
+  (`hole_view.FLAGS`).
+- Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`); the slow motion
+  near the cup eases in and out (`main._time_scale`).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,

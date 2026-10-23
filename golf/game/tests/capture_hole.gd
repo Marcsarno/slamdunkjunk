@@ -18,6 +18,7 @@ var burst := false     # --burst: a screenshot every frame through each swing, n
 var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
 var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, land at the margin's edge
 var side_test := false    # --side-test: first shot, slide the pulling finger a fifth of the screen right (aims left)
+var first_target := Vector2.INF   # --target=x,y: the first shot aims there (course metres), e.g. the safe lay-up
 
 
 func _ready() -> void:
@@ -34,6 +35,9 @@ func _ready() -> void:
 			drag_test = true
 		if a == "--side-test":
 			side_test = true
+		if a.begins_with("--target="):
+			var xy := a.trim_prefix("--target=").split(",")
+			first_target = Vector2(float(xy[0]), float(xy[1]))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
 
@@ -71,6 +75,10 @@ func _process(delta: float) -> void:
 				aim_t = 0.0
 			aim_t += delta
 			if main.phase == main.Phase.AIM and aim_t > 0.6:     # the shot's preview has had a few frames
+				if shot == 0 and first_target != Vector2.INF:
+					main._set_target(first_target)
+					first_target = Vector2.INF
+					main._update_preview()
 				# aim like a player: the game's target, moved upwind by as far as the wind's ring sits off it
 				var b2 := Vector2(main.ball.x, main.ball.y)
 				var pin2 := Vector2(main.terrain.pin().x, main.terrain.pin().y)

@@ -4,38 +4,38 @@
   "number": 2,
   "par": 3,
   "seed": 202,
-  "note": "The Cauldron: a downhill par 3 from a ridge to an island green in a misty swamp. A strip of fairway short of the water lets you lay up and pitch over. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Witch's Pool: a par 3 bent round a purple pool. The fairway swings out right past the witch's cauldron and back in to a green the pool wraps on its left: lay up and pitch on, or fly the rough straight at the flag with the pool waiting left. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      1,
-      40
+      20,
+      30
     ],
     [
-      3,
-      80
+      40,
+      62
     ],
     [
-      6,
-      116
+      36,
+      96
     ],
     [
-      9,
-      148
+      10,
+      122
     ]
   ],
-  "fairway_start": 52,
+  "fairway_start": 26,
   "fairway_width": [
     18,
-    20,
     24,
-    22,
+    26,
+    24,
     20
   ],
-  "rough_width": 14,
+  "rough_width": 12,
   "deep_rough_width": 14,
   "tee": {
     "center": [
@@ -49,112 +49,145 @@
   },
   "green": {
     "center": [
-      9,
-      148
+      2,
+      127
     ],
     "radius": [
       12,
       10
     ],
-    "rotation": 0.2,
+    "rotation": -0.4,
     "slope": [
-      0.012,
-      -0.02
+      0.014,
+      -0.012
     ]
   },
   "pin": [
-    12,
-    151
+    -1,
+    129
   ],
   "bunkers": [
     {
       "center": [
-        17,
-        157
+        16,
+        124
       ],
       "radius": [
-        4.2,
-        2.3
+        2.2,
+        6.0
       ],
-      "rotation": 0.5,
+      "rotation": 0.25,
       "depth": 0.5
+    },
+    {
+      "center": [
+        54,
+        72
+      ],
+      "radius": [
+        2.6,
+        5.5
+      ],
+      "rotation": -0.2,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        4,
+        94
+      ],
+      "radius": [
+        3.2,
+        2.2
+      ],
+      "rotation": 0.4,
+      "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        9,
-        149
+        -20,
+        122
       ],
       "radius": [
-        44,
-        33
+        11,
+        24
       ],
-      "rotation": 0.1,
-      "island": true,
-      "level_offset": -0.6
+      "rotation": -0.35,
+      "level_offset": -0.5,
+      "island": true
+    },
+    {
+      "center": [
+        -6,
+        148
+      ],
+      "radius": [
+        16,
+        8
+      ],
+      "rotation": -0.2,
+      "level_offset": -0.5,
+      "island": true
     }
   ],
   "elevation": {
-    "tee": 12.5,
-    "green": 2.1,
-    "cross_tilt": 0.008,
-    "roll_height": 0.35,
-    "bank_height": 6.0,
+    "tee": 5.0,
+    "green": 2.4,
+    "cross_tilt": 0.006,
+    "roll_height": 0.25,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          -34,
-          34
-        ],
-        "radius": 22,
-        "height": 2.4
-      },
-      {
-        "center": [
-          42,
-          36
+          -40,
+          40
         ],
         "radius": 20,
         "height": 2.2
       },
       {
         "center": [
-          8,
-          196
+          58,
+          50
         ],
-        "radius": 26,
-        "height": 2.8
+        "radius": 20,
+        "height": 2.4
+      },
+      {
+        "center": [
+          20,
+          168
+        ],
+        "radius": 24,
+        "height": 2.6
       }
     ],
     "profile": [
       [
         -6,
-        12.6
+        5.1
       ],
       [
         0,
-        12.5
+        5.0
       ],
       [
-        4,
-        12.2
-      ],
-      [
-        38,
+        6,
         4.9
       ],
       [
-        94,
-        3.4
+        60,
+        3.6
       ],
       [
-        116,
-        2.0
+        120,
+        2.6
       ],
       [
-        148,
-        2.1
+        150,
+        2.4
       ]
     ]
   },
@@ -165,11 +198,11 @@
   "graveyards": [
     {
       "center": [
-        -27,
-        66
+        -30,
+        70
       ],
-      "radius": 6,
-      "count": 6,
+      "radius": 5,
+      "count": 5,
       "fence": false
     }
   ],
@@ -196,18 +229,10 @@
     },
     {
       "center": [
-        10,
-        60
+        56,
+        104
       ],
       "carved": 2,
-      "plain": 2
-    },
-    {
-      "center": [
-        -9,
-        88
-      ],
-      "carved": 1,
       "plain": 2
     }
   ],
@@ -297,12 +322,50 @@
       0.025
     ]
   },
-  "carry": [
-    100,
-    175
-  ],
   "cart_path": {
-    "side": -1,
+    "side": 1,
     "offset": 6.0
+  },
+  "zones": [
+    {
+      "center": [
+        8,
+        64
+      ],
+      "radius": [
+        15,
+        38
+      ],
+      "rotation": 0.12,
+      "surface": "deep_rough"
+    }
+  ],
+  "features": [
+    {
+      "image": "light_witchs_cauldron",
+      "pos": [
+        62,
+        90
+      ],
+      "scale": 3.6
+    }
+  ],
+  "plan": {
+    "safe": [
+      [
+        40,
+        64
+      ],
+      [
+        -1,
+        129
+      ]
+    ],
+    "risk": [
+      [
+        -1,
+        129
+      ]
+    ]
   }
 }
