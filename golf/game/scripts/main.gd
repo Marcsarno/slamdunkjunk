@@ -25,6 +25,7 @@ const PULL_BOTTOM := 0.975
 const PULL_TRAVEL_MIN := 0.12
 const PULL_TRAVEL_MAX := 0.21
 const PUTT_HEADROOM := 2.0
+const PUTT_PAST := 0.3          # putts are aimed this far (m) past the hole, so the mark's pace drops
 const MAGNET := 0.03            # within this (share of the pull) of the mark, the pull settles exactly on it
 const RISKY_POWER := 0.9        # past this share of a club's power the swing gets loose: a wider margin
 const EASE := 20.0              # power follows the finger at this rate (1/s), smoothing touch jitter
@@ -286,13 +287,14 @@ func _dist_text(m: float, feet: bool) -> String:
 	return "1 yd" if yd == 1 else "%d yds" % yd
 
 
-## Where a shot should land to start with: for a putt, the hole; with the pin in reach, the spot the
+## Where a shot should land to start with: for a putt, a foot past the hole (struck to die right at
+## the cup, a putt stops on the lip; firm enough to finish a foot by, it drops); with the pin in reach, the spot the
 ## roll carries on from to finish at the pin; otherwise a full club out along the fairway's centre line.
 func _default_target() -> Vector2:
 	var b := Vector2(ball.x, ball.y)
 	var pin2 := Vector2(terrain.pin().x, terrain.pin().y)
 	if club.id == "putter":
-		return pin2
+		return pin2 + (pin2 - b).normalized() * PUTT_PAST
 	var reach: float = club.carry_m
 	if b.distance_to(pin2) <= reach:
 		return _landing_to_stop_at(pin2)
