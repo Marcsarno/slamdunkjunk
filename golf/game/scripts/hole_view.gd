@@ -479,6 +479,16 @@ func _green_lanterns() -> void:
 					mi.set_surface_override_material(i, m)
 
 
+const FLAG_SIZE := Vector2(0.8, 0.5)
+## Which of Marc's flags flies on each hole (a layout's theme can name its own with "flag").
+const FLAGS := {"h01": "pumpkin", "h02": "moon", "h03": "skull", "h04": "ghost", "h05": "pumpkin",
+	"h06": "ghost", "h07": "moon", "h08": "skull", "h09": "pumpkin"}
+
+
+func _flag_name() -> String:
+	return str(theme.get("flag", FLAGS.get(str(Round.current().get("id", "")), "pumpkin")))
+
+
 func _pin() -> void:
 	var p := Terrain.to_world(terrain.pin())
 	var cup := MeshInstance3D.new()
@@ -503,29 +513,29 @@ func _pin() -> void:
 	pole.material_override = white
 	pole.position = p + Vector3(0, 1.15, 0)
 	add_child(pole)
-	# a pennant like the one on the title art: orange-red, a gentle wave, pointing with the breeze
+	# Marc's painted flag for the hole (a jack-o'-lantern, ghost, skull or moon and bat), a gentle wave
 	var flag := MeshInstance3D.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var cols := 8
+	var cols := 10
+	var rows := 2
 	for i in cols:
-		var u0 := float(i) / cols
-		var u1 := float(i + 1) / cols
-		# a triangle 0.8 m long, 0.5 m tall at the pole, tapering to a point
-		var a0 := Vector3(u0 * 0.8, 0.25 * (1.0 - u0), 0)
-		var b0 := Vector3(u0 * 0.8, -0.25 * (1.0 - u0), 0)
-		var a1 := Vector3(u1 * 0.8, 0.25 * (1.0 - u1), 0)
-		var b1 := Vector3(u1 * 0.8, -0.25 * (1.0 - u1), 0)
-		for v in [a0, b0, a1, a1, b0, b1]:
-			st.set_uv(Vector2(v.x / 0.8, 0.5 - v.y * 2.0))
-			st.add_vertex(v)
+		for j in rows:
+			var u0 := float(i) / cols
+			var u1 := float(i + 1) / cols
+			var v0 := float(j) / rows
+			var v1 := float(j + 1) / rows
+			# 0.8 m long, 0.5 m tall; the swallowtail is in the texture's alpha
+			for uv: Vector2 in [Vector2(u0, v0), Vector2(u0, v1), Vector2(u1, v0), Vector2(u1, v0), Vector2(u0, v1), Vector2(u1, v1)]:
+				st.set_uv(uv)
+				st.add_vertex(Vector3(uv.x * FLAG_SIZE.x, (0.5 - uv.y) * FLAG_SIZE.y, 0))
 	st.generate_normals()
 	flag.mesh = st.commit()
 	var fsh := Shader.new()
 	fsh.code = """
 shader_type spatial;
 render_mode cull_disabled;
-uniform vec3 color : source_color = vec3(0.95, 0.32, 0.16);
+uniform sampler2D cloth : source_color, filter_linear_mipmap;
 void vertex() {
 	// the cloth ripples more toward the free end
 	float u = UV.x;
@@ -533,15 +543,21 @@ void vertex() {
 	VERTEX.y += sin(u * 5.0 - TIME * 3.1) * 0.02 * u;
 }
 void fragment() {
-	ALBEDO = color * (0.85 + 0.15 * UV.x);
-	EMISSION = color * 0.35;
-	ROUGHNESS = 0.8;
+	vec4 c = texture(cloth, UV);
+	ALPHA = c.a;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
+	// the folds catch the light as they turn (both faces show the painting, the back one mirrored)
+	float fold = 0.82 + 0.18 * sin(UV.x * 7.0 - TIME * 4.2 + 1.2);
+	ALBEDO = c.rgb * fold;
+	EMISSION = c.rgb * 0.3;
+	ROUGHNESS = 0.85;
 }
 """
 	var fm := ShaderMaterial.new()
 	fm.shader = fsh
+	fm.set_shader_parameter("cloth", load("res://assets/flags/%s.png" % _flag_name()))
 	flag.material_override = fm
-	flag.position = p + Vector3(0.02, 2.02, 0)
+	flag.position = p + Vector3(0.02, 2.3 - FLAG_SIZE.y * 0.5 - 0.02, 0)
 	add_child(flag)
 	# a slim beam to find the pin from far away: bright at the foot, gone by the top, and fading out
 	# as you get close (on the green it would only stand in the way)
