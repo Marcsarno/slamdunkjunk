@@ -99,6 +99,10 @@ project's convention), then `--import` again.
   (`CHASE_*`) and thin wind streaks slide past its face (`_update_wind`).
 - Pin flags: Marc's four painted flags (`assets/flags`, cut by `tools/prep_flags.py`), one per hole
   (`hole_view.FLAGS`).
+- Putting: a grid over the green whose beads run downhill (white to ~2.5%, yellow, red past ~4.5%) and a
+  straight aim line as long as the putt (`scripts/putt_grid.gd`), as PGA 2K / EA PGA show it. The cup
+  judges a putt once as it comes over the rim: slow enough for its line drops, else it hops the hole
+  and rolls on a little slower (`ball_sim._check_cup`).
 - Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`); the slow motion
   near the cup eases in and out (`main._time_scale`).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
@@ -109,7 +113,8 @@ project's convention), then `--import` again.
   frame rate (never during the opening flyover; the step a phone settles on is remembered); shadows 40 m
   on a 1024 map; shot preview recomputed 10x a second while pulling. Before each hole `main._prewarm()`
   draws everything once behind a title card (the whole hole from above, the lantern, the aiming view,
-  every landing effect underground, a trail) and loads all her frames, so no shader compiles and no
+  every landing effect underground, a trail, a rehearsed first shot: pull, side view, swing frames, the
+  putting grid) and loads every sound and loads all her frames, so no shader compiles and no
   texture loads mid-flyover or mid-swing. Props under 2.5 m aren't drawn past 90 m (`hole_view.gd`).
 
 ## What's next (in Marc's order of interest)

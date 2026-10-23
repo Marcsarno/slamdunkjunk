@@ -87,6 +87,7 @@ var trail := MeshInstance3D.new()
 var trail_mesh := ImmediateMesh.new()
 var ring := MeshInstance3D.new()           # where the wind carries a perfect full shot: flat, mint
 var dots := MultiMeshInstance3D.new()      # the flight arc and the roll after it
+var putt_grid := PuttGrid.new()             # on the green: the slope grid and the straight aim line
 var target_ring := MeshInstance3D.new()    # the target, flat on the ground
 var spread_ring := MeshInstance3D.new()    # the margin of error round where this pull lands
 var target_label := Label3D.new()
@@ -251,6 +252,36 @@ func _prewarm() -> void:
 	await _drawn(2)
 	trail_pts.clear()
 	_streaks.clear()
+	# the first shot, rehearsed: the pull (its gauge and map, her backswing), then round at her side
+	# through the swing, and the putting read, so none of it is drawn (or a sound loaded) for the
+	# first time when it's played for real
+	Sfx.preload_all()
+	phase = Phase.PULL
+	pull = 0.6
+	_update_preview()
+	_show_gauge()
+	_show_aim_map(false)
+	golfer.set_pull(_sprite_set("back"), pull)
+	await _drawn(1)
+	_place_golfer_face()
+	var face_set := _sprite_set("face")
+	var sc := _swing_cam()
+	cam_pos = sc[0]
+	cam_target = sc[1]
+	cam_fov = sc[2]
+	_apply_cam(0.0)
+	var down: Array = golfer.sets[face_set].down
+	for f in [down[0], down[down.size() / 2], down[down.size() - 1]]:
+		golfer.show_frame(face_set, int(f))
+		await _drawn(1)
+	var b2 := Vector2(ball.x, ball.y)
+	putt_grid.build(terrain, b2, b2 + aim * 4.0)
+	putt_grid.set_line(b2, aim, 4.0)
+	await _drawn(1)
+	putt_grid.visible = false
+	pull = 0.0
+	hud.hide_gauge()
+	hud.hide_aim_map()
 	_show_preview(false)
 	# then the opening for real
 	_start_hole()
@@ -335,6 +366,10 @@ func _on_green() -> bool:
 
 func _setup_shot() -> void:
 	club = _pick_club()
+	if club.id == "putter":
+		putt_grid.build(terrain, Vector2(ball.x, ball.y), Vector2(terrain.pin().x, terrain.pin().y))
+	else:
+		putt_grid.visible = false
 	pull = 0.0
 	pull_goal = 0.0
 	target_dragging = false
@@ -540,6 +575,10 @@ func _cycle_club() -> void:
 	if phase != Phase.AIM:
 		return
 	club = Clubs.next(club)
+	if club.id == "putter":
+		putt_grid.build(terrain, Vector2(ball.x, ball.y), Vector2(terrain.pin().x, terrain.pin().y))
+	else:
+		putt_grid.visible = false
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	_set_target(_default_target())
@@ -1208,6 +1247,7 @@ func _make_ball_visuals() -> void:
 	dots.material_override = dmat
 	dots.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(dots)
+	add_child(putt_grid)
 
 	var plane := PlaneMesh.new()
 	plane.size = Vector2.ONE
@@ -1392,6 +1432,8 @@ func _show_preview(on: bool) -> void:
 	target_label.visible = on
 	spread_ring.visible = on and full
 	dots.multimesh.visible_instance_count = dots.multimesh.visible_instance_count if on else 0
+	if not on:
+		putt_grid.visible = false
 
 
 ## The shot preview, all without wind: the arc of this pull's flight (a full pull while aiming), the
@@ -1462,13 +1504,10 @@ func _draw_preview(putt: bool) -> void:
 	var count := 0
 	var pts: Array = preview.get("points", [])
 	if putt:
-		# putts: the first stretch of the roll, so the break shows but the finish doesn't
-		var show_n := int(pts.size() * 0.4)
-		var step := maxi(1, int(ceil(float(show_n) / 40.0)))
-		for i in range(0, show_n, step):
-			var w := Terrain.to_world(pts[i]) + Vector3(0, 0.02, 0)
-			mm.set_instance_transform(count, Transform3D(Basis().scaled(Vector3.ONE * clampf(cp.distance_to(w) * 0.004, 0.012, 0.05)), w))
-			count += 1
+		# putts: a straight line along the aim, as long as this pull rolls (the target's distance
+		# while aiming); the grid's beads show which way it will break
+		var length := _carry_m if phase == Phase.PULL else Vector2(target.x - ball.x, target.y - ball.y).length()
+		putt_grid.set_line(Vector2(ball.x, ball.y), aim, minf(length, 60.0))
 	else:
 		# the flight: dots along the arc, about a dot per 4 m, sized to stay the same on screen
 		var air: Array = []

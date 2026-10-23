@@ -114,11 +114,18 @@ def main():
     save(out, "putt", (np.sin(2 * np.pi * 820 * t) + 0.5 * np.sin(2 * np.pi * 1350 * t)) * env(n, 0.001, 0.025)
          + low(rng.standard_normal(n), 1500) * env(n, 0.0005, 0.006) * 0.4, 0.6)
 
-    # landing on grass: a dull thud with a little rustle
-    n = int(0.3 * RATE)
+    # landing on grass: a soft, round thump. The body is pitched where a phone speaker can play it
+    # (a note dropping 190 -> 105 Hz, with a quieter octave above it), with a soft attack rather than
+    # a click, and only a whisper of dull rustle on top: a sharp noise front reads as a snap
+    n = int(0.32 * RATE)
     t = np.arange(n) / RATE
-    save(out, "land_grass", np.sin(2 * np.pi * 85 * t) * env(n, 0.002, 0.06)
-         + low(rng.standard_normal(n), 900) * env(n, 0.002, 0.05) * 0.6, 0.7)
+    rng.standard_normal(int(0.3 * RATE))                     # (keeps the later sounds' dice as they were)
+    lr = np.random.default_rng(21)
+    f = 105 + 85 * np.exp(-t / 0.035)
+    ph = 2 * np.pi * np.cumsum(f) / RATE
+    body = (np.sin(ph) + 0.35 * np.sin(2 * ph)) * env(n, 0.006, 0.075)
+    rustle = low(lr.standard_normal(n), 420, 4) * env(n, 0.008, 0.04) * 0.5
+    save(out, "land_grass", low(body + rustle, 1200), 0.8)
 
     # sand: a muffled puff
     n = int(0.45 * RATE)

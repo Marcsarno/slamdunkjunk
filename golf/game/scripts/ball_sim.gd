@@ -86,6 +86,7 @@ func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	first_land = Vector3.INF
 	apex = from.z
 	hit_obstacle = false
+	_over_cup = false
 	state = State.FLYING if velocity.z > 0.01 else State.ROLLING
 
 
@@ -230,16 +231,29 @@ func _roll(dt: float) -> void:
 func _check_cup() -> void:
 	var d := Vector2(pos.x - pin.x, pos.y - pin.y)
 	if d.length() > CUP_RADIUS:
+		_over_cup = false
 		return
+	if _over_cup:
+		return                                   # already judged as it came over the rim
+	_over_cup = true
 	var speed := vel.length()
-	if speed < CUP_CAPTURE_SPEED:
+	var dir := Vector2(vel.x, vel.y).normalized() if speed > 0.0001 else Vector2.ZERO
+	# how far off the cup's centre its line passes: dead centre it drops up to CUP_CAPTURE_SPEED,
+	# nearer the rim it needs to be slower (it has less hole to fall into)
+	var off := clampf(absf(dir.cross(-d)) / CUP_RADIUS, 0.0, 1.0)
+	if speed < CUP_CAPTURE_SPEED * sqrt(1.0 - off * off * 0.85):
 		state = State.HOLED
 		pos = Vector3(pin.x, pin.y, pin.z - 0.05)
 		vel = Vector3.ZERO
-	else:
-		# lip-out: the rim kicks it sideways and bleeds speed
-		var side := Vector3(-d.y, d.x, 0).normalized()
-		vel = (vel * 0.6) + side * speed * 0.25 * signf(d.x + 0.0001)
+		return
+	# too quick: it hops the hole and rolls on, a little slower, a rim catch turning it aside
+	var side := signf(dir.cross(-d))
+	var turn := side * off * off * 0.5           # radians, up to ~30 degrees off the rim
+	var h := Vector2(vel.x, vel.y).rotated(turn) * lerpf(0.85, 0.7, off)
+	vel = Vector3(h.x, h.y, vel.z)
+
+
+var _over_cup := false
 
 
 func _collide_obstacles(prev: Vector3) -> void:

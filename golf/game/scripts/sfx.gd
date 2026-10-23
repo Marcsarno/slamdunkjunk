@@ -16,6 +16,14 @@ func _ready() -> void:
 		_players.append(p)
 
 
+## Load every sound now (behind the title card), so none is read from the pack mid-shot.
+func preload_all() -> void:
+	for f in DirAccess.get_files_at(DIR):
+		var name := f.trim_suffix(".import").get_basename()
+		if not _streams.has(name) and ResourceLoader.exists(DIR + name + ".wav"):
+			_streams[name] = load(DIR + name + ".wav")
+
+
 func play(name: String, volume_db := 0.0, pitch := 1.0) -> void:
 	if not _streams.has(name):
 		var path := DIR + name + ".wav"
