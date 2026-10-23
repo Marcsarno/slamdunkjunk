@@ -192,6 +192,8 @@ func _ready() -> void:
 			add_child(load("res://tests/capture.gd").new())
 		elif a.begins_with("--capture-hole="):
 			add_child(load("res://tests/capture_hole.gd").new())
+		elif a.begins_with("--look-out="):
+			add_child(load("res://tests/look_at.gd").new())
 
 
 var _intro_id := 0              # the current opening, so a restarted one's title timer is the only one shown
@@ -382,7 +384,8 @@ func _setup_shot() -> void:
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
 	if _lie < 0.9:
-		var where := "A spider web" if terrain.in_web(ball.x, ball.y) else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)])
+		var where := "A spider web" if terrain.in_web(ball.x, ball.y) else ("The corn" if terrain.in_corn(ball.x, ball.y) \
+			else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)]))
 		hud.hint.text = "%s: it'll fly %d%% shorter" % [where, roundi((1.0 - _lie) * 100.0)]
 	ball_mesh.visible = true
 	_preview_key = ""
@@ -526,6 +529,7 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 ## the club, deep rough and the corn more, a bunker takes some, a spider web holds it fast).
 const LIE := {Terrain.Surface.ROUGH: 0.92, Terrain.Surface.DEEP: 0.78, Terrain.Surface.SAND: 0.85}
 const LIE_WEB := 0.6
+const LIE_CORN := 0.65
 var _lie := 1.0
 
 
@@ -534,6 +538,8 @@ func _lie_at(b: Vector3) -> float:
 		return 1.0
 	if terrain.in_web(b.x, b.y):
 		return LIE_WEB
+	if terrain.in_corn(b.x, b.y):
+		return LIE_CORN
 	var surf := terrain.surface_at(b.x, b.y)
 	var f: float = LIE.get(surf, 1.0)
 	if surf == Terrain.Surface.SAND and club.get("kind", "") == "wedge":
@@ -751,6 +757,8 @@ func _shot_done() -> void:
 			if sim.caught:
 				hud.flash("Caught in the web! · %s" % _dist_text(carried / YD, false))
 				Sfx.play("land_sand", -6.0, 0.7)
+			elif terrain.in_corn(ball.x, ball.y):
+				hud.flash("Lost in the corn! · %s" % _dist_text(carried / YD, false))
 			elif club.id == "putter":
 				hud.flash("%s to go" % _dist_text(_to_pin(), true))
 			else:

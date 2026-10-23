@@ -4,43 +4,35 @@
   "number": 5,
   "par": 5,
   "seed": 505,
-  "note": "The Long Furrow: a big S through the farm. The farm pond sits inside the first bend, so a brave drive can cut the corner; a stream crosses the lay-up zone, a hay-bale island and a cross bunker wait beyond it, and the green sits in the pumpkin patch. Course coords in meters: x right, y down-range, z up.",
+  "note": "Haunted Harvest: a long S out to the right round a fenced cornfield, to a green under the old barn and its silo. Three shots round it, or two over the corn: lay up on the pad beside the field and fly its corner. Anything in the corn is lost in it, and comes out short. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      4,
-      60
+      55,
+      70
     ],
     [
-      24,
+      115,
       125
     ],
     [
-      52,
-      180
+      140,
+      190
     ],
     [
-      60,
-      240
+      125,
+      260
     ],
     [
-      44,
-      300
+      85,
+      315
     ],
     [
-      14,
-      350
-    ],
-    [
-      -2,
-      400
-    ],
-    [
-      0,
-      440
+      35,
+      345
     ]
   ],
   "fairway_start": 38,
@@ -50,26 +42,11 @@
     30,
     30,
     28,
-    28,
-    28,
-    24,
+    26,
     22
   ],
-  "rough_width": 16,
-  "deep_rough_width": 16,
-  "rough_islands": [
-    {
-      "center": [
-        57,
-        252
-      ],
-      "radius": [
-        6,
-        9
-      ],
-      "rotation": 0.1
-    }
-  ],
+  "rough_width": 13,
+  "deep_rough_width": 14,
   "tee": {
     "center": [
       0,
@@ -82,159 +59,174 @@
   },
   "green": {
     "center": [
-      0,
-      440
+      35,
+      346
     ],
     "radius": [
       13,
       11
     ],
-    "rotation": -0.2,
+    "rotation": -0.3,
     "slope": [
-      0.012,
-      0.02
+      -0.012,
+      0.018
     ]
   },
   "pin": [
-    3,
-    443
+    32,
+    348
   ],
   "bunkers": [
     {
       "center": [
-        36,
-        268
-      ],
-      "radius": [
-        7,
-        3.5
-      ],
-      "rotation": 0.9,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        -6,
-        388
-      ],
-      "radius": [
-        10,
-        3.0
-      ],
-      "rotation": 0.15,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        14,
-        442
+        52,
+        352
       ],
       "radius": [
         5,
         3
       ],
-      "rotation": 1.1,
+      "rotation": 1.0,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        20,
+        334
+      ],
+      "radius": [
+        4.4,
+        2.6
+      ],
+      "rotation": -0.5,
       "depth": 0.45
     },
     {
       "center": [
-        -15,
-        450
+        156,
+        205
       ],
       "radius": [
-        5,
-        2.8
+        3,
+        7
       ],
-      "rotation": -0.7,
+      "rotation": 0.2,
       "depth": 0.45
     }
   ],
-  "water": [
+  "water": [],
+  "pads": [
+    {
+      "center": [
+        24,
+        178
+      ],
+      "radius": [
+        15,
+        13
+      ],
+      "rotation": 0.2
+    }
+  ],
+  "cornfields": [
+    {
+      "center": [
+        52,
+        262
+      ],
+      "radius": [
+        26,
+        44
+      ],
+      "rotation": -0.35,
+      "gap": 4.2
+    }
+  ],
+  "zones": [
+    {
+      "center": [
+        52,
+        262
+      ],
+      "radius": [
+        34,
+        54
+      ],
+      "rotation": -0.35,
+      "surface": "deep_rough"
+    },
     {
       "center": [
         62,
-        118
+        190
       ],
       "radius": [
-        15,
-        22
+        30,
+        40
       ],
-      "rotation": 0.3
+      "rotation": 0.4,
+      "surface": "rough"
     },
     {
       "center": [
-        12,
-        302
+        56,
+        380
       ],
       "radius": [
-        14,
-        4.5
+        34,
+        26
       ],
-      "rotation": 0.75,
-      "level_offset": -0.7
-    },
+      "rotation": 0.6,
+      "surface": "rough"
+    }
+  ],
+  "features": [
     {
-      "center": [
+      "model": "barn",
+      "pos": [
+        62,
+        392
+      ],
+      "face": [
         35,
-        316
+        346
       ],
-      "radius": [
-        15,
-        5
-      ],
-      "rotation": 0.55,
-      "level_offset": -0.7
-    },
-    {
-      "center": [
-        60,
-        326
-      ],
-      "radius": [
-        15,
-        4.5
-      ],
-      "rotation": 0.3,
-      "level_offset": -0.7
+      "clear": 18
     }
   ],
   "elevation": {
-    "tee": 3.0,
-    "green": 5.0,
-    "cross_tilt": 0.012,
-    "roll_height": 0.5,
-    "bank_height": 3.0,
+    "tee": 2.0,
+    "green": 4.5,
+    "cross_tilt": 0.008,
+    "roll_height": 0.35,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          -30,
-          110
+          -40,
+          120
         ],
         "radius": 24,
         "height": 2.4
       },
       {
         "center": [
-          96,
-          200
+          190,
+          260
         ],
         "radius": 22,
         "height": 2.2
       },
       {
         "center": [
-          -36,
-          400
+          -10,
+          380
         ],
         "radius": 24,
         "height": 2.6
       }
     ]
   },
-  "carry": [
-    302,
-    328
-  ],
   "wind": {
     "min": 1,
     "max": 5
@@ -242,14 +234,40 @@
   "graveyards": [
     {
       "center": [
-        -26,
-        300
+        180,
+        120
       ],
       "radius": 6,
       "count": 6,
       "fence": true
     }
   ],
+  "plan": {
+    "safe": [
+      [
+        98,
+        116
+      ],
+      [
+        140,
+        230
+      ],
+      [
+        32,
+        348
+      ]
+    ],
+    "risk": [
+      [
+        24,
+        178
+      ],
+      [
+        32,
+        348
+      ]
+    ]
+  },
   "lantern_spacing": 18,
   "trees_spacing": 8.5,
   "pumpkin_clusters": [
@@ -273,16 +291,16 @@
     },
     {
       "center": [
-        16,
-        30
+        12,
+        34
       ],
       "carved": 2,
       "plain": 3
     },
     {
       "center": [
-        0,
-        160
+        10,
+        228
       ],
       "carved": 1,
       "plain": 3
@@ -290,15 +308,15 @@
     {
       "center": [
         22,
-        410
+        368
       ],
       "carved": 2,
       "plain": 3
     },
     {
       "center": [
-        -22,
-        426
+        90,
+        372
       ],
       "carved": 2,
       "plain": 2
@@ -306,7 +324,7 @@
     {
       "center": [
         84,
-        250
+        236
       ],
       "carved": 1,
       "plain": 3
@@ -342,13 +360,6 @@
       "tree_golden_aspen",
       "tree_moonlit_pine"
     ],
-    "cornfield": {
-      "side": "left",
-      "from": 0.08,
-      "to": 0.6,
-      "gap": 5.0,
-      "depth": 26
-    },
     "backdrop": {
       "hole": "05-haunted-harvest",
       "variant": "a",

@@ -254,6 +254,12 @@ const SMALL_PROP := 2.5          # meters: props smaller than this ...
 const SMALL_PROP_RANGE := 90.0   # ... aren't drawn past this far from the camera
 
 
+func _two_sided(m: StandardMaterial3D) -> StandardMaterial3D:
+	var d := m.duplicate() as StandardMaterial3D
+	d.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return d
+
+
 func _apply_materials(root: Node) -> void:
 	var terrain_mat := _terrain_material()
 	_terrain_mat = terrain_mat
@@ -279,6 +285,8 @@ func _apply_materials(root: Node) -> void:
 		"bone_vc": _textured_vc("", 1.0, 1.0, 0.7),
 		"iron_vc": _textured_vc("", 1.0, 1.0, 0.45),
 		"wood_vc": _textured_vc("wood", 0.7, 1.6, 0.85),
+		"LandmarkBody": _textured_vc("wood", 0.5, 2.0, 0.95),
+		"LandmarkGlow": _two_sided(glow),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D

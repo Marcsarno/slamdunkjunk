@@ -77,13 +77,20 @@ func normal(x: float, y: float) -> Vector3:
 
 ## Inside one of the hole's giant spider webs (the layout's "webs": ellipses, course coords)?
 func in_web(x: float, y: float) -> bool:
-	for w: Dictionary in meta.get("webs", []):
-		var c := Vector2(w.center[0], w.center[1])
-		var r := Vector2(w.radius[0], w.radius[1])
-		var d := Vector2(x, y) - c
+	return _in_any(meta.get("webs", []), x, y)
+
+
+## Inside one of the hole's cornfields (the layout's "cornfields")?
+func in_corn(x: float, y: float) -> bool:
+	return _in_any(meta.get("corn", []), x, y)
+
+
+func _in_any(areas: Array, x: float, y: float) -> bool:
+	for w: Dictionary in areas:
+		var d := Vector2(x - float(w.center[0]), y - float(w.center[1]))
 		var rot := float(w.get("rotation", 0.0))
-		var u := (d.x * cos(rot) + d.y * sin(rot)) / r.x
-		var v := (-d.x * sin(rot) + d.y * cos(rot)) / r.y
+		var u := (d.x * cos(rot) + d.y * sin(rot)) / float(w.radius[0])
+		var v := (-d.x * sin(rot) + d.y * cos(rot)) / float(w.radius[1])
 		if u * u + v * v < 1.0:
 			return true
 	return false

@@ -543,6 +543,7 @@ def build(spec_path, out_dir, preview_dir=None):
         "water": spec.get("water", []), "wind": spec.get("wind", {"min": 0, "max": 0}),
         "webs": spec.get("webs", []),
         "web_art": spec.get("web_art", spec.get("webs", [])),
+        "corn": spec.get("cornfields", []),
     }
     if hole.cart is not None:
         meta["cart_path"] = [[round(float(a), 2), round(float(b), 2)] for a, b in hole.cart[::4]]

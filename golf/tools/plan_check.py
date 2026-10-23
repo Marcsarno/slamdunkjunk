@@ -58,6 +58,9 @@ def main():
     for w in spec.get("webs", []):                     # spider webs: the ball stops dead in them
         r, _ = hg.ellipse_r(gx, gy, w)
         rgb[r < 1.0] = (rgb[r < 1.0] * 0.4 + np.array([170, 140, 220]) * 0.6).astype(np.uint8)
+    for w in spec.get("cornfields", []):                # cornfields: lost in the corn
+        r, _ = hg.ellipse_r(gx, gy, w)
+        rgb[r < 1.0] = (rgb[r < 1.0] * 0.3 + np.array([200, 160, 60]) * 0.7).astype(np.uint8)
     img = Image.fromarray(rgb[::-1])
     dr = ImageDraw.Draw(img)
     top = ys[-1]

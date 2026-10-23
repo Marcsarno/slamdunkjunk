@@ -21,6 +21,7 @@ from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hole_gen  # noqa: E402
+import landmarks  # noqa: E402
 import props  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
@@ -155,7 +156,7 @@ for k, w in enumerate(spec.get("water", [])):
 
 # ---------- props --------------------------------------------------------------------------
 lanterns, obstacles, cards = [], [], []
-taken = [(float(f["pos"][0]), float(f["pos"][1]), 2.5 * f.get("scale", 1.0)) for f in spec.get("features", [])]
+taken = [(float(f["pos"][0]), float(f["pos"][1]), f.get("clear", 2.5 * f.get("scale", 1.0))) for f in spec.get("features", [])]
 
 
 def free(x, y, r):
@@ -318,9 +319,18 @@ def in_web(x, y):
     return False
 
 
+def in_cornfield_area(x, y, grow=1.0):
+    """Inside one of the layout's cornfields (ellipses filled with corn)."""
+    for w in spec.get("cornfields", []):
+        r, _ = hole_gen.ellipse_r(np.array([x]), np.array([y]), w)
+        if r[0] < grow:
+            return True
+    return False
+
+
 def in_open(x, y, grow=1.1):
     """Inside one of the hole's landing pads or open zones (grown a little): no woods there."""
-    for z in spec.get("pads", []) + spec.get("zones", []):
+    for z in spec.get("pads", []) + spec.get("zones", []) + spec.get("cornfields", []):
         r, _ = hole_gen.ellipse_r(np.array([x]), np.array([y]), z)
         if r[0] < grow:
             return True
@@ -404,7 +414,7 @@ def scatter(img, spacing, prob, hrange, zone, shadow=False):
             su = surf_at(x, y)
             if su in (hole_gen.FAIRWAY, hole_gen.GREEN, hole_gen.SAND, hole_gen.WATER, hole_gen.TEE, hole_gen.FRINGE):
                 continue
-            if not zone(x, y, d, s, su) or not free(x, y, 0.4) or in_web(x, y):
+            if not zone(x, y, d, s, su) or not free(x, y, 0.4) or in_web(x, y) or in_cornfield_area(x, y, 1.05):
                 continue
             card(img, x, y, rng.uniform(*hrange), shadow)
             n += 1
@@ -468,6 +478,44 @@ if cf:
             card("hay_bales", x, y, 1.3, shadow=True)
             obstacles.append({"type": "box", "pos": [x, y, h_at(x, y)], "size": [2.4, 1.2, 1.3],
                               "rot": math.atan2(d[1], d[0])})
+            taken.append((x, y, 1.5))
+# cornfields laid out as areas ("cornfields": ellipses): rows of corn filling each, a rail fence round it
+# with a gap, hay bales and a scarecrow at its edge
+for k, cfa in enumerate(spec.get("cornfields", [])):
+    cx, cy = cfa["center"]
+    rx, ry = cfa["radius"]
+    rot = cfa.get("rotation", 0.0)
+    c_, s_r = math.cos(rot), math.sin(rot)
+    n_corn = 0
+    for v in np.arange(-ry + 1.5, ry - 1.0, 2.6):           # rows across the field's long way
+        for u in np.arange(-rx + 1.2, rx - 1.0, 2.2):
+            if (u / rx) ** 2 + (v / ry) ** 2 > 0.92:
+                continue
+            uu, vv = u + rng.uniform(-0.35, 0.35), v + rng.uniform(-0.3, 0.3)
+            x, y = cx + uu * c_ - vv * s_r, cy + uu * s_r + vv * c_
+            if surf_at(x, y) in (hole_gen.WATER, hole_gen.FAIRWAY, hole_gen.GREEN) or not free(x, y, 0.3):
+                continue
+            card("corn", x, y, rng.uniform(2.1, 2.8), shadow=False, sink=0.1)
+            n_corn += 1
+    counts[f"cornfield_{k}"] = n_corn
+    ring = []
+    for i in range(41):
+        a_ = 2 * math.pi * i / 40
+        if cfa.get("gap") is not None and abs(math.atan2(math.sin(a_ - cfa["gap"]), math.cos(a_ - cfa["gap"]))) < 0.35:
+            if ring:
+                props.fence(col, f"CornFence_{k}_{i}", ring, h_at, post_gap=1.2)
+                ring = []
+            continue
+        u, v = math.cos(a_) * (rx + 1.2), math.sin(a_) * (ry + 1.2)
+        ring.append((cx + u * c_ - v * s_r, cy + u * s_r + v * c_))
+    if len(ring) > 1:
+        props.fence(col, f"CornFence_{k}", ring, h_at, post_gap=1.2)
+    for j, (a_, img, ht) in enumerate(((0.7, "hay_bales", 1.3), (2.2, "hay_bales", 1.3), (3.6, "scarecrow", 2.4),
+                                       (4.9, "hay_bales", 1.3))):
+        u, v = math.cos(a_) * (rx + 3.0), math.sin(a_) * (ry + 3.0)
+        x, y = cx + u * c_ - v * s_r, cy + u * s_r + v * c_
+        if free(x, y, 1.5) and surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.GREEN, hole_gen.WATER):
+            card(img, x, y, ht, shadow=True)
             taken.append((x, y, 1.5))
 print("ground cover:", counts)
 
@@ -621,9 +669,21 @@ if pool:
                 break
         side = -side
     print(f"light props {len(glows)}")
-# landmarks: one of the painted light props stood at a set spot, bigger ("features" in the layout)
+# landmarks ("features" in the layout): a 3D model from landmarks.py ("model": "barn", ...), or one of
+# the painted light props stood at a set spot, bigger ("image")
 for f in spec.get("features", []):
     x, y = f["pos"]
+    if "model" in f:
+        z = h_at(x, y)
+        if "face" in f:                     # turn its front (-y) toward that point
+            fx, fy = f["face"]
+            rot = math.atan2(fx - x, -(fy - y))
+        else:
+            rot = math.radians(f.get("rot", 0.0))
+        _, (hx, hy) = getattr(landmarks, f["model"])(col, f"Landmark_{f['model']}", (x, y, z - 0.15), rot,
+                                                     f.get("scale", 1.0))
+        obstacles.append({"type": "box", "pos": [x, y, z], "size": [2 * hx, 2 * hy, 10.0], "rot": rot})
+        continue
     ht, lift, r = (v * LIGHT_SCALE * f.get("scale", 1.0) for v in LIGHT_PROPS[f["image"]])
     z = h_at(x, y)
     glows.append({"image": f["image"], "pos": [round(float(x), 2), round(float(y), 2), round(z - 0.05, 2)],
