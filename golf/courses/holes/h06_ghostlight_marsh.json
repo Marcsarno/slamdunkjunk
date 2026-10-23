@@ -4,33 +4,38 @@
   "number": 6,
   "par": 3,
   "seed": 606,
-  "note": "Will-o'-the-Wisp: a curling par 3 over the glowing lagoon to a green on a spit of land, with more water right of it. The cart path crosses the lagoon on a long boardwalk. Course coords in meters: x right, y down-range, z up.",
+  "note": "Will-o'-the-Wisp: a par 3 with a choice. The fairway bends left and round the glowing marsh to a green on its far shore: lay up and pitch on, or fly the marsh straight at the flag. Ghost-lights drift over the water. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      4,
+      -12,
       50
     ],
     [
-      14,
-      100
+      -10,
+      95
     ],
     [
-      28,
-      150
+      8,
+      125
+    ],
+    [
+      36,
+      135
     ]
   ],
-  "fairway_start": 120,
+  "fairway_start": 30,
   "fairway_width": [
-    18,
     20,
-    22,
+    24,
+    26,
+    24,
     22
   ],
-  "rough_width": 14,
+  "rough_width": 13,
   "deep_rough_width": 14,
   "tee": {
     "center": [
@@ -44,8 +49,8 @@
   },
   "green": {
     "center": [
-      28,
-      150
+      36,
+      135
     ],
     "radius": [
       12,
@@ -58,26 +63,38 @@
     ]
   },
   "pin": [
-    30,
-    153
+    38,
+    137
   ],
   "bunkers": [
     {
       "center": [
-        14,
-        160
+        -30,
+        72
       ],
       "radius": [
-        4.5,
-        2.6
+        3,
+        8
       ],
-      "rotation": -0.4,
+      "rotation": 0.1,
       "depth": 0.5
     },
     {
       "center": [
-        36,
-        166
+        20,
+        146
+      ],
+      "radius": [
+        5,
+        2.8
+      ],
+      "rotation": -0.6,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        50,
+        148
       ],
       "radius": [
         4.2,
@@ -90,39 +107,37 @@
   "water": [
     {
       "center": [
-        6,
-        70
+        28,
+        66
       ],
       "radius": [
-        34,
-        34
+        21,
+        44
       ],
-      "rotation": -0.1,
-      "level_offset": -0.5
-    },
-    {
-      "center": [
-        58,
-        142
-      ],
-      "radius": [
-        14,
-        22
-      ],
-      "rotation": 0.2,
+      "rotation": -0.3,
       "level_offset": -0.5
     }
   ],
-  "carry": [
-    10,
-    120
+  "zones": [
+    {
+      "center": [
+        30,
+        66
+      ],
+      "radius": [
+        34,
+        60
+      ],
+      "rotation": -0.3,
+      "surface": "deep_rough"
+    }
   ],
   "elevation": {
     "tee": 2.4,
-    "green": 2.2,
-    "cross_tilt": 0.006,
+    "green": 2.4,
+    "cross_tilt": 0.004,
     "roll_height": 0.2,
-    "bank_height": 3.0,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
@@ -134,16 +149,16 @@
       },
       {
         "center": [
-          -20,
-          140
+          -36,
+          130
         ],
         "radius": 20,
         "height": 2.0
       },
       {
         "center": [
-          30,
-          196
+          40,
+          180
         ],
         "radius": 24,
         "height": 2.4
@@ -157,14 +172,32 @@
   "graveyards": [
     {
       "center": [
-        -26,
-        128
+        -40,
+        112
       ],
       "radius": 5,
       "count": 5,
       "fence": false
     }
   ],
+  "plan": {
+    "safe": [
+      [
+        -10,
+        90
+      ],
+      [
+        38,
+        137
+      ]
+    ],
+    "risk": [
+      [
+        38,
+        137
+      ]
+    ]
+  },
   "lantern_spacing": 13,
   "trees_spacing": 8.0,
   "pumpkin_clusters": [

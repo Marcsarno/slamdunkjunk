@@ -225,12 +225,22 @@ class Hole:
         # framing banks beyond the rough: smoothstep rise, steepest grade = 1.5 * H / width
         bank_h = el.get("bank_height", 3.0)
         bank_w = max(bank_h * 10.0, 20.0)                          # keeps banks under ~15%
-        h += bank_h * smoothstep(play, play + bank_w, d)
+        h += bank_h * smoothstep(play, play + bank_w, d) * self.open_ground(x, y)
         for m in el.get("mounds", []):
             hm = min(m["height"], 0.11 * m["radius"])               # gaussian max grade ~1.36 h/R -> <15%
             r2 = ((x - m["center"][0]) ** 2 + (y - m["center"][1]) ** 2) / m["radius"] ** 2
             h += hm * np.exp(-2.5 * r2)
         return h
+
+    def open_ground(self, x, y):
+        """1 in the woods, falling to 0 inside the hole's pads and open zones (landing pads off the line
+        of play, a graveyard or a pumpkin patch to carry): no framing banks there, the ground stays
+        playable."""
+        k = np.ones(np.shape(x))
+        for z in self.spec.get("pads", []) + self.spec.get("zones", []):
+            r, _ = ellipse_r(x, y, z)
+            k = k * smoothstep(1.0, 1.8, r)
+        return k
 
     def height(self, x, y):
         sp, el = self.spec, self.spec["elevation"]
@@ -291,6 +301,21 @@ class Hole:
         for r in sp.get("rough_islands", []):
             ir, _ = ellipse_r(x, y, r)
             out[(ir < 1.0) & (out == FAIRWAY)] = ROUGH
+        # open zones: ground off the line of play that's rough or deep rough, not woods (what a risky line
+        # carries over: a graveyard, a pumpkin patch); "surface": "rough" or "deep_rough"
+        for z in sp.get("zones", []):
+            zr, _ = ellipse_r(x, y, z)
+            wild = (zr < 1.0 + 0.06 * self.edge_noise(x + 20, y)) & (out != FAIRWAY)
+            if z.get("surface", "deep_rough") == "rough":
+                out[wild & ((out == OOB) | (out == DEEP))] = ROUGH
+            else:
+                out[wild & (out == OOB)] = DEEP
+        # landing pads: fairway away from the line (a shortcut's landing), ringed with rough
+        for pd in sp.get("pads", []):
+            pr, _ = ellipse_r(x, y, pd)
+            wob = 0.05 * self.edge_noise(x, y + 30)
+            out[(pr < 1.0 + 0.45 + wob) & ((out == OOB) | (out == DEEP))] = ROUGH
+            out[pr < 1.0 + wob] = FAIRWAY
         if self.cart is not None:
             out[self.cart_distance(x, y) < self.cart_width / 2] = PATH
         tx, ty = sp["tee"]["center"]

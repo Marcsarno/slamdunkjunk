@@ -4,67 +4,60 @@
   "number": 3,
   "par": 5,
   "seed": 303,
-  "note": "The Long Walk Home: an S-shaped par 5 climbing to the ruined abbey. A fenced graveyard sits in the fairway where a good drive lands - go left of it, right of it, or lay back. A cross bunker guards the approach. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Long Way Round: a par 5 that loops right round a walled graveyard. The safe road goes out right, up the far side and back across the top to the green; the brave line carries straight over the graves to a landing pad short of the green and has a go for eagle. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      3,
-      55
+      50,
+      8
     ],
     [
-      18,
-      120
+      108,
+      28
     ],
     [
-      20,
-      185
+      122,
+      82
     ],
     [
-      2,
-      245
+      126,
+      140
     ],
     [
-      -24,
-      300
+      124,
+      190
     ],
     [
-      -34,
-      360
+      100,
+      228
     ],
     [
-      -30,
-      410
+      50,
+      250
+    ],
+    [
+      -10,
+      255
     ]
   ],
-  "fairway_start": 42,
+  "fairway_start": 38,
   "fairway_width": [
     22,
-    26,
     28,
-    34,
-    36,
-    26,
-    22,
-    20
+    32,
+    30,
+    30,
+    30,
+    30,
+    28,
+    24
   ],
-  "rough_width": 16,
-  "deep_rough_width": 16,
-  "rough_islands": [
-    {
-      "center": [
-        9,
-        232
-      ],
-      "radius": [
-        8,
-        12
-      ],
-      "rotation": -0.35
-    }
-  ],
+  "rough_width": 14,
+  "deep_rough_width": 14,
+  "rough_islands": [],
   "tee": {
     "center": [
       0,
@@ -77,40 +70,52 @@
   },
   "green": {
     "center": [
-      -30,
-      410
+      -10,
+      255
     ],
     "radius": [
       13,
       11
     ],
-    "rotation": -0.3,
+    "rotation": 0.2,
     "slope": [
-      0.006,
-      0.022
+      0.014,
+      0.018
     ]
   },
   "pin": [
-    -26,
-    414
+    -7,
+    258
   ],
   "bunkers": [
     {
       "center": [
-        -27,
-        330
+        124,
+        10
       ],
       "radius": [
-        10,
-        3.0
+        7,
+        3.2
       ],
-      "rotation": 0.25,
+      "rotation": 0.4,
       "depth": 0.5
     },
     {
       "center": [
-        -46,
-        400
+        104,
+        130
+      ],
+      "radius": [
+        3.2,
+        9
+      ],
+      "rotation": 0.0,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -28,
+        248
       ],
       "radius": [
         5,
@@ -121,74 +126,66 @@
     },
     {
       "center": [
-        -15,
-        420
+        2,
+        272
       ],
       "radius": [
         4.5,
         2.6
       ],
-      "rotation": -0.9,
+      "rotation": -0.3,
       "depth": 0.45
     }
   ],
   "water": [],
   "elevation": {
     "tee": 2.0,
-    "green": 11.0,
+    "green": 7.0,
     "profile": [
       [
         0,
         2.0
       ],
       [
-        110,
+        150,
         3.0
       ],
       [
-        200,
-        3.8
+        300,
+        5.0
       ],
       [
-        270,
-        6.0
-      ],
-      [
-        340,
-        8.6
-      ],
-      [
-        410,
-        11.0
+        430,
+        7.0
       ]
     ],
-    "cross_tilt": 0.01,
-    "roll_height": 0.4,
-    "bank_height": 4.0,
+    "cross_tilt": 0.006,
+    "roll_height": 0.35,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          34,
-          88
+          170,
+          60
         ],
         "radius": 22,
         "height": 2.0
       },
       {
         "center": [
-          -52,
-          250
+          -60,
+          140
         ],
         "radius": 24,
-        "height": 2.4
+        "height": 2.2
       },
       {
         "center": [
-          -62,
-          424
+          40,
+          300
         ],
         "radius": 20,
-        "height": 2.4
+        "height": 2.2
       }
     ]
   },
@@ -199,48 +196,30 @@
   "graveyards": [
     {
       "center": [
-        9,
-        232
+        12,
+        110
       ],
-      "radius": 7,
-      "count": 13,
+      "radius": 32,
+      "count": 64,
       "fence": true
-    },
-    {
-      "center": [
-        -27,
-        138
-      ],
-      "radius": 9,
-      "count": 10,
-      "fence": true
-    },
-    {
-      "center": [
-        46,
-        296
-      ],
-      "radius": 10,
-      "count": 12,
-      "fence": false
     },
     {
       "center": [
         -60,
-        372
+        30
       ],
-      "radius": 8,
-      "count": 9,
-      "fence": true
+      "radius": 7,
+      "count": 7,
+      "fence": false
     },
     {
       "center": [
-        -12,
-        22
+        170,
+        160
       ],
-      "radius": 5,
-      "count": 5,
-      "fence": false
+      "radius": 8,
+      "count": 8,
+      "fence": true
     }
   ],
   "lantern_spacing": 19,
@@ -266,8 +245,8 @@
     },
     {
       "center": [
-        -2,
-        330
+        140,
+        100
       ],
       "carved": 2,
       "plain": 1
@@ -352,5 +331,82 @@
   "cart_path": {
     "side": 1,
     "offset": 6.0
+  },
+  "pads": [
+    {
+      "center": [
+        -12,
+        176
+      ],
+      "radius": [
+        16,
+        14
+      ],
+      "rotation": 0.1
+    }
+  ],
+  "zones": [
+    {
+      "center": [
+        24,
+        118
+      ],
+      "radius": [
+        44,
+        70
+      ],
+      "rotation": 0.0,
+      "surface": "deep_rough"
+    },
+    {
+      "center": [
+        -8,
+        100
+      ],
+      "radius": [
+        20,
+        96
+      ],
+      "rotation": 0.0,
+      "surface": "deep_rough"
+    },
+    {
+      "center": [
+        -12,
+        216
+      ],
+      "radius": [
+        16,
+        32
+      ],
+      "rotation": 0.0,
+      "surface": "rough"
+    }
+  ],
+  "plan": {
+    "safe": [
+      [
+        110,
+        30
+      ],
+      [
+        125,
+        190
+      ],
+      [
+        -7,
+        258
+      ]
+    ],
+    "risk": [
+      [
+        -12,
+        176
+      ],
+      [
+        -7,
+        258
+      ]
+    ]
   }
 }

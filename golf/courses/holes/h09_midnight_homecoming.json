@@ -4,49 +4,49 @@
   "number": 9,
   "par": 4,
   "seed": 909,
-  "note": "The Walk Home: a winding, lantern-lined finale climbing toward the village lights. A stream wanders down the left side and cuts across in front of the green, and the cart path crosses it on a bridge. Course coords in meters: x right, y down-range, z up.",
+  "note": "The Walk Home: the finale curls right and back round a fenced pumpkin patch to the lit clubhouse. Play round the long way, or carry the patch to a landing pad on the left and leave a short pitch home. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      -4,
-      55
+      30,
+      60
     ],
     [
-      -22,
-      110
+      70,
+      120
     ],
     [
-      -20,
-      165
+      82,
+      185
     ],
     [
-      2,
-      215
+      65,
+      245
     ],
     [
-      24,
-      262
+      25,
+      285
     ],
     [
-      26,
-      305
+      0,
+      300
     ]
   ],
   "fairway_start": 34,
   "fairway_width": [
-    26,
-    30,
+    24,
+    28,
     30,
     30,
     28,
     26,
     24
   ],
-  "rough_width": 16,
-  "deep_rough_width": 16,
+  "rough_width": 13,
+  "deep_rough_width": 14,
   "tee": {
     "center": [
       0,
@@ -59,40 +59,40 @@
   },
   "green": {
     "center": [
-      26,
-      305
+      0,
+      300
     ],
     "radius": [
       14,
       12
     ],
-    "rotation": 0.1,
+    "rotation": -0.3,
     "slope": [
       0.01,
       0.022
     ]
   },
   "pin": [
-    29,
-    308
+    2,
+    303
   ],
   "bunkers": [
     {
       "center": [
-        42,
-        296
+        -17,
+        300
       ],
       "radius": [
-        6,
-        3.2
+        5,
+        3
       ],
-      "rotation": 0.6,
+      "rotation": 1.1,
       "depth": 0.5
     },
     {
       "center": [
-        14,
-        320
+        16,
+        313
       ],
       "radius": [
         4.4,
@@ -103,101 +103,137 @@
     },
     {
       "center": [
-        -2,
-        150
+        66,
+        196
       ],
       "radius": [
-        7,
-        3.4
+        3,
+        7
       ],
-      "rotation": -0.2,
+      "rotation": 0.1,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        64,
+        84
+      ],
+      "radius": [
+        6,
+        3
+      ],
+      "rotation": 0.7,
       "depth": 0.45
     }
   ],
-  "water": [
+  "water": [],
+  "pads": [
     {
       "center": [
-        -50,
-        96
+        -10,
+        178
       ],
       "radius": [
-        26,
-        4.5
+        17,
+        14
       ],
-      "rotation": 1.75,
-      "level_offset": -0.7
-    },
-    {
-      "center": [
-        -47,
-        142
-      ],
-      "radius": [
-        27,
-        4.5
-      ],
-      "rotation": 1.5,
-      "level_offset": -0.7
-    },
-    {
-      "center": [
-        -35,
-        184
-      ],
-      "radius": [
-        22,
-        4.5
-      ],
-      "rotation": 1.05,
-      "level_offset": -0.7
-    },
-    {
-      "center": [
-        -23,
-        222
-      ],
-      "radius": [
-        20,
-        4.5
-      ],
-      "rotation": 1.25,
-      "level_offset": -0.7
-    },
-    {
-      "center": [
-        -12,
-        250
-      ],
-      "radius": [
-        10,
-        4.5
-      ],
-      "rotation": 1.0,
-      "level_offset": -0.7
-    },
+      "rotation": 0.0
+    }
+  ],
+  "zones": [
     {
       "center": [
         16,
-        247
+        135
       ],
       "radius": [
-        26,
-        5
+        27,
+        58
       ],
-      "rotation": -0.44,
-      "level_offset": -0.7
+      "rotation": 0.1,
+      "surface": "deep_rough"
+    },
+    {
+      "center": [
+        -6,
+        100
+      ],
+      "radius": [
+        16,
+        82
+      ],
+      "rotation": 0.0,
+      "surface": "deep_rough"
+    },
+    {
+      "center": [
+        -6,
+        240
+      ],
+      "radius": [
+        14,
+        50
+      ],
+      "rotation": 0.0,
+      "surface": "rough"
+    }
+  ],
+  "fences": [
+    {
+      "points": [
+        [
+          -6,
+          82
+        ],
+        [
+          -11,
+          110
+        ],
+        [
+          -11,
+          150
+        ],
+        [
+          -4,
+          182
+        ],
+        [
+          14,
+          194
+        ],
+        [
+          34,
+          186
+        ],
+        [
+          43,
+          160
+        ],
+        [
+          44,
+          120
+        ],
+        [
+          38,
+          92
+        ],
+        [
+          24,
+          78
+        ]
+      ]
     }
   ],
   "elevation": {
     "tee": 2.0,
     "green": 6.0,
-    "cross_tilt": 0.01,
-    "roll_height": 0.35,
-    "bank_height": 3.0,
+    "cross_tilt": 0.008,
+    "roll_height": 0.3,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          36,
+          120,
           110
         ],
         "radius": 24,
@@ -205,7 +241,7 @@
       },
       {
         "center": [
-          -80,
+          -70,
           160
         ],
         "radius": 22,
@@ -221,10 +257,6 @@
       }
     ]
   },
-  "carry": [
-    238,
-    262
-  ],
   "wind": {
     "min": 1,
     "max": 3
@@ -232,8 +264,8 @@
   "graveyards": [
     {
       "center": [
-        -74,
-        230
+        -60,
+        240
       ],
       "radius": 7,
       "count": 8,
@@ -263,27 +295,138 @@
     },
     {
       "center": [
-        20,
-        60
+        0,
+        100
       ],
-      "carved": 2,
-      "plain": 2
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
         12,
-        118
+        96
       ],
       "carved": 2,
-      "plain": 2
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
-        50,
-        250
+        26,
+        104
       ],
-      "carved": 3,
-      "plain": 2
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -2,
+        122
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        14,
+        120
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        30,
+        124
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        2,
+        142
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        18,
+        140
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        34,
+        146
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -2,
+        162
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        12,
+        162
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        28,
+        166
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        10,
+        182
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        24,
+        182
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        36,
+        104
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
@@ -295,13 +438,35 @@
     },
     {
       "center": [
-        46,
-        316
+        -22,
+        318
       ],
       "carved": 2,
       "plain": 1
     }
   ],
+  "plan": {
+    "safe": [
+      [
+        72,
+        160
+      ],
+      [
+        2,
+        303
+      ]
+    ],
+    "risk": [
+      [
+        -10,
+        178
+      ],
+      [
+        2,
+        303
+      ]
+    ]
+  },
   "cart_path": {
     "side": 1,
     "offset": 6.0

@@ -248,7 +248,7 @@ for g, gy_ in enumerate(spec.get("graveyards", [])):
     R = gy_["radius"]
     placed = 0
     tries = 0
-    while placed < gy_["count"] and tries < 400:
+    while placed < gy_["count"] and tries < max(400, gy_["count"] * 40):
         tries += 1
         a, rr = random.uniform(0, math.tau), R * math.sqrt(random.random())
         x, y = cx + math.cos(a) * rr, cy + math.sin(a) * rr
@@ -303,6 +303,20 @@ def in_cornfield(x, y):
     return hole.length * cf["from"] - 4 < s_ < hole.length * cf["to"] + 4 and start < lat * sgn < start + cf.get("depth", 26.0) + 4
 
 
+def in_open(x, y, grow=1.1):
+    """Inside one of the hole's landing pads or open zones (grown a little): no woods there."""
+    for z in spec.get("pads", []) + spec.get("zones", []):
+        r, _ = hole_gen.ellipse_r(np.array([x]), np.array([y]), z)
+        if r[0] < grow:
+            return True
+    return False
+
+
+# free-standing fences: [{"points": [[x, y], ...]}] (round a pumpkin patch, along a lane)
+for k, fen in enumerate(spec.get("fences", [])):
+    props.fence(col, f"FenceLine_{k}", [tuple(p) for p in fen["points"]], h_at, post_gap=1.1)
+
+
 TREE_HEIGHT = {"pine_blue": (9.0, 13.0), "haunted_tree": (5.5, 7.5), "lantern_tree": (5.5, 7.5),
                "dead_tree": (6.0, 8.5), "birch": (8.0, 11.0), "apple_tree": (5.5, 7.5),
                # the painted tree set (tools/prep_trees.py)
@@ -327,9 +341,9 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
         if d < edge - 4 or not free(x, y, 2.5) or in_cornfield(x, y):
             continue
         su = surf_at(x, y)
-        if su == hole_gen.WATER:
+        if su == hole_gen.WATER or in_open(x, y):
             continue
-        near_zone = d < edge + spec["deep_rough_width"]
+        near_zone = d < edge + spec["deep_rough_width"] or in_open(x, y, 1.6)
         if rng.random() > (0.75 if near_zone else 0.4):
             continue
         pool = tree_cfg.get("near" if near_zone else "far", ["maple_orange"])
@@ -600,6 +614,26 @@ if moon_pos is not None:
     out_props["moon"] = [round(v, 1) for v in moon_pos]
 json.dump(out_props,
           open(os.path.join(OUT, "props.json"), "w"), indent=1)
+
+# ---------- small props merged by patch of ground --------------------------------------------
+# a graveyard's stones or a patch's pumpkins are dozens of little objects, each a draw call (or
+# three) for a phone every frame: joined into one mesh per MERGE_CELL square of ground they cost a
+# handful, and a patch far from the camera is still left out whole
+MERGE_CELL = 40.0
+MERGE_PREFIXES = ("Grave_", "Patch_", "Arm_")
+groups = defaultdict(list)
+for ob in list(col.objects):
+    if ob.type == "MESH" and ob.name.startswith(MERGE_PREFIXES):
+        groups[(int(ob.location.x // MERGE_CELL), int(ob.location.y // MERGE_CELL))].append(ob)
+merged = 0
+for key, obs in groups.items():
+    if len(obs) < 2:
+        continue
+    with bpy.context.temp_override(active_object=obs[0], selected_editable_objects=obs, selected_objects=obs):
+        bpy.ops.object.join()
+    obs[0].name = f"Props_{key[0]}_{key[1]}"
+    merged += len(obs)
+print(f"merged {merged} small props into {sum(1 for o in groups.values() if len(o) > 1)} meshes")
 
 # ---------- export -------------------------------------------------------------------------
 deps = bpy.context.evaluated_depsgraph_get()
