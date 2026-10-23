@@ -49,6 +49,7 @@ const INTRO_TIME := 6.5
 const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
 const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
+const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
 const AIM_BALL_Y := 0.62        # the aiming view tips down until the ball sits this far down the screen,
                                 # clear of the slingshot under it
 const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
@@ -895,8 +896,8 @@ func _aim_cam_pos() -> Vector3:
 func _aim_cam_target() -> Vector3:
 	var a := _aim_cam_dir()
 	if club.id == "putter":
-		var t := ball + a * 5.0
-		return Terrain.to_world(Vector3(t.x, t.y, terrain.height(t.x, t.y)))
+		# her low in the picture, the green and the hole up it (not a stretch of empty grass under her)
+		return _look_with_ball_at(Terrain.to_course(_aim_cam_pos()), a, PUTT_BALL_Y, 66.0)
 	var t2 := ball + a * 40.0
 	return Terrain.to_world(Vector3(t2.x, t2.y, terrain.height(t2.x, t2.y) + 2.5))
 
@@ -922,15 +923,18 @@ func _target_cam() -> void:
 	p.z = maxf(p.z, terrain.height(p.x, p.y) + 3.0)
 	_want_fov = 50.0 - (4.0 * pull if pulling else 0.0)
 	_want_pos = Terrain.to_world(p)
-	# straight down the line, tipped down from the ball by as much as puts it AIM_BALL_Y down the
-	# screen (the view is as wide as the screen; its height follows from the aspect)
-	var vp := get_viewport().get_visible_rect().size
-	var tan_v := tan(deg_to_rad(_want_fov) * 0.5) * vp.y / maxf(vp.x, 1.0)
-	var to_b := ball - p
-	var pitch := atan2(-to_b.z, Vector2(to_b.x, to_b.y).length()) - atan(2.0 * (AIM_BALL_Y - 0.5) * tan_v)
-	var look := p + (a * cos(pitch) - Vector3(0, 0, sin(pitch))) * maxf(d, 20.0)
-	_want_target = Terrain.to_world(look)
+	_want_target = _look_with_ball_at(p, a, AIM_BALL_Y, _want_fov)
 	_cam_rate = 4.0
+
+
+## A point to look at from `p` (course) straight along `a`, tipped down just enough to put the ball
+## `ball_y` of the way down the screen with a view `fov` degrees wide (its height follows the aspect).
+func _look_with_ball_at(p: Vector3, a: Vector3, ball_y: float, fov: float) -> Vector3:
+	var vp := get_viewport().get_visible_rect().size
+	var tan_v := tan(deg_to_rad(fov) * 0.5) * vp.y / maxf(vp.x, 1.0)
+	var to_b := ball - p
+	var pitch := atan2(-to_b.z, Vector2(to_b.x, to_b.y).length()) - atan(2.0 * (ball_y - 0.5) * tan_v)
+	return Terrain.to_world(p + (a * cos(pitch) - Vector3(0, 0, sin(pitch))) * 30.0)
 
 
 func _cut_to_swing_cam() -> void:
