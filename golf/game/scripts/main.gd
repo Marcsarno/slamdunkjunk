@@ -444,9 +444,13 @@ func _place_golfer_back(pose := true) -> void:
 		golfer.address(set_name)
 
 
-## The caddie and the cat stand to her left a few steps up the line, in sight from behind her and in
+## On the tee the caddie and the cat stand to her left a few steps up the line, in sight from behind her and in
 ## the swing shot (moved when the aim settles, while the view is up high and they're too small to see).
 func _place_pals() -> void:
+	# they see her off from the tee and wait there; the rest of the hole is hers alone
+	caddie.visible = strokes == 0
+	cat.visible = strokes == 0
+	cart.visible = strokes == 0      # their cart stays parked by the tee with them
 	# to her left, or her right if the left is water or sand (by a green, say)
 	var side := 1.0 if _dry(Vector2(ball.x, ball.y) - _right() * 2.4 + aim * 1.7) else -1.0
 	for p in [[caddie, Vector2(2.4, 1.7)], [cat, Vector2(1.7, 1.1)]]:
