@@ -65,19 +65,20 @@ project's convention), then `--import` again.
   Chip 32 (skips and runs), Putter. Auto-picked: the shortest club whose full swing covers the shot
   with 10% in hand (`PICK_SHARE`), so most shots want 80-90% of a full pull. The club button steps down
   the bag. `tests/tune_clubs.gd` finds each club's launch speed for its carry.
-- Aiming: target auto-placed (lays up short of trouble), drag to move it. **Slingshot:** a Halloween ball
-  button (`hud.gd` `Sling`, an on-screen control, not the golf ball) rests low in the middle; pull down
-  from it. How far down is the power (21% of the screen height is the club's full power; the target is a
-  mark part way, with a click); how far the finger slides sideways aims the other way (down-right sends
-  it left; `SLING_SPAN` 40% of the screen width = `SLING_AIM_MAX` 18 degrees, putts 8, soft dead zone,
-  eased). The ball follows the finger half way and rides 2.8 radii above it, clear of the thumb. Its face
-  goes still -> launch -> panic (past 90%). The view stays up on the course while pulling (corner map off,
-  `AIM_MAP`), cuts to her swing on release. Putts: a full pull is 2x the putt. Past 90% power the margin of
-  error widens. Marc's seven balls (pumpkin, ghost, skull, mummy, vampire, frank, bat; still + launch
-  faces; no panic face yet) are cut from `art_src/balls/balls_sheet*.png` by `tools/prep_balls.py` into
-  `assets/balls/<name>/<pose>.png`; picked on a turntable on the clubhouse bar (`front.gd`, names in
-  `Sling.NAMES`, remembered in `user://settings.cfg`). Putts: the default target is read for break
-  (`_read_putt`: a foot past, moved across the slope until the roll runs over the cup).
+- Aiming: close behind her (`AIM_BACK` 3.1 m, `AIM_HEIGHT` 1.65, ball 80% down the screen), with the
+  map top left showing the target, margin and landing (off on the green). The target is auto-placed
+  (lays up short of trouble); dragging the upper screen swings it across (`DRAG_TURN`) and longer or
+  shorter (`DRAG_REACH`). Pull down from the lower screen: how far down is the power (21% of the screen
+  height is the club's full power; the target is a mark part way, with a click); sliding sideways aims
+  the other way, slingshot style (`SLING_SPAN` 40% of the width = `SLING_AIM_MAX` 18 degrees, putts 8,
+  soft dead zone, eased). On release the camera sweeps round from behind her to her side
+  (`_start_orbit`, `ORBIT_TIME`) and she swings. Putts: a full pull is 2x the putt; the default target
+  is read for break (`_read_putt`).
+- The ball she plays is Marc's design picked on the clubhouse turntable (`scripts/balls.gd`: pumpkin,
+  ghost, skull, mummy, vampire, frank, bat; still + launch faces cut by `tools/prep_balls.py`): a
+  billboard drawn bigger than life (`BALL_LOOK_GROUND`/`BALL_LOOK_AIR` of its camera distance), calm
+  at address, scared as the pull grows and in flight, where the chase camera follows close
+  (`CHASE_*`) and thin wind streaks slide past its face (`_update_wind`).
 - Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,
