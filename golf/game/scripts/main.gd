@@ -55,7 +55,7 @@ const AIM_FOV := 60.0
 const ORBIT_TIME := 0.42        # the sweep round from behind her to her side as she swings
 const CHASE_BACK := 5.0         # the camera after the ball in the air: this far behind it ...
 const CHASE_SIDE := 1.8         # ... to the side ...
-const CHASE_UP := 0.9           # ... and above
+const CHASE_UP := 1.8           # ... and above
 const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
 const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
 const BALL_LOOK_GROUND := 0.03  # the ball's drawn width as a share of its distance from the camera ...
@@ -1009,6 +1009,7 @@ func _chase_cam(_delta: float) -> void:
 		# way; easing after it, so the camera falls behind as it leaves her and closes in as it slows
 		# toward the top of its flight
 		p = b - dir * CHASE_BACK + side * CHASE_SIDE + Vector3(0, 0, CHASE_UP)
+		p.z = maxf(p.z, terrain.height(p.x, p.y) + 3.5)      # over the lanterns and headstones by the tee
 		_cam_rate = lerpf(2.0, 5.5, clampf(sim.time / 1.2, 0.0, 1.0))
 		_want_fov = 58.0
 	else:
