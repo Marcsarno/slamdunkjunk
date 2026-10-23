@@ -4532,5 +4532,898 @@
   "down_ms": [
    100
   ]
+ },
+ "video_back_putter": {
+  "view": "back",
+  "body_px": 579,
+  "frames": {
+   "1": {
+    "file": "video_back_putt_01.png",
+    "size": [
+     318,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "3": {
+    "file": "video_back_putt_03.png",
+    "size": [
+     317,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "4": {
+    "file": "video_back_putt_04.png",
+    "size": [
+     317,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "5": {
+    "file": "video_back_putt_05.png",
+    "size": [
+     317,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "6": {
+    "file": "video_back_putt_06.png",
+    "size": [
+     317,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "7": {
+    "file": "video_back_putt_07.png",
+    "size": [
+     317,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "8": {
+    "file": "video_back_putt_08.png",
+    "size": [
+     316,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "9": {
+    "file": "video_back_putt_09.png",
+    "size": [
+     316,
+     582
+    ],
+    "anchor": [
+     77.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     579.0
+    ]
+   },
+   "10": {
+    "file": "video_back_putt_10.png",
+    "size": [
+     316,
+     582
+    ],
+    "anchor": [
+     78.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.6,
+     579.0
+    ]
+   },
+   "11": {
+    "file": "video_back_putt_11.png",
+    "size": [
+     315,
+     582
+    ],
+    "anchor": [
+     78.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.6,
+     579.0
+    ]
+   },
+   "12": {
+    "file": "video_back_putt_12.png",
+    "size": [
+     314,
+     582
+    ],
+    "anchor": [
+     78.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.6,
+     579.0
+    ]
+   },
+   "13": {
+    "file": "video_back_putt_13.png",
+    "size": [
+     312,
+     582
+    ],
+    "anchor": [
+     79.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.6,
+     579.0
+    ]
+   },
+   "14": {
+    "file": "video_back_putt_14.png",
+    "size": [
+     310,
+     582
+    ],
+    "anchor": [
+     79.5,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.6,
+     579.0
+    ]
+   },
+   "15": {
+    "file": "video_back_putt_15.png",
+    "size": [
+     308,
+     581
+    ],
+    "anchor": [
+     80.5,
+     578.0
+    ],
+    "height": 579,
+    "club_head": [
+     293.6,
+     578.0
+    ]
+   },
+   "16": {
+    "file": "video_back_putt_16.png",
+    "size": [
+     303,
+     581
+    ],
+    "anchor": [
+     80.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     293.6,
+     577.0
+    ]
+   },
+   "17": {
+    "file": "video_back_putt_17.png",
+    "size": [
+     299,
+     583
+    ],
+    "anchor": [
+     81.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     294.6,
+     577.0
+    ]
+   },
+   "18": {
+    "file": "video_back_putt_18.png",
+    "size": [
+     293,
+     586
+    ],
+    "anchor": [
+     81.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     294.6,
+     577.0
+    ]
+   },
+   "19": {
+    "file": "video_back_putt_19.png",
+    "size": [
+     288,
+     589
+    ],
+    "anchor": [
+     82.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     295.6,
+     577.0
+    ]
+   },
+   "20": {
+    "file": "video_back_putt_20.png",
+    "size": [
+     280,
+     592
+    ],
+    "anchor": [
+     83.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     296.6,
+     577.0
+    ]
+   },
+   "21": {
+    "file": "video_back_putt_21.png",
+    "size": [
+     272,
+     594
+    ],
+    "anchor": [
+     84.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     297.6,
+     576.0
+    ]
+   },
+   "48": {
+    "file": "video_back_putt_48.png",
+    "size": [
+     265,
+     593
+    ],
+    "anchor": [
+     82.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     295.6,
+     575.0
+    ]
+   },
+   "49": {
+    "file": "video_back_putt_49.png",
+    "size": [
+     276,
+     589
+    ],
+    "anchor": [
+     82.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     295.6,
+     575.0
+    ]
+   },
+   "50": {
+    "file": "video_back_putt_50.png",
+    "size": [
+     286,
+     584
+    ],
+    "anchor": [
+     81.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     294.6,
+     575.0
+    ]
+   },
+   "51": {
+    "file": "video_back_putt_51.png",
+    "size": [
+     293,
+     579
+    ],
+    "anchor": [
+     80.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     293.6,
+     575.0
+    ]
+   },
+   "52": {
+    "file": "video_back_putt_52.png",
+    "size": [
+     299,
+     577
+    ],
+    "anchor": [
+     79.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.6,
+     575.0
+    ]
+   },
+   "53": {
+    "file": "video_back_putt_53.png",
+    "size": [
+     305,
+     577
+    ],
+    "anchor": [
+     79.5,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.6,
+     575.0
+    ]
+   },
+   "54": {
+    "file": "video_back_putt_54.png",
+    "size": [
+     308,
+     578
+    ],
+    "anchor": [
+     78.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.6,
+     576.0
+    ]
+   },
+   "55": {
+    "file": "video_back_putt_55.png",
+    "size": [
+     310,
+     578
+    ],
+    "anchor": [
+     77.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     576.0
+    ]
+   },
+   "56": {
+    "file": "video_back_putt_56.png",
+    "size": [
+     313,
+     578
+    ],
+    "anchor": [
+     77.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     290.6,
+     576.0
+    ]
+   },
+   "57": {
+    "file": "video_back_putt_57.png",
+    "size": [
+     314,
+     579
+    ],
+    "anchor": [
+     76.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     289.6,
+     577.0
+    ]
+   },
+   "58": {
+    "file": "video_back_putt_58.png",
+    "size": [
+     316,
+     578
+    ],
+    "anchor": [
+     76.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     289.6,
+     576.0
+    ]
+   },
+   "59": {
+    "file": "video_back_putt_59.png",
+    "size": [
+     316,
+     578
+    ],
+    "anchor": [
+     75.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     576.0
+    ]
+   },
+   "60": {
+    "file": "video_back_putt_60.png",
+    "size": [
+     317,
+     578
+    ],
+    "anchor": [
+     75.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     576.0
+    ]
+   },
+   "61": {
+    "file": "video_back_putt_61.png",
+    "size": [
+     317,
+     578
+    ],
+    "anchor": [
+     75.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     576.0
+    ]
+   },
+   "62": {
+    "file": "video_back_putt_62.png",
+    "size": [
+     316,
+     578
+    ],
+    "anchor": [
+     74.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     576.0
+    ]
+   },
+   "63": {
+    "file": "video_back_putt_63.png",
+    "size": [
+     316,
+     578
+    ],
+    "anchor": [
+     74.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     576.0
+    ]
+   },
+   "64": {
+    "file": "video_back_putt_64.png",
+    "size": [
+     316,
+     578
+    ],
+    "anchor": [
+     74.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     576.0
+    ]
+   },
+   "65": {
+    "file": "video_back_putt_65.png",
+    "size": [
+     319,
+     578
+    ],
+    "anchor": [
+     74.5,
+     576.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     576.0
+    ]
+   },
+   "66": {
+    "file": "video_back_putt_66.png",
+    "size": [
+     321,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "67": {
+    "file": "video_back_putt_67.png",
+    "size": [
+     315,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "68": {
+    "file": "video_back_putt_68.png",
+    "size": [
+     315,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "69": {
+    "file": "video_back_putt_69.png",
+    "size": [
+     315,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "70": {
+    "file": "video_back_putt_70.png",
+    "size": [
+     315,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "71": {
+    "file": "video_back_putt_71.png",
+    "size": [
+     314,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "72": {
+    "file": "video_back_putt_72.png",
+    "size": [
+     314,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "73": {
+    "file": "video_back_putt_73.png",
+    "size": [
+     313,
+     579
+    ],
+    "anchor": [
+     74.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     287.6,
+     577.0
+    ]
+   },
+   "74": {
+    "file": "video_back_putt_74.png",
+    "size": [
+     313,
+     579
+    ],
+    "anchor": [
+     75.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     577.0
+    ]
+   },
+   "75": {
+    "file": "video_back_putt_75.png",
+    "size": [
+     312,
+     579
+    ],
+    "anchor": [
+     75.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     577.0
+    ]
+   },
+   "76": {
+    "file": "video_back_putt_76.png",
+    "size": [
+     311,
+     579
+    ],
+    "anchor": [
+     75.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     577.0
+    ]
+   },
+   "77": {
+    "file": "video_back_putt_77.png",
+    "size": [
+     310,
+     579
+    ],
+    "anchor": [
+     75.5,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     288.6,
+     577.0
+    ]
+   }
+  },
+  "back": [
+   1,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21
+  ],
+  "down": [
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   72,
+   73,
+   74,
+   75,
+   76,
+   77
+  ],
+  "contact": 9,
+  "down_ms": [
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   42,
+   600
+  ]
  }
 }
