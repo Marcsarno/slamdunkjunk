@@ -1,0 +1,7 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "claude/hunting-game-pitch": false
+    }
+  }
+}

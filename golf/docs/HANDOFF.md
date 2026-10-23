@@ -8,7 +8,7 @@ Notes to pick the work up from (last updated 2026-10-23, evening). Code lives on
 - **Vercel (public):** https://midnight-golf-wheat.vercel.app (`#fps` on the end shows frame rate and 3D
   scale). Project `midnight-golf` (team `marcsarno`, id `prj_Kx6ClNpKm1RppDyK6dlbOPKP4No0`), root
   directory `golf/dist/web`, no build step. Its production branch is `main`, so pushes to this branch only
-  make (protected) previews: **deploy production by hand**  (2026-10-23: pushes to this branch now deploy production on their own) after rebuilding `golf/dist/web` (Vercel MCP
+  make (protected) previews: **deploy production by hand**  (2026-10-23: automatic deploys on push are now turned off, see the rules below) after rebuilding `golf/dist/web` (Vercel MCP
   `create_deployment`, `gitSource` github Marcsarno/slamdunkjunk, ref `claude/hunting-game-pitch`, the
   commit sha, `target: production`).
 - **Claude artifact (private preview):** https://claude.ai/artifact/TAgqet24mAUsE5tgyED6Qs, published from
@@ -50,6 +50,10 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   a clean build from committed sources. Don't touch `fart/` or `Marcsarno/yola-zombie`. Run Blender
   headless only. Never enter passwords. Look at real frames before claiming something looks right.
 - When told "just answer", answer only.
+- **No preview builds, ever.** Pushes don't deploy (`golf/dist/web/vercel.json` and the repo root
+  `vercel.json` turn git deployments off for this branch; `build_web.sh` rewrites the first). Production
+  is deployed by hand, only when Marc asks; otherwise he plays the Claude artifact. Batch commits and
+  push a few times a session.
 
 ## The game today
 

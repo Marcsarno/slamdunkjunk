@@ -2,13 +2,13 @@
 //   1. a deep, nearly black gradient (a little lighter just above the horizon)
 //   2. stars: three painted strips (sparse bright, medium, dense faint), each wrapped round the sky and
 //      twinkling a little
-//   3. clouds: three painted layers drifting at their own speeds (a low bank on the horizon, puffy
-//      clouds, high wisps), hiding the stars behind them, brighter toward the moon
-//   4. optionally the hole's painting, only as a skyline (hills, castles) darkened into the night and
-//      fading out above `paint_top_deg`, so its painted sky never shows
-//   5. the moon, measured on the screen: every pixel's direction and the moon's are projected with
+//   3. the moon, measured on the screen: every pixel's direction and the moon's are projected with
 //      the camera's own orientation and field of view (set every frame by HoleView), and the disc is
-//      round in those screen units, so it's always a perfect solid circle, in front of the clouds
+//      round in those screen units, so it's always a perfect solid circle
+//   4. clouds: three painted layers drifting at their own speeds (a low bank on the horizon, puffy
+//      clouds, high wisps), hiding the stars and drifting across the moon, brighter near it
+//   5. optionally the hole's painting, only as a skyline (hills, castles) darkened into the night and
+//      fading out above `paint_top_deg`, so its painted sky never shows
 // The strips are laid on the sky by azimuth and elevation, the azimuth squeezed by cos(elevation) so
 // what's painted round stays round, and folded back and forth so they meet themselves with no seam.
 shader_type sky;
@@ -83,7 +83,23 @@ void sky() {
 		vec3 st = s1.rgb * s1.a * 1.3 * tw + s2.rgb * s2.a * (1.6 - 0.6 * tw) + s3.rgb * s3.a;
 		c += st * star_amount * smoothstep(2.0, 10.0, el);
 
-		// 3. clouds, far to near, each over what's behind it
+		// 3. the moon: a round disc on the screen with a soft glow round it, behind the clouds (they drift
+		// across it)
+		vec3 md = normalize(moon_dir);
+		if (dot(d, cam_fwd) > 0.0 && dot(md, cam_fwd) > 0.0) {
+			vec2 sd = vec2(dot(d, cam_right), dot(d, cam_up)) / (dot(d, cam_fwd) * tan_half);
+			vec2 sm = vec2(dot(md, cam_right), dot(md, cam_up)) / (dot(md, cam_fwd) * tan_half);
+			vec2 q = (sd - sm) * vec2(0.5 * screen_aspect, 0.5) / moon_radius;
+			float r = length(q);
+			float halo = (exp(-max(r - 1.0, 0.0) * 3.0) * 0.2 + exp(-max(r - 1.0, 0.0) * 0.6) * 0.06) * step(1.0, r);
+			c += moon_glow * halo;
+			if (r < 1.03) {
+				vec3 disc = texture(moon_tex, vec2(0.5 + q.x * 0.5, 0.5 - q.y * 0.5) * 0.985 + 0.0075).rgb * moon_energy;
+				c = mix(c, disc, smoothstep(1.02, 0.97, r));
+			}
+		}
+
+		// 4. clouds, far to near, each over what's behind it
 		float t = TIME * cloud_drift / 600.0;
 		float toward_moon = pow(max(dot(d, normalize(moon_dir)), 0.0), 8.0);
 		vec3 lit = cloud_tint * (1.0 + 0.9 * toward_moon);
@@ -95,7 +111,7 @@ void sky() {
 		c = mix(c, k3.rgb * lit * 1.1, k3.a * cloud_amount * 0.8);
 	}
 
-	// 4. the painting, as a dark skyline only
+	// 5. the painting, as a dark skyline only (in front of the moon if it hangs low)
 	if (paint_mix > 0.0) {
 		float t = (az - yaw_deg) / span_deg + 0.5;
 		float m = mod(t, 2.0);
@@ -105,21 +121,6 @@ void sky() {
 		float a = paint_mix * (1.0 - smoothstep(paint_top_deg * 0.45, paint_top_deg, el));
 		a *= 1.0 - smoothstep(0.997, 1.15, v);
 		c = mix(c, p, a);
-	}
-
-	// 5. the moon: a round disc on the screen with a soft glow round it
-	vec3 md = normalize(moon_dir);
-	if (dot(d, cam_fwd) > 0.0 && dot(md, cam_fwd) > 0.0) {
-		vec2 sd = vec2(dot(d, cam_right), dot(d, cam_up)) / (dot(d, cam_fwd) * tan_half);
-		vec2 sm = vec2(dot(md, cam_right), dot(md, cam_up)) / (dot(md, cam_fwd) * tan_half);
-		vec2 q = (sd - sm) * vec2(0.5 * screen_aspect, 0.5) / moon_radius;
-		float r = length(q);
-		float halo = (exp(-max(r - 1.0, 0.0) * 3.0) * 0.2 + exp(-max(r - 1.0, 0.0) * 0.6) * 0.06) * step(1.0, r);
-		c += moon_glow * halo;
-		if (r < 1.03) {
-			vec3 disc = texture(moon_tex, vec2(0.5 + q.x * 0.5, 0.5 - q.y * 0.5) * 0.985 + 0.0075).rgb * moon_energy;
-			c = mix(c, disc, smoothstep(1.02, 0.97, r));
-		}
 	}
 
 	COLOR = c * energy;

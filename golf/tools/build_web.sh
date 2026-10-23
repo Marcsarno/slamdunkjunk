@@ -20,4 +20,7 @@ set_formats false true
 python3 -I tools/web_pack.py build/web build/web_host build/web_desktop | tail -1
 python3 -I tools/web_pack.py build/web dist/web build/web_desktop > /dev/null
 rm -f dist/web/local.html
+# pushes never deploy on their own (each would use one of Vercel's daily deployments): production is
+# deployed by hand when Marc asks
+printf '{\n  "git": {\n    "deploymentEnabled": false\n  }\n}\n' > dist/web/vercel.json
 du -sh dist/web
