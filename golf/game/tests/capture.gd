@@ -1,8 +1,9 @@
 extends Node
 ## Scripted play-through that saves screenshots, for checking the look without a phone.
-## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 -- --capture=<dir>
+## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 -- --capture=<dir> [--introonly | --intro-frames]
 
 var main: Node
+const INTRO_AT := [0.05, 0.6, 1.2, 1.8, 2.4, 3.0, 3.8, 5.0]   # --intro-frames: when to snap (s into the opening)
 var out_dir := ""
 var t := 0.0
 var step := 0
@@ -26,6 +27,14 @@ func snap(name: String) -> void:
 
 func _process(delta: float) -> void:
 	t += delta
+	if "--intro-frames" in OS.get_cmdline_user_args():
+		# the opening shot, a frame every so often through it
+		if step < INTRO_AT.size() and main.phase_t >= INTRO_AT[step]:
+			snap("intro_%.1f" % main.phase_t)
+			step += 1
+		elif step >= INTRO_AT.size():
+			get_tree().quit()
+		return
 	match step:
 		0:
 			if t > 1.5:

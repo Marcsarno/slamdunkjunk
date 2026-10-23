@@ -25,7 +25,6 @@ var card_text: Label
 var next := Button.new()
 var _msg_time := 0.0
 var fade := ColorRect.new()
-var caddie := Caddie.new()
 var _fade_t := 0.0
 var fps := Label.new()
 var _fps_t := 0.0
@@ -249,8 +248,6 @@ func _ready() -> void:
 		fps.position = Vector2(16, 150)
 		root.add_child(_label(fps, 24, Color(0.6, 1.0, 0.8)))
 
-	root.add_child(caddie)
-
 	fade.color = Color(0.05, 0.02, 0.08, 0.0)
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -348,7 +345,6 @@ func show_card(title_text: String, detail: String, next_text := "Play again") ->
 	card_text.text = detail
 	next.text = next_text
 	card.visible = true
-	caddie.say("card")
 	card.modulate.a = 0.0
 	card.scale = Vector2.ONE * 0.92
 	card.pivot_offset = card.size * 0.5
@@ -382,7 +378,6 @@ func _chalk_button(b: Button, text: String, color: Color) -> void:
 
 func hide_card() -> void:
 	card.visible = false
-	caddie.rest()
 
 
 ## Cover the cut to a new shot with a short fade from dark.

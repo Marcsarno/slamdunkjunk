@@ -28,7 +28,8 @@ const SIDE_AIM := 0.5           # radians of aim per screen-width the finger sli
 const SIDE_DEAD := 0.04         # ... once it has drifted this share of the width
 const HINT := "Drag the target · pull down from the bottom to swing, sideways to aim"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
-const INTRO_TIME := 5.0
+const INTRO_TIME := 6.5
+const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
 const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
 const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
@@ -38,7 +39,13 @@ var obstacles: ObstacleGrid
 var view := HoleView.new()
 var fx := Fx.new()
 var golfer := Golfer.new()
-var cat := Cat.new()
+## The caddie and his cat stand to her left on every shot, changing poses as the game goes.
+var caddie := Pal.new("skelly_", {"idle": 1.2, "wave": 1.2, "tip": 1.2, "club": 1.2, "point": 1.25,
+	"read": 1.25, "cheer": 1.3, "lean": 1.25, "card": 1.25, "bow": 1.05}, ["lean", "idle"], "lean")
+var cat := Pal.new("cat_", {"ball": 0.8, "sit": 0.8, "happy": 0.8, "groom": 0.74, "crouch": 0.58,
+	"pounce": 0.67, "sleep": 0.45, "stretch": 0.64, "walk": 0.77, "walk2": 0.72},
+	["sit", "sit", "groom", "happy", "sleep", "stretch"], "sit")
+var lantern := HeroLantern.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
 var ball_mesh := MeshInstance3D.new()
@@ -101,7 +108,9 @@ func _ready() -> void:
 		Sfx.play_after(randf_range(0.4, 1.8), "thunder", lerpf(-12.0, -3.0, k), randf_range(0.85, 1.1)))
 	par = int(terrain.meta.par)
 	add_child(golfer)
+	add_child(caddie)
 	add_child(cat)
+	add_child(lantern)
 	cam.keep_aspect = Camera3D.KEEP_WIDTH
 	cam.near = 0.05
 	cam.far = 2500.0
@@ -151,10 +160,15 @@ func _start_hole() -> void:
 	phase = Phase.INTRO
 	phase_t = 0.0
 	hud.hint.text = "Tap to skip"
-	hud.caddie.say("bow", INTRO_TIME)
-	_place_cat()
-	cat.pose("ball")
-	hud.flash("Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)], INTRO_TIME)
+	caddie.pose("bow", INTRO_TIME)
+	_place_pals()
+	cat.pose("ball", INTRO_TIME + 3.0)
+	_place_lantern()
+	# the hole's name once the camera has swung round the lantern and starts down the hole
+	var title := "Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)]
+	get_tree().create_timer(INTRO_SWING * 0.8).timeout.connect(func():
+		if phase == Phase.INTRO:
+			hud.flash(title, INTRO_TIME - INTRO_SWING * 0.8))
 
 
 func _to_pin() -> float:
@@ -179,7 +193,7 @@ func _setup_shot() -> void:
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
 	if phase != Phase.INTRO:
-		hud.caddie.rest()
+		caddie.rest()
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
@@ -289,8 +303,7 @@ func _set_target(t: Vector2, exact := true) -> void:
 	aim = v.normalized()
 	_place_golfer_back(phase != Phase.PULL)       # mid-pull she keeps her backswing
 	if exact:
-		if strokes == 0:
-			_place_cat()
+		_place_pals()
 		full_power = _power_for(v.length(), aim)
 		if full_power > 1.0:
 			# uphill or blocked: a full swing doesn't get there, so the target comes back to where it does
@@ -314,7 +327,7 @@ func _cycle_club() -> void:
 	hud.set_club(club.label, club.carry_m * YD)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	_set_target(_default_target())
-	hud.caddie.say("club", 1.6)       # handing over the new club
+	caddie.pose("club", 1.6)       # handing over the new club
 
 
 func _right() -> Vector2:
@@ -335,11 +348,25 @@ func _place_golfer_back(pose := true) -> void:
 		golfer.address(set_name)
 
 
-## The cat sits just left of the tee shot's line a few steps ahead, in sight from behind her and in
-## the swing shot (moved when the aim settles, while the view is up high and she's too small to see).
-func _place_cat() -> void:
-	var c2 := Vector2(ball.x, ball.y) - _right() * 1.9 + aim * 1.6
-	cat.position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
+## The caddie and the cat stand to her left a few steps up the line, in sight from behind her and in
+## the swing shot (moved when the aim settles, while the view is up high and they're too small to see).
+func _place_pals() -> void:
+	for p in [[caddie, Vector2(2.4, 1.7)], [cat, Vector2(1.7, 1.1)]]:
+		var c2: Vector2 = Vector2(ball.x, ball.y) - _right() * p[1].x + aim * p[1].y
+		p[0].position = Terrain.to_world(Vector3(c2.x, c2.y, terrain.height(c2.x, c2.y)))
+
+
+## The giant jack-o'-lantern sits off the right of the tee, its face turned back across the tee box.
+var _lantern_face := Vector2.ZERO
+
+
+func _place_lantern() -> void:
+	var l2 := Vector2(ball.x, ball.y) + _right() * 2.6 + aim * 0.8
+	_lantern_face = (-_right() + aim * 0.4).normalized()
+	var w := Terrain.to_world(Vector3(l2.x, l2.y, terrain.height(l2.x, l2.y) - 0.04))
+	lantern.position = w
+	var f := Terrain.to_world(Vector3(_lantern_face.x, _lantern_face.y, 0)) - Terrain.to_world(Vector3.ZERO)
+	lantern.look_at(w - f, Vector3.UP)      # its face (local +z) toward the tee
 
 
 ## How far off a shot of `d` meters may land (the circle's half-width): a few percent on short shots,
@@ -369,14 +396,15 @@ func _shoot() -> void:
 		_shot_offset = spread_test if spread_test != Vector2.INF else Vector2.from_angle(randf() * TAU) * randf()
 		if _shot_offset.length() < 0.2:
 			hud.flash("Perfect!", 1.0)
-			hud.caddie.say("cheer", 2.0)
+			caddie.pose("cheer", 2.0)
 			Sfx.play("perfect", -6.0)
 	if club.id != "putter":
 		Sfx.play_after(0.08, "swing", -4.0, randf_range(0.95, 1.05))
 	_show_preview(false)
-	if hud.caddie._pose == "point":
-		hud.caddie.rest()
-	cat.watch_swing()
+	if caddie.current() == "point":
+		caddie.rest()
+	cat.pose("crouch", 0.7)
+	get_tree().create_timer(0.7).timeout.connect(func(): cat.pose("pounce", 2.5))
 	phase = Phase.SWING
 	phase_t = 0.0
 	if golfer.contact.is_connected(_on_contact):
@@ -418,7 +446,7 @@ func _shot_done() -> void:
 			phase = Phase.HOLED
 			ball = sim.pos
 			hud.flash(_score_name(strokes - par), 3.0)
-			hud.caddie.say("cheer" if strokes <= par else "tip")
+			caddie.pose("cheer" if strokes <= par else "tip")
 			Sfx.play("cup")
 			Sfx.play_after(0.3, "holed", -3.0)
 			fx.holed(Terrain.to_world(terrain.pin()), HoleView._col(view.theme.get("wisp_color"), Color(1.0, 0.6, 0.25)))
@@ -427,12 +455,12 @@ func _shot_done() -> void:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Splash! +1 stroke")
-			hud.caddie.say("read", 2.8)      # checking the rule book
+			caddie.pose("read", 2.8)      # checking the rule book
 		BallSim.State.OOB:
 			strokes += 1
 			ball = last_ball
 			hud.flash("Out of bounds! +1 stroke")
-			hud.caddie.say("read", 2.8)
+			caddie.pose("read", 2.8)
 		_:
 			ball = sim.pos
 			if club.id == "putter":
@@ -440,7 +468,7 @@ func _shot_done() -> void:
 			else:
 				var s := terrain.surface_at(ball.x, ball.y)
 				if s == Terrain.Surface.FAIRWAY or s == Terrain.Surface.GREEN:
-					hud.caddie.say("tip", 1.8)
+					caddie.pose("tip", 1.8)
 				hud.flash("%s · %s" % [Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
 
 
@@ -491,7 +519,7 @@ func _press(p: Vector2) -> void:
 				_side_goal = 0.0
 				_side = 0.0
 				hud.hint.text = ""
-				hud.caddie.say("point")
+				caddie.pose("point")
 			else:
 				var hit: Variant = _ground_at(p)
 				if hit != null:
@@ -579,7 +607,7 @@ func _release() -> void:
 			pull_goal = 0.0
 			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
-			hud.caddie.rest()
+			caddie.rest()
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
 			if _side != 0.0 or _side_goal != 0.0:
@@ -640,6 +668,7 @@ func _process(delta: float) -> void:
 				var detail := "%d strokes on a par %d" % [strokes, par]
 				if Round.scores.size() > 1:
 					detail += "\nRound: %s after %d" % [Round.to_par_text(), Round.scores.size()]
+				caddie.pose("card")
 				hud.show_card(_score_name(strokes - par), detail, "Next hole" if Round.has_next() else ("New round" if Round.scores.size() > 1 else "Play again"))
 	_apply_cam(delta)
 	_update_ball_visual()   # after the camera moves: the ball's size is set from its distance to the camera
@@ -652,7 +681,7 @@ func _process(delta: float) -> void:
 
 func _end_intro() -> void:
 	phase = Phase.AIM
-	hud.caddie.rest()
+	caddie.rest()
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
 	_target_cam()
@@ -773,9 +802,35 @@ func _path_height(f: float) -> float:
 	return h / 5.0
 
 
+## Each hole opens close on the jack-o'-lantern's glowing face, swings round behind it and rises off
+## the tee into the flight down the hole to the pin.
 func _intro_cam() -> void:
+	var s := smoothstep(0.0, INTRO_SWING, phase_t)
+	var l2 := Terrain.to_course(lantern.position)
+	var lc := Vector3(l2.x, l2.y, l2.z + HeroLantern.CENTRE_Y)
+	var a0 := _lantern_face.angle()
+	var a1 := a0 + angle_difference(a0, (-aim + _right() * 0.25).angle())
+	var ang := lerpf(a0, a1, s)
+	var rad := lerpf(1.75, 6.5, s * s)
+	var o2 := Vector2(lc.x, lc.y) + Vector2.from_angle(ang) * rad
+	var ground := terrain.height(o2.x, o2.y)
+	var orbit_pos := Vector3(o2.x, o2.y, maxf(lc.z + lerpf(0.12, 4.5, s * s), ground + 0.35))
+	var ahead3 := Vector3(ball.x, ball.y, ball.z) + Vector3(aim.x, aim.y, 0) * 40.0
+	var orbit_look := lc.lerp(ahead3, smoothstep(0.5, 1.0, s))     # on the lantern until halfway round
+	# then the flight down the hole, starting as the swing finishes and taking over from it
+	var fly0 := INTRO_SWING * 0.6
+	var b := smoothstep(fly0, INTRO_SWING * 1.25, phase_t)
+	_intro_fly(clampf((phase_t - fly0) / (INTRO_TIME - fly0), 0.0, 1.0))
+	cam_pos = Terrain.to_world(orbit_pos).lerp(cam_pos, b)
+	cam_target = Terrain.to_world(orbit_look).lerp(cam_target, b)
+	cam_fov = lerpf(50.0, 62.0, b)
+	_want_pos = cam_pos
+	_want_target = cam_target
+	_want_fov = cam_fov
+
+
+func _intro_fly(u: float) -> void:
 	var n: int = terrain.meta.path.size()
-	var u := clampf(phase_t / INTRO_TIME, 0.0, 1.0)
 	u = u * u * (3.0 - 2.0 * u)
 	var f := u * (n - 1)
 	var p2 := _path_at(f)
@@ -787,10 +842,7 @@ func _intro_cam() -> void:
 	var h := _path_height(f)
 	cam_pos = Terrain.to_world(Vector3(p2.x, p2.y, h + 26.0 - 8.0 * u))
 	cam_target = Terrain.to_world(Vector3(ahead.x, ahead.y, _path_height(minf(fa, n - 1.0))))
-	cam_fov = 62.0
-	_want_pos = cam_pos
-	_want_target = cam_target
-	_want_fov = cam_fov
+
 
 
 func _apply_cam(delta: float) -> void:
