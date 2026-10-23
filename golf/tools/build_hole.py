@@ -516,9 +516,49 @@ from mathutils import Matrix, noise  # noqa: E402
 # because the game's painted sky draws its own moon and horizon.
 moon_pos = scenery() if spec.get("theme", {}).get("scenery_3d") else None
 
+# ---------- painted light props (tools/prep_lights.py) lining the rough, the theme picking which ----------
+# height m, raised off the ground m (the floating ones), trunk radius for the ball (0: it flies through)
+LIGHT_PROPS = {
+    "light_classic_jack": (0.95, 0.0, 0.45), "light_pumpkin_totem": (1.9, 0.0, 0.45),
+    "light_hanging_harvest": (2.5, 0.0, 0.12), "light_pumpkin_path_lights": (1.2, 0.0, 0.0),
+    "light_haunted_lamppost": (3.3, 0.0, 0.15), "light_lantern_ghost": (1.7, 0.45, 0.0),
+    "light_glowing_ghoul": (1.9, 0.0, 0.35), "light_captured_spirit": (1.3, 0.0, 0.35),
+    "light_marsh_wisp": (1.6, 0.0, 0.0), "light_skull_lantern": (0.75, 1.1, 0.0),
+    "light_witchs_cauldron": (1.2, 0.0, 0.55), "light_grave_candles": (0.9, 0.0, 0.35),
+    "light_moon_mushrooms": (1.3, 0.0, 0.4), "light_hollow_heart_tree": (2.4, 0.0, 0.6),
+    "light_skeleton_groundskeeper": (1.65, 0.0, 0.3),
+}
+LIGHT_SCALE = 1.6      # storybook scale, bigger than life, so they read from the tee and the fairway
+glows = []
+pool = theme.get("light_props", [])
+if pool:
+    lr = random.Random(spec.get("seed", 1) + 77)      # its own dice: everything placed before stays put
+    order = list(pool)
+    lr.shuffle(order)
+    side, k = 1, 0
+    for s in np.arange(18.0, hole.length - 6, theme.get("light_props_spacing", 30.0)):
+        p, d = path_point(s)
+        nrm = np.array([d[1], -d[0]]) * side
+        for _ in range(8):
+            off = hole.half_width(s) + lr.uniform(4.5, 8.0)      # just off the fairway, beyond the jack-o'-lanterns
+            x, y = p + nrm * off + d * lr.uniform(-4, 4)
+            if surf_at(x, y) in (hole_gen.ROUGH, hole_gen.DEEP) and free(x, y, 1.2):
+                name = order[k % len(order)]
+                k += 1
+                ht, lift, r = (v * LIGHT_SCALE for v in LIGHT_PROPS[name])
+                z = h_at(x, y)
+                glows.append({"image": name, "pos": [round(float(x), 2), round(float(y), 2), round(z - 0.05, 2)],
+                              "height": round(ht, 2), "lift": round(lift, 2)})
+                if r > 0:
+                    obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": r, "h": ht * 0.8})
+                taken.append((x, y, 1.2))
+                break
+        side = -side
+    print(f"light props {len(glows)}")
+
 for o in obstacles:
     o["pos"] = [round(float(v), 3) for v in o["pos"]]
-out_props = {"lanterns": lanterns, "obstacles": obstacles, "cards": cards, "instances": instances}
+out_props = {"lanterns": lanterns, "obstacles": obstacles, "cards": cards, "instances": instances, "glows": glows}
 if moon_pos is not None:
     out_props["moon"] = [round(v, 1) for v in moon_pos]
 json.dump(out_props,

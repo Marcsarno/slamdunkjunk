@@ -212,6 +212,16 @@
     }
   ],
   "theme": {
+    "light_props_spacing": 15,
+    "light_props": [
+      "light_witchs_cauldron",
+      "light_marsh_wisp",
+      "light_captured_spirit",
+      "light_glowing_ghoul",
+      "light_moon_mushrooms",
+      "light_hollow_heart_tree",
+      "light_skull_lantern"
+    ],
     "trees_near": [
       "tree_bent_willow",
       "tree_hollow_sentinel",

@@ -30,6 +30,8 @@ var ambience := Ambience.new()
 var _fog_base := 0.0045
 var _sky_mat: ShaderMaterial
 var _moon_dir := Vector3(0, 0.5, -1)
+var _light_points: Array = []      # [course position, color]: the lanterns and the light props, for the pooled lights
+var _floaters: Array = []          # light props that hover (ghosts, the skull): [node, base y, phase]
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -42,6 +44,7 @@ func build(hole_dir: String, t: Terrain) -> void:
 	add_child(scene)
 	_apply_materials(scene)
 	_cards()
+	_glow_props()
 	_horizon_rings()
 	_pin()
 	_make_bats()
@@ -324,6 +327,62 @@ func _cards() -> void:
 		add_child(mmi)
 
 
+## The painted light props along the rough (placed by build_hole.py, their light found by prep_lights.py):
+## each stands in the world like a card, with a soft halo of its own color where its light is, and
+## joins the lanterns for the pooled lights. The ghosts and the skull hover and bob.
+func _glow_props() -> void:
+	for p in props.lanterns:
+		_light_points.append([Vector3(p[0], p[1], p[2]), Color(1.0, 0.55, 0.2)])
+	var list: Array = props.get("glows", [])
+	if list.is_empty():
+		return
+	var meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(CARD_DIR + "lights.json"))
+	var halo_tex := Fx._dot_texture()
+	var mats := {}
+	for g in list:
+		var m: Dictionary = meta[g.image]
+		var h := float(g.height)
+		var lift := float(g.get("lift", 0.0))
+		if not mats.has(g.image):
+			var tex: Texture2D = load(CARD_DIR + g.image + ".png")
+			var q := QuadMesh.new()
+			q.size = Vector2(h * float(m.aspect), h)
+			q.center_offset = Vector3(0, h * 0.5, 0)
+			var mat := _card_material(tex, Color(1, 1, 1))
+			mat.disable_fog = true             # lights read through the night haze
+			var col := Color(m.color[0], m.color[1], m.color[2])
+			var hm := StandardMaterial3D.new()
+			hm.albedo_texture = halo_tex
+			hm.albedo_color = Color(col, 0.8)
+			hm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			hm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			hm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			hm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			hm.disable_fog = true
+			var hq := QuadMesh.new()
+			var hs := clampf(h * 1.3, 1.8, 4.0)
+			hq.size = Vector2(hs, hs)
+			mats[g.image] = [q, mat, hq, hm, col]
+		var parts: Array = mats[g.image]
+		var node := Node3D.new()
+		add_child(node)
+		node.position = Terrain.to_world(Vector3(g.pos[0], g.pos[1], g.pos[2] + lift))
+		var body := MeshInstance3D.new()
+		body.mesh = parts[0]
+		body.material_override = parts[1]
+		body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		node.add_child(body)
+		var halo := MeshInstance3D.new()
+		halo.mesh = parts[2]
+		halo.material_override = parts[3]
+		halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		halo.position = Vector3(0, h * float(m.glow[1]), 0)
+		node.add_child(halo)
+		_light_points.append([Vector3(g.pos[0], g.pos[1], g.pos[2] + lift + h * float(m.glow[1])), parts[4]])
+		if lift > 0.0:
+			_floaters.append([node, node.position.y, randf() * TAU])
+
+
 ## Optional painted tree-line rings between the course edge and the sky backdrop.
 func _horizon_rings() -> void:
 	var center := Vector3((terrain.meta.origin[0] + terrain.meta.extent[0]) * 0.5,
@@ -507,6 +566,8 @@ func _process(delta: float) -> void:
 		_sky_mat.set_shader_parameter("tan_half", t)
 		_sky_mat.set_shader_parameter("screen_aspect", vp.x / vp.y)
 	_bat_t += delta
+	for f in _floaters:
+		f[0].position.y = f[1] + sin(_bat_t * 1.4 + f[2]) * 0.12
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed
 		var c: Vector3 = b.center
@@ -518,16 +579,20 @@ func _process(delta: float) -> void:
 		return
 	_light_timer = 0.25
 	var cam := camera.global_position
+	# the nearest lanterns and light props get the real lights, each in its own color
+	var lit: Array = _light_points.duplicate()
+	lit.sort_custom(func(a, b):
+		return Terrain.to_world(a[0]).distance_squared_to(cam) < Terrain.to_world(b[0]).distance_squared_to(cam))
+	for i in lantern_lights.size():
+		var l := lantern_lights[i]
+		l.visible = i < lit.size()
+		if l.visible:
+			l.position = Terrain.to_world(lit[i][0] + Vector3(0, 0, 0.35))
+			l.light_color = lit[i][1]
 	var near: Array = props.lanterns.duplicate()
 	near.sort_custom(func(a, b):
 		return Terrain.to_world(Vector3(a[0], a[1], a[2])).distance_squared_to(cam) \
 			< Terrain.to_world(Vector3(b[0], b[1], b[2])).distance_squared_to(cam))
-	for i in lantern_lights.size():
-		var l := lantern_lights[i]
-		l.visible = i < near.size()
-		if l.visible:
-			var p: Array = near[i]
-			l.position = Terrain.to_world(Vector3(p[0], p[1], p[2] + 0.35))
 	if _terrain_mat:
 		var pools: Array[Vector4] = []
 		for i in POOLS:

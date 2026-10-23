@@ -50,6 +50,16 @@
   ]
  },
  "theme": {
+  "light_props": [
+   "light_grave_candles",
+   "light_skull_lantern",
+   "light_glowing_ghoul",
+   "light_lantern_ghost",
+   "light_haunted_lamppost",
+   "light_skeleton_groundskeeper",
+   "light_captured_spirit",
+   "light_moon_mushrooms"
+  ],
   "trees_near": [
    "tree_silver_snag",
    "tree_ghost_birch",

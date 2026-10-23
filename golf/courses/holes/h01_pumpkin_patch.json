@@ -207,6 +207,16 @@
   ],
   "lantern_spacing": 15,
   "theme": {
+    "light_props_spacing": 24,
+    "light_props": [
+      "light_classic_jack",
+      "light_pumpkin_totem",
+      "light_hanging_harvest",
+      "light_pumpkin_path_lights",
+      "light_haunted_lamppost",
+      "light_lantern_ghost",
+      "light_skeleton_groundskeeper"
+    ],
     "trees_near": [
       "tree_copper_oak",
       "tree_scarlet_maple",
