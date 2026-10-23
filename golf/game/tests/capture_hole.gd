@@ -1,8 +1,8 @@
 extends Node
 ## Plays a hole to the bottom of the cup and saves a screenshot at each stage of every shot (aim, pull,
 ## swing, flight, landing, result; the putts; the card), for checking the whole course's look.
-## Each shot aims at the pin and picks the power whose simulated finish is nearest it (driver off the
-## tee aims down the fairway's middle instead, as a player would).
+## Each shot keeps the game's target, moved upwind by the drift the wind's ring shows, pulls to the
+## mark and strikes it perfectly, as a good player would.
 ## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 --resolution 720x1560 -- [--hole=h02] [--round] --capture-hole=<dir>
 
 var main: Node
@@ -12,9 +12,11 @@ var shot := 0
 var t := 0.0
 var stage := "wait_aim"
 var landed := false
+var aim_t := 0.0
 var round := false     # --round: press Next hole on each card and play on to the last hole
 var burst := false     # --burst: a screenshot every frame through each swing, not just one
 var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
+var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, then miss the needle
 
 
 func _ready() -> void:
@@ -27,8 +29,25 @@ func _ready() -> void:
 			burst = true
 		if a == "--pull-steps":
 			pull_steps = true
+		if a == "--drag-test":
+			drag_test = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
+
+
+func _touch(p: Vector2, down: bool) -> InputEventScreenTouch:
+	var e := InputEventScreenTouch.new()
+	e.index = 0
+	e.position = p
+	e.pressed = down
+	return e
+
+
+func _drag_ev(p: Vector2) -> InputEventScreenDrag:
+	var e := InputEventScreenDrag.new()
+	e.index = 0
+	e.position = p
+	return e
 
 
 func snap(name: String) -> void:
@@ -39,57 +58,61 @@ func snap(name: String) -> void:
 	print("captured s%d %s phase=%d strokes=%d club=%s ball scale %.2f cam-ball %.1f m" % [shot + 1, name, main.phase, main.strokes, main.club.get("id", ""), main.ball_mesh.scale.x, main.cam.global_position.distance_to(main.ball_mesh.global_position)])
 
 
-## The pull (0..1) whose simulated finish lands nearest `target`, along `aim`.
-func best_pull(target: Vector3) -> float:
-	var best := 0.5
-	var best_d := INF
-	for i in 41:
-		var p := 0.07 + 0.93 * i / 40.0   # a person can pull as little as MIN_PULL
-		var r := BallSim.simulate(main.terrain, main.obstacles, main.terrain.pin(), main.wind, main.ball,
-			Clubs.launch_velocity(main.club, p, main.aim), main.club.lift)
-		var d := Vector2(r.end.x - target.x, r.end.y - target.y).length()
-		if r.state == BallSim.State.WATER or r.state == BallSim.State.OOB:
-			d += 1000.0
-		if d < best_d:
-			best_d = d
-			best = p
-	return best
-
-
 func _process(delta: float) -> void:
 	t += delta
 	match stage:
 		"wait_aim":
 			if main.phase == main.Phase.INTRO and t > 1.0:
 				main._press(Vector2(360, 900))
-			if main.phase == main.Phase.AIM and t > 1.2:
-				var pin: Vector3 = main.terrain.pin()
-				var to_pin := Vector2(pin.x - main.ball.x, pin.y - main.ball.y)
-				var target := pin
-				if main.club.id == "driver":
-					# a full drive down the middle: ~22 path samples (~220 m) on from where the ball lies
-					var path: Array = main.terrain.meta.path
-					var here := Vector2(main.ball.x, main.ball.y)
-					var near := 0
-					for i in path.size():
-						if Vector2(path[i][0], path[i][1]).distance_to(here) < Vector2(path[near][0], path[near][1]).distance_to(here):
-							near = i
-					var k: int = mini(near + 22, path.size() - 1)
-					var far := Vector2(path[k][0], path[k][1])
-					to_pin = far - Vector2(main.ball.x, main.ball.y)
-					target = Vector3(far.x, far.y, 0)
-				main.aim = to_pin.normalized()
-				main.aim_goal = main.aim
-				main._place_golfer_back()
-				main._aim_cam()
+			if main.phase != main.Phase.AIM:
+				aim_t = 0.0
+			aim_t += delta
+			if main.phase == main.Phase.AIM and aim_t > 0.6:     # the shot's preview has had a few frames
+				# aim like a player: the game's target, moved upwind by as far as the wind's ring sits off it
+				var b2 := Vector2(main.ball.x, main.ball.y)
+				var pin2 := Vector2(main.terrain.pin().x, main.terrain.pin().y)
+				print("aim s%d: pin %.1f m, target %.1f m, power %.3f, wind %s, wind lands %.1f m from target" % [shot + 1, b2.distance_to(pin2), b2.distance_to(main.target), main.full_power, main.wind, Vector2(main._wind_land.x, main._wind_land.y).distance_to(main.target) if main._wind_land != Vector3.INF else -1.0])
+				if main._wind_land != Vector3.INF:
+					var drift := Vector2(main._wind_land.x - main.target.x, main._wind_land.y - main.target.y)
+					main._set_target(main.target - drift)
+					print("   moved upwind: target %.1f m, power %.3f" % [b2.distance_to(main.target), main.full_power])
+				t = 0.0
+				stage = "settle"
+		"settle":
+			if t > 0.9 and not (drag_test and shot == 0):
+				stage = "settling"
 				await snap("aim")
-				var p := best_pull(target)
-				main._press(Vector2(360, 1000))
-				main._drag(Vector2(360, 1000 + p * main.get_viewport().get_visible_rect().size.y * main.PULL_FULL), Vector2.ZERO)
-				main.aim = to_pin.normalized()
-				main.aim_goal = main.aim
-				main.pull = p
-				main.pull_goal = p
+				var vp := main.get_viewport().get_visible_rect().size
+				main._press(Vector2(360, vp.y * 0.8))
+				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+				main.needle_test = 0.0      # a perfect strike
+				t = 0.0
+				stage = "pull"
+			elif t > 0.9:
+				# a finger on the target, dragged a fifth of the screen to the right
+				stage = "dragging"
+				var tw: Vector3 = Terrain.to_world(Vector3(main.target.x, main.target.y, main.terrain.height(main.target.x, main.target.y)))
+				var sp: Vector2 = main.cam.unproject_position(tw)
+				var before: Vector2 = main.target
+				main._unhandled_input(_touch(sp, true))
+				for k in 10:
+					main._unhandled_input(_drag_ev(sp + Vector2(14.4 * (k + 1), 0)))
+					await get_tree().process_frame
+				await snap("drag")
+				main._unhandled_input(_touch(sp + Vector2(144, 0), false))
+				var after_sp: Vector2 = main.cam.unproject_position(Terrain.to_world(Vector3(main.target.x, main.target.y, main.terrain.height(main.target.x, main.target.y))))
+				print("drag test: target moved %.1f m; finger at %s, target drawn at %s" % [before.distance_to(main.target), sp + Vector2(144, 0), after_sp])
+				t = 0.0
+				stage = "settle_after_drag"
+		"settle_after_drag":
+			if t > 1.0:
+				stage = "settling"
+				await snap("aim")
+				var vp := main.get_viewport().get_visible_rect().size
+				main._press(Vector2(360, vp.y * 0.8))
+				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+				main.needle_test = 0.9      # well off the middle: pushed right and bending right
+				drag_test = false
 				t = 0.0
 				stage = "pull"
 		"pull":
@@ -132,11 +155,19 @@ func _process(delta: float) -> void:
 				stage = "done"
 		"land":
 			if main.sim and main.sim.state != BallSim.State.FLYING:
+				stage = "landed"
 				await snap("landing")
-				stage = "done"
+				t = 0.0
+				stage = "after_landing"
 			elif main.phase == main.Phase.RESULT or main.phase == main.Phase.HOLED:
 				stage = "done"
+		"after_landing":
+			if t > 0.35:
+				stage = "done"
+				await snap("landing_fx")
 		"done":
+			if main.phase == main.Phase.RESULT and main.sim:
+				print("   shot s%d: landed %.1f m, finished %.1f m out (from %s)" % [shot + 1, Vector2(main.sim.first_land.x - main.last_ball.x, main.sim.first_land.y - main.last_ball.y).length() if main.sim.first_land != Vector3.INF else -1.0, Vector2(main.sim.pos.x - main.last_ball.x, main.sim.pos.y - main.last_ball.y).length(), main.last_ball])
 			if main.phase == main.Phase.RESULT:
 				await snap("result")
 				shot += 1

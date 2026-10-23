@@ -16,6 +16,7 @@ var dist := Label.new()
 var wind := Label.new()
 var wind_arrow := WindArrow.new()
 var gauge := Gauge.new()
+var accuracy := Needle.new()
 var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
@@ -58,27 +59,27 @@ class WindArrow extends Control:
 		draw_colored_polygon(head, col)
 
 
-## The distance gauge shown while pulling: a yardage scale up to the club's full carry, filled to where
-## this pull will land, a fainter stretch for the roll after it (once the finger holds still), and a
-## flag where the pin is. Line the ball's finish up with the flag; it turns mint when it does.
+## The power gauge shown while pulling, in yards (feet for putts): filled to where this pull carries,
+## with the target marked. Pulling to the mark lands on the target (it turns mint there); past it is
+## extra power at a risk (red); a fainter stretch shows the roll once the finger holds still.
 class Gauge extends Control:
 	const TRACK_W := 22.0
 	const TOP := 34.0
 	const BOTTOM := 26.0
 	var value := 0.0      # this pull's carry, in the gauge's units
 	var finish := -1.0    # where it stops after rolling; < 0 while not worked out yet
-	var top_value := 1.0  # the top of the scale (a full pull, or a bit over)
-	var pin := 0.0        # distance to the pin, same units
+	var mark := 1.0       # the target's distance: a full (100%) pull
+	var top_value := 1.0  # the top of the scale: the most power a pull can add
 	var unit := "yds"
 	var warning := ""     # e.g. "into the water": where the preview shot ends up, if it's trouble
 
-	func show_shot(v: float, finish_v: float, top: float, pin_v: float, unit_name: String, warn := "") -> void:
+	func show_shot(v: float, finish_v: float, mark_v: float, top: float, unit_name: String, warn := "") -> void:
 		value = v
-		warning = warn
 		finish = finish_v
+		mark = mark_v
 		top_value = maxf(top, 1.0)
-		pin = pin_v
 		unit = unit_name
+		warning = warn
 		visible = true
 		queue_redraw()
 
@@ -88,11 +89,14 @@ class Gauge extends Control:
 	func _draw() -> void:
 		var font := get_theme_default_font()
 		var ink := Color(0.06, 0.02, 0.1)
-		var tx := size.x - TRACK_W - 40.0   # room on the right for the pin flag
+		var cream := Color(1, 0.94, 0.84)
+		var tx := size.x - TRACK_W - 40.0   # room on the right for the target mark
 		var y0 := size.y - BOTTOM
-		# the track
+		var my := _y(mark)
+		# the track, red-tinted above the mark where power is risky
 		draw_rect(Rect2(tx - 6, TOP - 6, TRACK_W + 12, y0 - TOP + 12), Color(0.16, 0.08, 0.24, 0.78))
 		draw_rect(Rect2(tx, TOP, TRACK_W, y0 - TOP), Color(0.05, 0.02, 0.09, 0.9))
+		draw_rect(Rect2(tx, TOP, TRACK_W, my - TOP), Color(0.55, 0.08, 0.12, 0.55))
 		var fy := _y(value)
 		# a tick every 10/25/50 units (whichever gives a handful), labelled on the left except behind the tag
 		var step := 50.0
@@ -103,53 +107,84 @@ class Gauge extends Control:
 		var v := step
 		while v < top_value:
 			var ty := _y(v)
-			draw_line(Vector2(tx - 10, ty), Vector2(tx + TRACK_W, ty), Color(1, 0.94, 0.84, 0.55), 2.0)
-			if absf(ty - fy) > 40.0:
+			draw_line(Vector2(tx - 10, ty), Vector2(tx + TRACK_W, ty), Color(cream, 0.55), 2.0)
+			if absf(ty - fy) > 40.0 and absf(ty - my) > 16.0:
 				var t := "%d" % roundi(v)
 				var tw := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
 				draw_string_outline(font, Vector2(tx - 16 - tw, ty + 8), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 6, ink)
-				draw_string(font, Vector2(tx - 16 - tw, ty + 8), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 0.94, 0.84, 0.8))
+				draw_string(font, Vector2(tx - 16 - tw, ty + 8), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(cream, 0.8))
 			v += step
-		# the fill: orange, mint when it lines up with the pin
-		var close := finish >= 0.0 and absf(finish - pin) <= maxf(top_value * 0.025, 1.0)
-		var fill := Color(0.45, 1.0, 0.7) if close else Color(1.0, 0.62, 0.18)
+		# the fill: orange short of the mark, mint on it, red past it
+		var on_mark := absf(value - mark) <= maxf(mark * 0.015, 0.3)
+		var fill := Color(0.45, 1.0, 0.7) if on_mark else (Color(1.0, 0.32, 0.28) if value > mark else Color(1.0, 0.62, 0.18))
 		draw_rect(Rect2(tx, fy, TRACK_W, y0 - fy), Color(fill, 0.9))
 		if finish > value:
 			var ry := _y(finish)
 			draw_rect(Rect2(tx, ry, TRACK_W, fy - ry), Color(fill, 0.38))
-		# the pin: a flag on the track (at the top with an arrow if it's out of reach)
-		var py := _y(pin)
+		# the target mark: a line across the track and a ring beside it
 		var px := tx + TRACK_W
-		var flag := Color(1.0, 0.3, 0.25)
-		draw_line(Vector2(tx - 6, py), Vector2(px + 6, py), ink, 8.0)
-		draw_line(Vector2(tx - 4, py), Vector2(px + 4, py), Color.WHITE, 4.0)
-		draw_line(Vector2(px + 6, py + 2), Vector2(px + 6, py - 36), ink, 6.0)
-		draw_line(Vector2(px + 6, py), Vector2(px + 6, py - 34), Color.WHITE, 3.0)
-		var fl := PackedVector2Array([Vector2(px + 7, py - 34), Vector2(px + 30, py - 25), Vector2(px + 7, py - 16)])
-		draw_colored_polygon(PackedVector2Array([fl[0] + Vector2(-1, -3), fl[1] + Vector2(4, 0), fl[2] + Vector2(-1, 3)]), ink)
-		draw_colored_polygon(fl, flag)
-		if pin > top_value:
-			draw_colored_polygon(PackedVector2Array([Vector2(tx + TRACK_W * 0.5, py - 22), Vector2(tx + 3, py - 8), Vector2(tx + TRACK_W - 3, py - 8)]), Color.WHITE)
+		draw_line(Vector2(tx - 6, my), Vector2(px + 6, my), ink, 8.0)
+		draw_line(Vector2(tx - 4, my), Vector2(px + 4, my), Color.WHITE, 4.0)
+		var c := Vector2(px + 20, my)
+		draw_arc(c, 11, 0, TAU, 24, ink, 7.0)
+		draw_arc(c, 11, 0, TAU, 24, Color(1.0, 0.8, 0.4), 3.5)
+		draw_circle(c, 3.5, Color(1.0, 0.8, 0.4))
 		# this pull's distance, in a tag at the top of the fill
 		var big := "%d" % roundi(value)
 		var bw := font.get_string_size(big, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
 		var uw := font.get_string_size(unit, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
-		var roll_text := warning if warning != "" else ("" if finish <= value + 0.5 else "rolls to %d" % roundi(finish))
-		var rw := font.get_string_size(roll_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+		var note := warning
+		if note == "":
+			note = "on target" if on_mark else ("too far!" if value > mark else "")
+			if finish > value + 0.5:
+				note = ("on target · " if on_mark else "") + "rolls to %d" % roundi(finish)
+		var rw := font.get_string_size(note, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 		var tag_w := maxf(bw + uw + 30, rw + 24)
-		var tag := Rect2(tx - 28 - tag_w, fy - 30, tag_w, 56 + (24 if roll_text != "" else 0))
+		var tag := Rect2(tx - 28 - tag_w, fy - 30, tag_w, 56 + (24 if note != "" else 0))
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0.16, 0.08, 0.24, 0.92)
 		sb.border_color = fill
 		sb.set_border_width_all(3)
 		sb.set_corner_radius_all(12)
 		draw_style_box(sb, tag)
-		draw_line(Vector2(tag.end.x, fy), Vector2(tx + TRACK_W, fy), Color(1, 0.94, 0.84), 4.0)
-		draw_string(font, Vector2(tag.position.x + 12, fy + 16), big, HORIZONTAL_ALIGNMENT_LEFT, -1, 46, Color(1, 0.94, 0.84))
-		draw_string(font, Vector2(tag.position.x + 18 + bw, fy + 15), unit, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 0.94, 0.84, 0.8))
-		if roll_text != "":
-			var note_col := Color(1.0, 0.45, 0.4) if warning != "" else Color(1, 0.94, 0.84, 0.75)
-			draw_string(font, Vector2(tag.position.x + 12, fy + 41), roll_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, note_col)
+		draw_line(Vector2(tag.end.x, fy), Vector2(tx + TRACK_W, fy), cream, 4.0)
+		draw_string(font, Vector2(tag.position.x + 12, fy + 16), big, HORIZONTAL_ALIGNMENT_LEFT, -1, 46, cream)
+		draw_string(font, Vector2(tag.position.x + 18 + bw, fy + 15), unit, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(cream, 0.8))
+		if note != "":
+			var note_col := Color(1.0, 0.45, 0.4) if (warning != "" or value > mark and not on_mark) else Color(cream, 0.8)
+			draw_string(font, Vector2(tag.position.x + 12, fy + 41), note, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, note_col)
+
+
+## The accuracy meter shown while pulling: a needle sweeps across a bar; letting go with it in the
+## mint middle is a perfect, straight strike, and the further out it is the more the shot bends.
+class Needle extends Control:
+	var needle := 0.0       # -1 .. 1
+	var perfect := 0.12     # half-width of the mint middle, same units
+
+	func show_needle(n: float, perfect_w: float) -> void:
+		needle = n
+		perfect = perfect_w
+		visible = true
+		queue_redraw()
+
+	func _draw() -> void:
+		var ink := Color(0.06, 0.02, 0.1)
+		var w := size.x
+		var cy := size.y * 0.5
+		var half := w * 0.5 - 14.0
+		var cx := w * 0.5
+		draw_rect(Rect2(cx - half - 6, cy - 16, half * 2 + 12, 32), Color(0.16, 0.08, 0.24, 0.85))
+		# red at the ends, through orange, to mint in the middle
+		var n_seg := 24
+		for k in n_seg:
+			var a := -1.0 + 2.0 * k / n_seg
+			var b := -1.0 + 2.0 * (k + 1) / n_seg
+			var m := absf((a + b) * 0.5)
+			var col := Color(0.45, 1.0, 0.7) if m <= perfect else Color(1.0, 0.62, 0.18).lerp(Color(1.0, 0.3, 0.25), clampf((m - perfect) / (1.0 - perfect), 0.0, 1.0))
+			draw_rect(Rect2(cx + a * half, cy - 10, (b - a) * half + 0.5, 20), col)
+		var nx := cx + needle * half
+		draw_line(Vector2(nx, cy - 24), Vector2(nx, cy + 24), ink, 9.0)
+		draw_line(Vector2(nx, cy - 22), Vector2(nx, cy + 22), Color.WHITE, 4.0)
 
 
 func _label(l: Label, size: int, color := CREAM) -> Label:
@@ -209,6 +244,19 @@ func _ready() -> void:
 	gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gauge.visible = false
 	root.add_child(gauge)
+
+	# the accuracy needle: across the middle, below the horizon and clear of her and the gauge
+	accuracy.anchor_left = 0.5
+	accuracy.anchor_right = 0.5
+	accuracy.anchor_top = 0.47
+	accuracy.anchor_bottom = 0.47
+	accuracy.offset_left = -190
+	accuracy.offset_right = 150
+	accuracy.offset_top = -30
+	accuracy.offset_bottom = 30
+	accuracy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	accuracy.visible = false
+	root.add_child(accuracy)
 
 	# just above the horizon, clear of the moon (which sits a fifth to a third of the way down)
 	message.anchor_left = 0.5
@@ -324,6 +372,7 @@ func set_club(label: String, yards: float) -> void:
 
 func hide_gauge() -> void:
 	gauge.visible = false
+	accuracy.visible = false
 
 
 func flash(text: String, seconds := 2.2) -> void:

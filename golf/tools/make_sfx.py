@@ -1,0 +1,190 @@
+"""Synthesize the game's sound effects (no recordings needed): writes 16-bit mono WAVs.
+
+usage: python3 -I make_sfx.py <out_dir>
+
+  swing       the club whooshing through
+  hit_driver  the crack of a driver
+  hit_iron    the click of an iron or wedge
+  putt        a soft putter tock
+  land_grass  the ball thumping down on grass
+  land_sand   a puff of sand
+  splash      the ball dropping into water, with bubbles
+  cup         rattling in and dropping to the bottom
+  perfect     a bright two-note chime for a perfect strike
+  holed       a spooky celesta run when the ball drops
+  thunder     a crack and a long rumble, for the lightning
+  click       a tiny tick as the pull settles on the mark
+"""
+import os
+import sys
+import wave
+
+import numpy as np
+from scipy import signal
+
+RATE = 22050
+rng = np.random.default_rng(7)
+
+
+def t_of(seconds):
+    return np.arange(int(seconds * RATE)) / RATE
+
+
+def env(n, attack, decay):
+    """Attack (s) then exponential decay with time constant `decay` (s)."""
+    t = np.arange(n) / RATE
+    a = np.clip(t / max(attack, 1e-4), 0, 1)
+    return a * np.exp(-np.maximum(t - attack, 0) / decay)
+
+
+def band(x, lo, hi, order=2):
+    sos = signal.butter(order, [lo, hi], btype="band", fs=RATE, output="sos")
+    return signal.sosfilt(sos, x)
+
+
+def low(x, f, order=2):
+    return signal.sosfilt(signal.butter(order, f, btype="low", fs=RATE, output="sos"), x)
+
+
+def high(x, f, order=2):
+    return signal.sosfilt(signal.butter(order, f, btype="high", fs=RATE, output="sos"), x)
+
+
+def sweep_band(x, f0, f1, width=0.6, block=256):
+    """Band-pass with a centre gliding from f0 to f1 over the sound."""
+    out = np.zeros_like(x)
+    n = len(x)
+    for start in range(0, n, block):
+        u = start / n
+        fc = f0 * (f1 / f0) ** u
+        seg = x[max(0, start - 1024):start + block]
+        y = band(seg, fc * (1 - width / 2), fc * (1 + width / 2))
+        out[start:start + block] = y[-len(x[start:start + block]):]
+    return out
+
+
+def bell(freq, seconds, decay, partials=((1, 1.0), (2.76, 0.35), (5.4, 0.15))):
+    t = t_of(seconds)
+    y = sum(a * np.sin(2 * np.pi * freq * k * t) * np.exp(-t / (decay / k ** 0.5)) for k, a in partials)
+    return y * env(len(t), 0.003, 10.0)
+
+
+def save(out, name, y, gain=0.9):
+    y = np.asarray(y, float)
+    peak = np.max(np.abs(y)) or 1.0
+    y = y / peak * gain
+    fade = min(len(y), int(0.01 * RATE))
+    y[-fade:] *= np.linspace(1, 0, fade)
+    data = (np.clip(y, -1, 1) * 32767).astype("<i2")
+    with wave.open(os.path.join(out, name + ".wav"), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(RATE)
+        w.writeframes(data.tobytes())
+
+
+def main():
+    out = sys.argv[1]
+    os.makedirs(out, exist_ok=True)
+
+    # swing: breathy noise rising in pitch and loudness to the strike, then gone
+    n = int(0.42 * RATE)
+    t = np.arange(n) / RATE
+    shape = np.sin(np.pi * np.clip(t / 0.42, 0, 1)) ** 2.2
+    save(out, "swing", sweep_band(rng.standard_normal(n), 350, 2400, 0.9) * shape, 0.55)
+
+    # driver: a crack (bright noise burst and ringing partials) over a short low thump
+    n = int(0.35 * RATE)
+    t = np.arange(n) / RATE
+    crack = high(rng.standard_normal(n), 1800) * env(n, 0.0005, 0.012)
+    ring = sum(a * np.sin(2 * np.pi * f * t) for f, a in ((2300, 1.0), (3550, 0.6), (5200, 0.35))) * env(n, 0.0005, 0.05)
+    thump = np.sin(2 * np.pi * 110 * t) * env(n, 0.001, 0.035)
+    save(out, "hit_driver", crack * 1.2 + ring * 0.45 + thump * 0.6)
+
+    # iron: a tighter, more metallic click
+    ring = sum(a * np.sin(2 * np.pi * f * t) for f, a in ((3100, 1.0), (4700, 0.5), (6900, 0.25))) * env(n, 0.0004, 0.03)
+    crack = high(rng.standard_normal(n), 2500) * env(n, 0.0004, 0.008)
+    save(out, "hit_iron", crack + ring * 0.5 + thump * 0.25)
+
+    # putt: a soft wooden tock
+    n = int(0.18 * RATE)
+    t = np.arange(n) / RATE
+    save(out, "putt", (np.sin(2 * np.pi * 820 * t) + 0.5 * np.sin(2 * np.pi * 1350 * t)) * env(n, 0.001, 0.025)
+         + low(rng.standard_normal(n), 1500) * env(n, 0.0005, 0.006) * 0.4, 0.6)
+
+    # landing on grass: a dull thud with a little rustle
+    n = int(0.3 * RATE)
+    t = np.arange(n) / RATE
+    save(out, "land_grass", np.sin(2 * np.pi * 85 * t) * env(n, 0.002, 0.06)
+         + low(rng.standard_normal(n), 900) * env(n, 0.002, 0.05) * 0.6, 0.7)
+
+    # sand: a muffled puff
+    n = int(0.45 * RATE)
+    save(out, "land_sand", band(rng.standard_normal(n), 300, 2200) * env(n, 0.004, 0.11)
+         + np.sin(2 * np.pi * 70 * t_of(0.45)) * env(n, 0.002, 0.05) * 0.5, 0.7)
+
+    # splash: a burst of water noise, then bubbles popping
+    n = int(1.1 * RATE)
+    t = np.arange(n) / RATE
+    burst = band(rng.standard_normal(n), 250, 3500) * env(n, 0.008, 0.16)
+    plop = np.sin(2 * np.pi * (180 + 300 * np.exp(-t / 0.05)) * t) * env(n, 0.002, 0.08)
+    bubbles = np.zeros(n)
+    for k in range(9):
+        s = int(rng.uniform(0.12, 0.9) * RATE)
+        m = int(0.05 * RATE)
+        if s + m < n:
+            tt = np.arange(m) / RATE
+            f = rng.uniform(500, 1100)
+            bubbles[s:s + m] += np.sin(2 * np.pi * f * (1 + 2.5 * tt) * tt) * env(m, 0.002, 0.012) * rng.uniform(0.2, 0.5)
+    save(out, "splash", burst + plop * 0.7 + bubbles * 0.6)
+
+    # cup: three rattles round the rim, then the drop to the bottom
+    n = int(0.75 * RATE)
+    t = np.arange(n) / RATE
+    y = np.zeros(n)
+    for k, at in enumerate((0.0, 0.07, 0.13)):
+        s = int(at * RATE)
+        m = int(0.05 * RATE)
+        tt = np.arange(m) / RATE
+        y[s:s + m] += (np.sin(2 * np.pi * (1700 - 200 * k) * tt) + high(rng.standard_normal(m), 2000) * 0.5) * env(m, 0.0005, 0.01) * (0.6 - 0.12 * k)
+    s = int(0.26 * RATE)
+    tt = np.arange(n - s) / RATE
+    y[s:] += (np.sin(2 * np.pi * 190 * tt) * 0.9 + np.sin(2 * np.pi * 640 * tt) * 0.4) * env(n - s, 0.001, 0.07)
+    save(out, "cup", y)
+
+    # perfect: a bright two-note chime
+    a = bell(1318.5, 0.9, 0.35)
+    b = bell(1975.5, 0.9, 0.35)
+    y = np.zeros(int(1.0 * RATE))
+    y[:len(a)] += a
+    s = int(0.09 * RATE)
+    y[s:s + len(b)] += b[:len(y) - s]
+    save(out, "perfect", y, 0.5)
+
+    # holed: a spooky celesta run (A minor, rising), with a soft shimmer
+    notes = (440.0, 523.25, 659.25, 880.0, 1046.5, 1318.5)
+    y = np.zeros(int(1.8 * RATE))
+    for k, f in enumerate(notes):
+        s = int(k * 0.11 * RATE)
+        b = bell(f, 1.2, 0.5)
+        y[s:s + len(b)] += b[:len(y) - s] * (0.7 + 0.06 * k)
+    shimmer = band(rng.standard_normal(len(y)), 5000, 9000) * env(len(y), 0.3, 0.5) * 0.08
+    save(out, "holed", y + shimmer, 0.6)
+
+    # thunder: a crack, then a long, lumpy low rumble
+    n = int(3.6 * RATE)
+    t = np.arange(n) / RATE
+    brown = np.cumsum(rng.standard_normal(n))
+    brown = high(brown, 25)
+    rumble = low(brown, 140, 4) * env(n, 0.25, 1.1) * (0.7 + 0.3 * np.sin(2 * np.pi * 1.3 * t) * np.sin(2 * np.pi * 0.47 * t))
+    crack = band(rng.standard_normal(n), 400, 4000) * env(n, 0.003, 0.09)
+    save(out, "thunder", rumble / np.max(np.abs(rumble)) + crack * 0.35, 0.8)
+
+    # click: a tiny tick
+    n = int(0.03 * RATE)
+    save(out, "click", np.sin(2 * np.pi * 3200 * t_of(0.03)) * env(n, 0.0003, 0.004), 0.4)
+    print("wrote", sorted(os.listdir(out)))
+
+
+if __name__ == "__main__":
+    main()

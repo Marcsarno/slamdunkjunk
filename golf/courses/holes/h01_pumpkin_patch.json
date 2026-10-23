@@ -251,7 +251,15 @@
     "moon_scale": 0.75,
     "backdrop_haze": 0.45,
     "light_azimuth": 200,
-    "light_elevation": 36
+    "light_elevation": 36,
+    "wisp_color": [
+      1.0,
+      0.62,
+      0.25
+    ],
+    "ghosts": 2,
+    "lightning": 45,
+    "mist": 24
   },
   "trees_spacing": 8.5,
   "pumpkin_clusters": [

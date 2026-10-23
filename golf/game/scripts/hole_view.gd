@@ -1,7 +1,8 @@
 class_name HoleView
 extends Node3D
 ## Everything you see on a hole: the Blender terrain/props, painted billboard cards, the painted
-## sky backdrop and moon, fog and lights, the pin, lantern lights, bats. The look comes from the
+## sky backdrop and moon, fog and lights, the pin, lantern lights, bats, and the Ambience (mist,
+## wisps, leaves, ghosts, lightning). The look comes from the
 ## hole's "theme" (courses/holes/<id>.json -> terrain.json); gameplay data lives in Terrain.
 
 const CARD_DIR := "res://assets/cards/"
@@ -24,6 +25,7 @@ var _bats: Array = []
 var _bat_tex: Array[Texture2D] = []
 var _bat_t := 0.0
 var _terrain_mat: ShaderMaterial
+var ambience := Ambience.new()
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -39,6 +41,8 @@ func build(hole_dir: String, t: Terrain) -> void:
 	_horizon_rings()
 	_pin()
 	_make_bats()
+	add_child(ambience)
+	ambience.build(terrain, props, theme, env)
 	for i in LANTERN_LIGHTS:
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.55, 0.2)
@@ -183,6 +187,19 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("extent", Vector2(terrain.meta.extent[0], terrain.meta.extent[1]))
 	m.set_shader_parameter("texture_strength", float(theme.get("texture_strength", 0.35)))
 	m.set_shader_parameter("brightness", float(theme.get("ground_brightness", 1.0)))
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.02
+	noise.fractal_octaves = 3
+	var blotch := NoiseTexture2D.new()
+	blotch.width = 256
+	blotch.height = 256
+	blotch.seamless = true
+	blotch.generate_mipmaps = true
+	blotch.noise = noise
+	m.set_shader_parameter("blotch", blotch)
+	m.set_shader_parameter("leaf_color", _col(theme.get("leaf_ground"), Color(0.42, 0.2, 0.07)))
+	m.set_shader_parameter("leaf_amount", float(theme.get("leaf_amount", 0.55)))
 	var none: Array[Vector4] = []
 	none.resize(POOLS)
 	m.set_shader_parameter("pools", none)
@@ -464,6 +481,7 @@ func _make_bats() -> void:
 
 
 func _process(delta: float) -> void:
+	ambience.camera = camera
 	_bat_t += delta
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed

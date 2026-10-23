@@ -16,11 +16,11 @@ const HOLES := [
 	["Midnight Homecoming", 0],
 ]   # par 0: not built yet (the built ones are Round.HOLES, in the same order)
 const HELP := [
-	"Drag the sky to turn your aim.",
-	"Pull down anywhere below it to set the power.",
-	"Let go to swing.",
+	"Drag the gold ring to where you want to land.",
+	"Pull down from the bottom to the gauge's mark.",
+	"Let go with the needle in the middle.",
+	"Wind blows a shot to the mint ring: aim off.",
 	"Tap the club box to change clubs.",
-	"Watch the wind arrow up top.",
 ]
 
 var splash := Control.new()

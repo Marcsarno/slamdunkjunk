@@ -3,6 +3,8 @@
 // hole_gen.py picks the surface (R fairway, G green, B sand, A deep-rough/out-of-bounds
 // darkening, leftover = rough); the detail map carries mowing lanes and edge outlines.
 // Jack-o'-lantern light pools are added here for the nearest lanterns (cheaper than real lights).
+// A large, slow noise (`blotch`) breaks up the big flat areas: drifts of fallen leaves and darker and
+// lighter patches in the rough, a gentle unevenness in the fairway; greens and sand stay clean.
 // Course coords: x = world x, y = -world z.
 shader_type spatial;
 render_mode diffuse_lambert;
@@ -13,6 +15,9 @@ uniform sampler2D tex_rough : source_color, filter_linear_mipmap_anisotropic, re
 uniform sampler2D tex_fairway : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_green : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D tex_sand : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D blotch : filter_linear_mipmap, repeat_enable;
+uniform vec3 leaf_color : source_color = vec3(0.42, 0.2, 0.07);
+uniform float leaf_amount = 0.55;
 uniform vec2 origin = vec2(0.0);
 uniform vec2 extent = vec2(100.0);
 uniform float tile_grass = 7.0;
@@ -69,6 +74,15 @@ void fragment() {
 	grain = mix(grain, g_green, w.g);
 	grain = mix(grain, g_sand, w.b);
 	vec3 c = base_col * mix(1.0, grain, texture_strength);
+	// big patches: two scales of noise, ~70 m and ~18 m across
+	float big = texture(blotch, cxy / 70.0).r;
+	float small = texture(blotch, cxy / 18.0 + vec2(0.31, 0.77)).r;
+	float rough_w = clamp(1.0 - w.r - w.g - w.b, 0.0, 1.0);
+	float patchy = (big - 0.5) * 0.5 + (small - 0.5) * 0.3;
+	c *= 1.0 + patchy * (rough_w * 0.9 + w.r * 0.35);
+	// fallen leaves drift in the rough, thickest where the small noise peaks inside the big one
+	float leaves = smoothstep(0.55, 0.72, small * 0.6 + big * 0.5) * rough_w * leaf_amount;
+	c = mix(c, leaf_color * (0.8 + 0.4 * small) * mix(1.0, grain, 0.6), leaves);
 	c *= mix(vec3(1.0), dark_tint, w.a);
 	c *= det * brightness;
 	ALBEDO = c;

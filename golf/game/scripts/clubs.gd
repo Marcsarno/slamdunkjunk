@@ -35,11 +35,12 @@ static func launch_velocity(club: Dictionary, power: float, aim: Vector2) -> Vec
 	return Vector3(d.x * cos(a), d.y * cos(a), sin(a)) * speed
 
 
-## Longest club whose full carry doesn't fly well past the target.
+## The shortest club that reaches the target with a full swing (the driver when none does). A full
+## pull lands on the target whatever the club, so a club with more reach just swings softer.
 static func pick(distance: float, on_green: bool) -> Dictionary:
 	if on_green:
 		return by_id("putter")
-	for c in ALL:
-		if c.id != "putter" and c.carry_m <= distance * 1.12:
-			return c
-	return by_id("wedge")
+	for id in ["wedge", "iron", "driver"]:
+		if by_id(id).carry_m >= distance:
+			return by_id(id)
+	return by_id("driver")
