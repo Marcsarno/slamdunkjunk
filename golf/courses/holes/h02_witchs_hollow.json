@@ -255,7 +255,7 @@
         "haze": 0.55
       }
     ],
-    "sky_style": "painted",
+    "sky_style": "night",
     "fog": [
       0.06,
       0.11,
@@ -263,9 +263,9 @@
     ],
     "fog_density": 0.0042,
     "sky_horizon": [
-      0.03,
-      0.06,
-      0.075
+      0.04,
+      0.05,
+      0.13
     ],
     "backdrop_haze": 0.18,
     "moon_scale": 0.7,
@@ -290,7 +290,12 @@
     "lightning": 35,
     "mist": 30,
     "mist_alpha": 0.38,
-    "leaf_amount": 0.25
+    "leaf_amount": 0.25,
+    "sky_top": [
+      0.004,
+      0.006,
+      0.025
+    ]
   },
   "carry": [
     100,

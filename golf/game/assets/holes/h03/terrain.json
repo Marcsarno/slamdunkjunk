@@ -93,7 +93,7 @@
     "haze": 0.55
    }
   ],
-  "sky_style": "painted",
+  "sky_style": "night",
   "fog": [
    0.09,
    0.09,
@@ -101,9 +101,9 @@
   ],
   "fog_density": 0.0036,
   "sky_horizon": [
+   0.04,
    0.05,
-   0.045,
-   0.12
+   0.13
   ],
   "backdrop_haze": 0.18,
   "ambient": 0.19,
@@ -118,7 +118,12 @@
   "ghosts": 8,
   "lightning": 22,
   "mist": 30,
-  "leaf_amount": 0.25
+  "leaf_amount": 0.25,
+  "sky_top": [
+   0.004,
+   0.006,
+   0.025
+  ]
  },
  "tee": [
   0.0,
