@@ -8,7 +8,7 @@ Notes to pick the work up from (last updated 2026-10-23, evening). Code lives on
 - **Vercel (public):** https://midnight-golf-wheat.vercel.app (`#fps` on the end shows frame rate and 3D
   scale). Project `midnight-golf` (team `marcsarno`, id `prj_Kx6ClNpKm1RppDyK6dlbOPKP4No0`), root
   directory `golf/dist/web`, no build step. Its production branch is `main`, so pushes to this branch only
-  make (protected) previews: **deploy production by hand** after rebuilding `golf/dist/web` (Vercel MCP
+  make (protected) previews: **deploy production by hand**  (2026-10-23: pushes to this branch now deploy production on their own) after rebuilding `golf/dist/web` (Vercel MCP
   `create_deployment`, `gitSource` github Marcsarno/slamdunkjunk, ref `claude/hunting-game-pitch`, the
   commit sha, `target: production`).
 - **Claude artifact (private preview):** https://claude.ai/artifact/TAgqet24mAUsE5tgyED6Qs, published from
@@ -31,16 +31,18 @@ godot --headless --path golf/game -s res://tests/probe_landing.gd          # bou
 xvfb-run -a -s "-screen 0 720x1560x24" godot --path golf/game --rendering-driver opengl3 --resolution 720x1560 \
   -- --hole=h01 --capture-hole=<dir>      # bot plays the hole, screenshot per stage (--burst, --side-test, --drag-test)
 #   --capture=<dir> --introonly | --intro-frames | --stills ;  --quality=0.75 fixes the 3D scale
-# web
-mkdir -p golf/build/web && godot --headless --path golf/game --export-release "Web" ../build/web/index.html
-godot --headless --path golf/game -s res://tools/pack_holes.gd -- --out=../build/web h02 h03 h04 h05 h06 h07 h08 h09
-python3 -I golf/tools/web_pack.py golf/build/web golf/build/web_host          # the artifact / local test
-python3 -I golf/tools/web_pack.py golf/build/web golf/dist/web && rm golf/dist/web/local.html   # Vercel
+# web: one script exports twice (textures for phones, ETC2, and for desktops, S3TC), packs holes 2-9
+# and hosts it in golf/dist/web (Vercel: every push to this branch now deploys to production) and
+# golf/build/web_host (serve it and open local.html to test)
+bash golf/tools/build_web.sh
 # local phone-sized touch test: serve golf/build on 8770, then the Playwright scripts in the scratchpad
 ```
 
-New PNGs import as lossless: set `compress/mode=1` and `lossy_quality=0.85` in their `.import` files (the
-project's convention), then `--import` again.
+Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import VRAM-compressed
+(`compress/mode=2`, mipmaps on): they stay compressed in graphics memory (hole 1 went from ~226 MB to
+~107 MB, `tests/mem_probe.gd --list`). The page fetches the game data in the format the device reads
+(phones ETC2, other desktops S3TC; `web_pack.py`). Menu art (`assets/ui`) stays `compress/mode=1`
+(lossy, 0.85) and the hole maps lossless. Run `--import` after changing an `.import` file.
 
 ## Standing rules from Marc
 
