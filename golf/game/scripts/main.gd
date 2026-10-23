@@ -15,9 +15,16 @@ enum Phase { INTRO, AIM, PULL, SWING, FLIGHT, RESULT, HOLED }
 const YD := 1.0936
 const PULL_ZONE := 0.62         # touches starting below this share of the screen height pull back to
                                 # swing; above it they drag the target
-const PULL_FULL := 0.26         # pull distance (share of screen height) to the target mark: a full shot
-const OVERPOWER := 1.1          # pulling past the mark adds up to this much power, and widens the spread
-const MAGNET := 0.04            # within this of the mark, the pull settles exactly on it
+## The pull: pulling all the way to the bottom of the screen is the club's full power, wherever the
+## finger starts (the travel is what's left below it, kept between these shares of the screen
+## height). The target is a mark partway along it. A putt's full pull is PUTT_HEADROOM times the
+## putt, so the hole sits halfway down and a firm putt can run past.
+const PULL_BOTTOM := 0.965
+const PULL_TRAVEL_MIN := 0.10
+const PULL_TRAVEL_MAX := 0.34
+const PUTT_HEADROOM := 2.0
+const MAGNET := 0.03            # within this (share of the pull) of the mark, the pull settles exactly on it
+const RISKY_POWER := 0.9        # past this share of a club's power the swing gets loose: a wider margin
 const EASE := 20.0              # power follows the finger at this rate (1/s), smoothing touch jitter
 const MIN_PULL := 0.06
 const SPREAD_NEAR := 0.045      # how far off a shot may land, as a share of its length: short shots ...
@@ -69,7 +76,10 @@ var par := 4
 var wind := Vector2.ZERO
 var target := Vector2.ZERO      # course xy where the shot is planned to land: the target marker
 var full_power := 1.0           # club power (as Clubs.launch_velocity takes it) that carries to the target
-var pull := 0.0                 # 0 .. OVERPOWER: 1 is the target mark
+var max_power := 1.0            # the power of a full pull, set when the pull starts (the club's own; a putt's headroom)
+var pull := 0.0                 # 0 .. 1 of max_power; the target sits at mark_pull()
+var _pull_len := 300.0          # finger travel (px) for a full pull, from where this pull started
+var _max_carry := 0.0           # how far a full pull goes, for the gauge's scale
 var pull_goal := 0.0            # where the finger says the pull should be; pull eases toward it
 var pull_start := Vector2.ZERO
 var spread_test := Vector2.INF  # a test can fix where in the margin a shot lands (x across, y along, -1..1)
@@ -135,6 +145,10 @@ func _ready() -> void:
 	view.camera = cam
 	_make_ball_visuals()
 	add_child(hud)
+	var wg := HoleView._col(view.theme.get("water_glow"), Color(0.35, 0.55, 1.0))
+	if wg.v < 0.05:
+		wg = Color(0.35, 0.55, 1.0)
+	hud.aim_map.setup(terrain, Color(0.16 + 0.6 * wg.r, 0.16 + 0.6 * wg.g, 0.16 + 0.6 * wg.b))
 	Music.set_in_play(true)
 	Music.start()
 	hud.club_pressed.connect(_cycle_club)
@@ -472,7 +486,8 @@ func _spread(d: float) -> float:
 	if club.id == "putter":
 		return 0.0
 	var share := lerpf(SPREAD_NEAR, SPREAD_FAR, clampf(d / SPREAD_AT, 0.0, 1.0))
-	return d * share * (1.0 + 2.5 * maxf(0.0, pull - 1.0))
+	var power := max_power * pull if phase == Phase.PULL or phase == Phase.SWING else 0.0
+	return d * share * (1.0 + 4.0 * maxf(0.0, power - RISKY_POWER))
 
 
 func _place_golfer_face() -> void:
@@ -519,14 +534,17 @@ func _on_contact() -> void:
 	sim = BallSim.new(terrain, obstacles, terrain.pin(), wind)
 	# aim at the spot in the margin it's to land on: across by the circle's width, along by its length
 	var b := Vector2(ball.x, ball.y)
-	var d := Vector2(target.x, target.y).distance_to(b) * pull
+	var power := max_power * pull
+	var d := _carry(power, aim)
+	if d == INF:
+		d = Vector2(target.x, target.y).distance_to(b)        # a putt that drops
 	var r := _spread(d)
 	var land := b + aim * d + _right() * _shot_offset.x * r + aim * _shot_offset.y * r * SPREAD_LONG
 	var dir := (land - b).normalized()
 	var stretch := land.distance_to(b) / maxf(d, 0.01)
-	sim.launch(ball, Clubs.launch_velocity(club, full_power * pull * stretch, dir), club.lift)
+	sim.launch(ball, Clubs.launch_velocity(club, power * stretch, dir), club.lift)
 	var hit: String = {"driver": "hit_driver", "putter": "putt"}.get(club.id, "hit_iron")
-	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(full_power * pull, 0.0, 1.0)) if club.id == "putter" else -1.0)
+	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(power, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
 	trail_pts.clear()
 	flight_dir = aim
@@ -611,6 +629,10 @@ func _press(p: Vector2) -> void:
 				phase = Phase.PULL
 				pull_start = p
 				pull_goal = 0.0
+				max_power = _full_pull_power()
+				_pull_len = clampf(vp.y * PULL_BOTTOM - p.y, vp.y * PULL_TRAVEL_MIN, vp.y * PULL_TRAVEL_MAX)
+				var mc := _carry(max_power, aim)
+				_max_carry = mc if mc != INF else Vector2(target.x - ball.x, target.y - ball.y).length() * PUTT_HEADROOM
 				_aim_at_pull = aim
 				_dist_at_pull = Vector2(target.x - ball.x, target.y - ball.y).length()
 				_side_goal = 0.0
@@ -632,16 +654,29 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 		if hit != null:
 			_set_target(_target0 + (hit - _drag_hit0), false)
 	elif phase == Phase.PULL:
-		var g := clampf((p - pull_start).y / (vp.y * PULL_FULL), 0.0, OVERPOWER)
-		if absf(g - 1.0) < MAGNET:
-			if absf(pull_goal - 1.0) >= MAGNET:
+		var g := clampf((p - pull_start).y / _pull_len, 0.0, 1.0)
+		var m := mark_pull()
+		if absf(g - m) < MAGNET:
+			if absf(pull_goal - m) >= MAGNET:
 				Input.vibrate_handheld(18)      # a click onto the mark
 				Sfx.play("click", -6.0)
-			g = 1.0
+			g = m
 		pull_goal = g
 		# sliding sideways swings the aim (past a little drift, which pulling down always has)
 		var dx := (p - pull_start).x / vp.x
 		_side_goal = signf(dx) * maxf(0.0, absf(dx) - SIDE_DEAD) * SIDE_AIM
+
+
+## The power of a full pull: the club's full power, or for a putt PUTT_HEADROOM times this putt.
+func _full_pull_power() -> float:
+	if club.id == "putter":
+		return clampf(maxf(full_power * PUTT_HEADROOM, full_power + 0.06), 0.02, 1.0)
+	return 1.0
+
+
+## Where on the pull (0 .. 1) the target is.
+func mark_pull() -> float:
+	return clampf(full_power / maxf(max_power, 0.0001), 0.0, 1.0)
 
 
 ## The ground point (course xy) under a screen point, by walking the camera ray down to the terrain.
@@ -688,7 +723,7 @@ func _ease_toward_finger(delta: float) -> void:
 			_side = _side_goal
 		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(-_side) * _dist_at_pull, false)
 	if phase == Phase.PULL:
-		golfer.set_pull(_sprite_set("back"), minf(pull, 1.0))
+		golfer.set_pull(_sprite_set("back"), pull)
 
 
 func _release() -> void:
@@ -1136,7 +1171,7 @@ func _show_preview(on: bool) -> void:
 ## wind would carry a perfect full shot.
 func _update_preview() -> void:
 	var putt: bool = club.id == "putter"
-	var p := full_power * (pull if phase == Phase.PULL else 1.0)
+	var p := max_power * pull if phase == Phase.PULL else full_power
 	var key := "%.4f|%.3f|%.3f|%s" % [p, target.x, target.y, club.id]
 	var still := key == _preview_key
 	_preview_key = key
@@ -1175,6 +1210,7 @@ func _update_preview() -> void:
 	_draw_preview(putt)
 	if phase == Phase.PULL:
 		_show_gauge()
+		_show_aim_map(putt)
 	else:
 		hud.hide_gauge()
 
@@ -1244,12 +1280,31 @@ func _draw_preview(putt: bool) -> void:
 		ring.global_transform = Transform3D(Basis().scaled(Vector3(size * 0.7, 1.0, size * 0.7)), ww)
 
 
+## The map in the corner while pulling: where this pull lands, against the target and the course.
+func _show_aim_map(putt: bool) -> void:
+	var m := hud.aim_map
+	var b2 := Vector2(ball.x, ball.y)
+	var dist := b2.distance_to(target)
+	m.ball = b2
+	m.aim = _aim_at_pull
+	m.shot_dir = aim
+	m.target = target
+	m.land = b2 + aim * minf(_carry_m, maxf(_max_carry, dist) * 1.2)
+	var r := _spread(_carry_m)
+	m.spread = Vector2(r, r * SPREAD_LONG)
+	m.span = maxf(maxf(_max_carry, dist) * 1.08, 10.0 if putt else 40.0)
+	var on_mark := absf(pull - mark_pull()) < 0.005
+	m.fill = Color(0.45, 1.0, 0.7) if on_mark else (Color(1.0, 0.32, 0.28) if pull > mark_pull() else Color(1.0, 0.62, 0.18))
+	m.label = _dist_text(_carry_m, putt)
+	hud.show_aim_map()
+
+
 func _show_gauge() -> void:
 	var putt: bool = club.id == "putter"
 	var per_m := 3.281 if putt else YD
 	var mark := Vector2(target.x - ball.x, target.y - ball.y).length() * per_m
 	hud.gauge.show_shot(_carry_m * per_m, _finish_m * per_m if _finish_m >= 0.0 else -1.0,
-		mark, mark * OVERPOWER, "ft" if putt else "yds", _finish_warn)
+		mark, maxf(_max_carry, mark) * per_m, "ft" if putt else "yds", _finish_warn)
 
 
 func _trouble(state: int) -> String:

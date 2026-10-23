@@ -3,8 +3,8 @@ extends RefCounted
 ## Golf ball physics in course coordinates (x right, y down-range, z up, meters).
 ##
 ## Flight: gravity, quadratic air drag relative to the wind, and backspin lift that decays.
-## Ground: bounce off the terrain normal with per-surface restitution, then roll with
-## per-surface resistance plus the slope pulling it downhill. Obstacles (tombstones,
+## Ground: a turf bounce (below), then a roll with per-surface resistance plus the slope pulling it
+## downhill. Obstacles (tombstones,
 ## lanterns, trunks, canopies) come from props.json. The same code drives the aim preview.
 
 enum State { FLYING, ROLLING, STOPPED, HOLED, WATER, OOB }
@@ -19,22 +19,28 @@ const DT := 1.0 / 120.0
 const ROLL_START_SPEED := 1.3     # bounces softer than this settle into a roll
 const MAX_TIME := 25.0
 
-# surface id -> [restitution, tangential keep on impact, rolling resistance (m/s^2)]
+# The turf bounce. A ball coming in steep plugs into the turf and loses more of its speed both ways;
+# a low skip keeps its speed and runs on. Each impact keeps, of the speed along the ground,
+#   keep * (1 - 0.6 sin(descent)),  less the backspin's bite (spin * grip, first landing mostly),
+# and bounces back up at  restitution * cos^2(descent)  of its speed into the ground. Gentle hops
+# (slow into the ground) lose little along it, so a drive skips, then runs out.
+# surface id -> [restitution, keep along the ground, rolling resistance (m/s^2), backspin grip (m/s)]
 const SURF := {
-	Terrain.Surface.OOB: [0.15, 0.4, 6.0],
-	Terrain.Surface.ROUGH: [0.18, 0.40, 4.0],
-	Terrain.Surface.FAIRWAY: [0.30, 0.55, 2.2],
-	Terrain.Surface.GREEN: [0.20, 0.50, 0.62],
-	Terrain.Surface.SAND: [0.04, 0.12, 9.0],
-	Terrain.Surface.WATER: [0.0, 0.0, 99.0],
-	Terrain.Surface.TEE: [0.30, 0.55, 2.2],
-	Terrain.Surface.FRINGE: [0.25, 0.50, 1.6],
-	Terrain.Surface.DEEP: [0.12, 0.35, 6.0],
-	Terrain.Surface.PATH: [0.5, 0.75, 1.4],        # paving: a big kick and a long run
+	Terrain.Surface.OOB: [0.15, 0.30, 6.0, 1.0],
+	Terrain.Surface.ROUGH: [0.18, 0.24, 4.0, 1.2],
+	Terrain.Surface.FAIRWAY: [0.27, 0.40, 1.45, 2.8],
+	Terrain.Surface.GREEN: [0.22, 0.36, 0.62, 6.0],
+	Terrain.Surface.SAND: [0.05, 0.08, 9.0, 0.5],
+	Terrain.Surface.WATER: [0.0, 0.0, 99.0, 0.0],
+	Terrain.Surface.TEE: [0.27, 0.40, 1.45, 2.8],
+	Terrain.Surface.FRINGE: [0.24, 0.36, 1.2, 4.0],
+	Terrain.Surface.DEEP: [0.12, 0.18, 6.0, 1.0],
+	Terrain.Surface.PATH: [0.55, 0.80, 1.4, 0.5],        # paving: a big kick and a long run
 }
-# backspin "checks" the ball for a moment after it lands: extra braking ~ the club's lift
-const SKID_TIME := 0.7
-const SPIN_BRAKE := 2600.0
+const PLUG_SPEED := 12.0         # m/s into the ground at which a landing takes its full loss
+# backspin checks the ball for a moment after it lands
+const CHECK_TIME := 0.35
+const CHECK_BRAKE := 2.5         # extra m/s^2 at full spin
 
 var terrain: Terrain
 var obstacles: ObstacleGrid
@@ -51,7 +57,7 @@ var first_land := Vector3.INF
 var apex := 0.0
 var hit_obstacle := false
 var skid := 0.0
-var spin_brake := 0.0
+var spin := 0.0                  # 0 (a driver's low spin) .. 1 (a wedge's); bites at the first landing
 
 
 func _init(t: Terrain, obs: ObstacleGrid, pin_pos: Vector3, wind_v: Vector2 = Vector2.ZERO) -> void:
@@ -67,7 +73,8 @@ func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	_acc = 0.0
 	vel = velocity
 	lift = lift_coef
-	spin_brake = lift_coef * SPIN_BRAKE
+	# the club's spin, from its lift: driver ~0.1, iron ~0.55, wedge 1, putter 0
+	spin = clampf((lift_coef - 0.0015) / 0.0009, 0.0, 1.0)
 	skid = 0.0
 	time = 0.0
 	bounces = 0
@@ -155,16 +162,27 @@ func _land() -> void:
 	bounces += 1
 	var p: Array = SURF[surf]
 	var n := terrain.normal(pos.x, pos.y)
-	var vn := vel.dot(n)
-	if vn >= 0.0:
+	var vn := -vel.dot(n)                    # speed into the ground
+	if vn <= 0.0:
 		return
-	var vt := vel - n * vn
-	var out_n: float = -vn * float(p[0])
-	vel = vt * p[1] + n * out_n
+	var vt_vec := vel + n * vn
+	var vt := vt_vec.length()
+	var sin_d := clampf(vn / maxf(vel.length(), 0.001), 0.0, 1.0)
+	var plug := clampf(vn / PLUG_SPEED, 0.0, 1.0)
+	var keep := 1.0 - (1.0 - float(p[1]) * (1.0 - 0.6 * sin_d)) * plug
+	var along := vt * keep - spin * float(p[3]) * plug
+	# a wedge can spin back a touch on a green; anything else just stops dead
+	var least := -0.8 if surf == Terrain.Surface.GREEN and spin > 0.8 else 0.0
+	along = maxf(along, least)
+	var dir := vt_vec / vt if vt > 0.0001 else Vector3.ZERO
+	var out_n: float = vn * float(p[0]) * (1.0 - sin_d * sin_d)
+	if bounces == 1 and spin > 0.3:
+		skid = CHECK_TIME
+	spin *= 0.2                              # the turf takes most of the spin at the first landing
+	vel = dir * along + n * out_n
 	if out_n < ROLL_START_SPEED:
-		vel = vt * p[1]
+		vel = dir * along
 		state = State.ROLLING
-		skid = SKID_TIME
 
 
 func _roll(dt: float) -> void:
@@ -178,7 +196,7 @@ func _roll(dt: float) -> void:
 	var resist: float = SURF[surf][2]
 	if skid > 0.0:
 		skid -= dt
-		resist += spin_brake
+		resist += CHECK_BRAKE * clampf(spin * 5.0, 0.0, 1.0)
 	var n := terrain.normal(pos.x, pos.y)
 	var slope := Vector3(0, 0, -G) - n * (-G * n.z)       # gravity along the ground
 	var speed := vel.length()

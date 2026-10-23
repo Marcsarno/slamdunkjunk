@@ -16,6 +16,7 @@ var dist := Label.new()
 var wind := Label.new()
 var wind_arrow := WindArrow.new()
 var gauge := Gauge.new()
+var aim_map := AimMap.new()
 var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
@@ -154,6 +155,100 @@ class Gauge extends Control:
 			draw_string(font, Vector2(tag.position.x + 12, fy + 41), note, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, note_col)
 
 
+## While pulling, the view behind her can't show where the shot comes down, so a small map of the
+## hole shows it from above: turned so the aim points up, the ball at the bottom, the target, the
+## margin of error and where this pull lands, moving as the pull grows and the aim swings.
+class AimMap extends Control:
+	var tex: ImageTexture
+	var origin := Vector2.ZERO      # course xy of the texture's first pixel
+	var m_per_px := 1.0
+	var ball := Vector2.ZERO
+	var aim := Vector2(0, 1)        # up the map: the line the pull began on, so sliding the aim swings the shot across it
+	var shot_dir := Vector2(0, 1)   # where this shot is going
+	var land := Vector2.ZERO
+	var target := Vector2.ZERO
+	var spread := Vector2.ZERO      # half-widths of the margin: across, along
+	var span := 200.0               # metres from the ball to the top of the map
+	var fill := Color(1.0, 0.62, 0.18)
+	var label := ""
+
+	const COLORS := {0: Color8(24, 38, 30), 1: Color8(52, 88, 50), 2: Color8(118, 166, 72), 3: Color8(156, 204, 98),
+		4: Color8(228, 210, 160), 6: Color8(138, 186, 84), 7: Color8(104, 150, 66), 8: Color8(36, 62, 40),
+		9: Color8(184, 172, 152)}
+
+	## The hole's surfaces as a picture, one pixel per metre.
+	func setup(t: Terrain, water: Color) -> void:
+		var step := maxi(1, roundi(1.0 / t.surf_cell))
+		var w := int(t.snx / step)
+		var h := int(t.sny / step)
+		var data := PackedByteArray()
+		data.resize(w * h * 3)
+		var k := 0
+		for j in h:
+			var row := j * step * t.snx
+			for i in w:
+				var s := t.surface[row + i * step]
+				var c: Color = water if s == 5 else COLORS.get(s, Color8(24, 38, 30))
+				data[k] = c.r8
+				data[k + 1] = c.g8
+				data[k + 2] = c.b8
+				k += 3
+		tex = ImageTexture.create_from_image(Image.create_from_data(w, h, false, Image.FORMAT_RGB8, data))
+		origin = t.origin
+		m_per_px = t.surf_cell * step
+
+	func _to_panel(q: Vector2, s: float) -> Vector2:
+		var rel := q - ball
+		var right := Vector2(aim.y, -aim.x)
+		return Vector2(size.x * 0.5 + rel.dot(right) * s, size.y * 0.9 - rel.dot(aim) * s)
+
+	func _draw() -> void:
+		if tex == null:
+			return
+		var s := size.y * 0.8 / maxf(span, 5.0)
+		var right := Vector2(aim.y, -aim.x)
+		# texture pixel -> course -> panel, as one transform
+		var xa := Vector2(right.x, -aim.x) * s * m_per_px
+		var ya := Vector2(right.y, -aim.y) * s * m_per_px
+		var o := _to_panel(origin, s)
+		draw_rect(Rect2(Vector2.ZERO, size), COLORS[0])        # beyond the hole: woods
+		draw_set_transform_matrix(Transform2D(xa, ya, o))
+		draw_texture(tex, Vector2.ZERO)
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+		var ink := Color(0.06, 0.02, 0.1)
+		var cream := Color(1, 0.94, 0.84)
+		var b := _to_panel(ball, s)
+		var l := _to_panel(land, s)
+		var t := _to_panel(target, s)
+		# the line of the shot, dashed
+		var d := (l - b)
+		var n := int(d.length() / 14.0)
+		for i in n:
+			if i % 2 == 0:
+				draw_line(b + d * (float(i) / n), b + d * (float(i + 1) / n), Color(cream, 0.8), 3.0)
+		# the margin of error round where it lands
+		if spread.x > 0.2:
+			var pts := PackedVector2Array()
+			var sr := Vector2(shot_dir.y, -shot_dir.x)
+			for i in 33:
+				var a := TAU * i / 32.0
+				pts.append(_to_panel(land + sr * cos(a) * spread.x + shot_dir * sin(a) * spread.y, s))
+			draw_polyline(pts, ink, 5.0, true)
+			draw_polyline(pts, Color(1, 1, 1, 0.9), 2.5, true)
+		# the target ring, the landing spot, the ball
+		draw_arc(t, 9.0, 0, TAU, 24, ink, 6.0)
+		draw_arc(t, 9.0, 0, TAU, 24, Color(1.0, 0.8, 0.35), 3.0)
+		draw_circle(l, 8.0, ink)
+		draw_circle(l, 6.0, fill)
+		draw_circle(b, 5.0, ink)
+		draw_circle(b, 3.5, Color.WHITE)
+		if label != "":
+			var font := get_theme_default_font()
+			var lp := l + Vector2(12, 8)
+			draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 6, ink)
+			draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, cream)
+
+
 func _label(l: Label, size: int, color := CREAM) -> Label:
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
@@ -211,6 +306,27 @@ func _ready() -> void:
 	gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gauge.visible = false
 	root.add_child(gauge)
+
+	# the aim map, top left under the bar, in a framed window that clips it
+	var frame := PanelContainer.new()
+	var fs := _panel_style(16)
+	fs.content_margin_left = 4
+	fs.content_margin_right = 4
+	fs.content_margin_top = 4
+	fs.content_margin_bottom = 4
+	frame.add_theme_stylebox_override("panel", fs)
+	frame.anchor_left = 0.0
+	frame.anchor_right = 0.4
+	frame.anchor_top = 0.115
+	frame.anchor_bottom = 0.45
+	frame.offset_left = 16
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.clip_contents = true
+	frame.visible = false
+	aim_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	aim_map.clip_contents = true
+	frame.add_child(aim_map)
+	root.add_child(frame)
 
 
 	# just above the horizon, clear of the moon (which sits a fifth to a third of the way down)
@@ -327,6 +443,12 @@ func set_club(label: String, yards: float) -> void:
 
 func hide_gauge() -> void:
 	gauge.visible = false
+	aim_map.get_parent().visible = false
+
+
+func show_aim_map() -> void:
+	aim_map.get_parent().visible = true
+	aim_map.queue_redraw()
 
 
 func flash(text: String, seconds := 2.2) -> void:

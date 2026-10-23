@@ -87,7 +87,7 @@ func _process(delta: float) -> void:
 				await snap("aim")
 				var vp := main.get_viewport().get_visible_rect().size
 				main._press(Vector2(360, vp.y * 0.8))
-				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+				main._drag(Vector2(360, vp.y * 0.8 + main._pull_len * main.mark_pull()), Vector2.ZERO)
 				main.spread_test = Vector2.ZERO      # dead centre of its margin
 				t = 0.0
 				stage = "pull"
@@ -113,7 +113,7 @@ func _process(delta: float) -> void:
 				await snap("aim")
 				var vp := main.get_viewport().get_visible_rect().size
 				main._press(Vector2(360, vp.y * 0.8))
-				main._drag(Vector2(360, vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+				main._drag(Vector2(360, vp.y * 0.8 + main._pull_len * main.mark_pull()), Vector2.ZERO)
 				main.spread_test = Vector2(0.95, 0.0)   # at the right edge of its margin
 				drag_test = false
 				t = 0.0
@@ -138,7 +138,7 @@ func _process(delta: float) -> void:
 					var vp := main.get_viewport().get_visible_rect().size
 					var aim0: Vector2 = main.aim
 					for k in 10:
-						main._drag(Vector2(360 + 14.4 * (k + 1), vp.y * (0.8 + main.PULL_FULL)), Vector2.ZERO)
+						main._drag(Vector2(360 + 14.4 * (k + 1), vp.y * 0.8 + main._pull_len * main.mark_pull()), Vector2.ZERO)
 						await get_tree().process_frame
 					await get_tree().create_timer(0.5).timeout
 					await snap("side")

@@ -42,7 +42,10 @@ func _init() -> void:
 		var total: float = r.end.y
 		print("    %-7s carry %5.1f m  total %5.1f m  apex %4.1f m  time %4.1f s" % [club.id, carry, total, r.apex, r.time])
 		check(absf(carry - club.carry_m) < club.carry_m * 0.05, "%s full carry near %d m" % [club.id, club.carry_m])
-		check(total - carry > 1.0 and total - carry < carry * 0.15, "%s rolls out %.0f m" % [club.id, total - carry])
+		# a driver runs out, an iron a little, a wedge checks up (shares of carry)
+		var run: Array = {"driver": [0.06, 0.15], "iron": [0.02, 0.08], "wedge": [0.0, 0.03]}[club.id]
+		var share := (total - carry) / carry
+		check(share >= run[0] and share <= run[1], "%s rolls out %.0f m (%.0f%% of carry)" % [club.id, total - carry, share * 100])
 		var half := BallSim.simulate(fair, null, far_pin, Vector2.ZERO, Vector3(0, 0, BallSim.RADIUS),
 			Clubs.launch_velocity(club, 0.5, Vector2(0, 1)), club.lift)
 		var ratio: float = half.first_land.y / carry
