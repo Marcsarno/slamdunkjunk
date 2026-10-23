@@ -10,10 +10,10 @@ signal contact
 signal swing_finished
 
 const HEIGHT_M := 1.55          # sole to top of hair in the address pose
-## Which front-on swing to play: "video" (cut from a rendered video by tools/prep_video_swing.py, a
-## stand-in until the 3D avatar) or "" for the drawn frames. Clubs without a video set (the putter)
-## always use the drawn ones.
-const FACE_SWING := "video"
+## Which frames to show: "video" (cut from rendered videos by tools/prep_video_swing.py, a stand-in
+## until the 3D avatar: from behind while aiming and pulling, front-on for the swing) or "" for the
+## drawn frames. Clubs without video sets (the putter) always use the drawn ones.
+const SPRITE_STYLE := "video"
 const DIR := "res://assets/golfer/"
 
 var sets: Dictionary
@@ -42,10 +42,16 @@ func _ready() -> void:
 	add_child(mesh)
 
 
-## The front-on set for a club's sprite name: the FACE_SWING one when there is one.
+## The front-on set for a club's sprite name: the SPRITE_STYLE one when there is one.
 func face_set(sprite: String) -> String:
-	var name := "%s_%s" % [FACE_SWING, sprite]
-	return name if FACE_SWING != "" and sets.has(name) else sprite
+	var name := "%s_%s" % [SPRITE_STYLE, sprite]
+	return name if SPRITE_STYLE != "" and sets.has(name) else sprite
+
+
+## The from-behind set (aiming, pulling) for a club's sprite name: the SPRITE_STYLE one when there is one.
+func back_set(sprite: String) -> String:
+	var name := "%s_back_%s" % [SPRITE_STYLE, sprite]
+	return name if SPRITE_STYLE != "" and sets.has(name) else "back_" + sprite
 
 
 func _quad(set_name: String, frame: int) -> Array:

@@ -14,6 +14,7 @@ var stage := "wait_aim"
 var landed := false
 var round := false     # --round: press Next hole on each card and play on to the last hole
 var burst := false     # --burst: a screenshot every frame through each swing, not just one
+var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
 
 
 func _ready() -> void:
@@ -24,6 +25,8 @@ func _ready() -> void:
 			round = true
 		if a == "--burst":
 			burst = true
+		if a == "--pull-steps":
+			pull_steps = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	main = get_parent()
 
@@ -91,6 +94,17 @@ func _process(delta: float) -> void:
 				stage = "pull"
 		"pull":
 			if t > 0.4:
+				if pull_steps and shot == 0:
+					pull_steps = false
+					stage = "steps"
+					var goal: float = main.pull_goal
+					for p in [0.0, 0.25, 0.5, 0.75, 1.0]:
+						main.pull_goal = p
+						await get_tree().create_timer(0.35).timeout
+						await snap("pull%d" % roundi(p * 100))
+					main.pull_goal = goal
+					main.pull = goal
+					stage = "pull"
 				await snap("pull")
 				main._release()
 				t = 0.0

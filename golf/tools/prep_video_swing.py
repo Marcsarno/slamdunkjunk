@@ -1,13 +1,16 @@
-"""Cut Brittany's front-on swing out of a rendered video into game frames (a stand-in until the
-3D avatar arrives).
+"""Cut Brittany's swing out of rendered videos into game frames (a stand-in until the 3D avatar
+arrives). Two videos, one per camera view:
 
-usage: python3 -I prep_video_swing.py <video> <out_dir> [--sheet <jpg>]
+  --view face   front-on, for the swing cut: the downswing from the top to the finish
+  --view back   from behind, for aiming: address, and the backswing the pull scrubs through
 
-The video is a fixed camera on a flat white backdrop, so every frame is cut on one canvas and
+usage: python3 -I prep_video_swing.py <video> <out_dir> --view face|back [--sheet <jpg>]
+
+Each video is a fixed camera on a flat white backdrop, so every frame is cut on one canvas and
 shares one foot anchor: she moves in the frames exactly as in the video, without sliding. Writes
-video_swing_NN.png (trimmed RGBA, each with its own size and anchor) and puts "video_driver" and
-"video_iron" sets using them into <out_dir>/golfer.json; the other sets there are left as they are.
-Golfer.FACE_SWING picks these sets ("video") or the drawn ones ("") for the swing.
+<prefix>_NN.png (trimmed RGBA, each with its own size and anchor) and puts that view's sets for the
+driver and iron into <out_dir>/golfer.json; the other sets there are left as they are.
+Golfer.SPRITE_STYLE picks these sets ("video") or the drawn ones ("").
 
 Per frame:
   - the background is flood-filled in from the frame edges (near-white, near-grey pixels), so white
@@ -26,10 +29,23 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-ADDRESS = 1                 # video frame numbers, 1-based as ffmpeg numbers them
-TOP = 53                    # the downswing starts at the top (49-52 are a pause up there)
-LAST = 86
-HOLD_FROM = 76              # from here she holds the finish: every other frame is enough
+# Per video (frame numbers 1-based, as ffmpeg numbers them; club positions in video pixels at
+# address: where the shaft meets her hands, where it meets the head, and the box the head sits in)
+VIEWS = {
+    "face": dict(
+        address=1,
+        top=53,             # the downswing starts at the top (49-52 are a pause up there)
+        last=86,
+        hold_from=76,       # from here she holds the finish: every other frame is enough
+        hands0=(228.0, 340.0), hosel0=(203.0, 628.0), head_box=(176, 618, 216, 667),
+        prefix="video_swing", set_prefix="video_"),
+    "back": dict(
+        address=1,
+        top=81,             # address to the top of the backswing (then she holds it a long while)
+        step=3,             # every third frame: the pull scrubs through them
+        hands0=(252.0, 358.0), hosel0=(372.0, 562.0), head_box=(364, 552, 432, 606),
+        prefix="video_back", set_prefix="video_back_"),
+}
 PAD = 260                   # canvas margin around the video, for a club carried past its edge
 FPS = 24.0
 CLUB_DEPTH = 0.75           # a club carried past the picture's edge is drawn this share of its
@@ -62,7 +78,20 @@ def foreground(a):
     bg = np.isin(lab, edge[edge > 0])
     sizes = ndimage.sum(cand, lab, range(1, n + 1))
     mean_chroma = ndimage.mean(chroma, lab, range(1, n + 1))
-    pockets = [i + 1 for i in range(n) if sizes[i] >= 120 and mean_chroma[i] <= 3.0]
+    pockets = [i + 1 for i in range(n) if sizes[i] >= 120 and mean_chroma[i] <= 3.6]   # white on her: 4+
+    # a pocket between her arms picks up a tint from her skin, like the white on her sneakers; but
+    # it's above the floor and ringed by skin and shirt, where white on her is ringed by cream
+    # sneaker or grey metal
+    coloured = chroma > 30
+    for i in range(n):
+        if i + 1 in pockets or sizes[i] < 120 or mean_chroma[i] > 8:
+            continue
+        m = lab == i + 1
+        if m[FLOOR_Y:].any() or light[m].mean() < 249:
+            continue
+        ring = ndimage.binary_dilation(m, iterations=4) & ~m   # past the soft edge
+        if coloured[ring].mean() > 0.6:
+            pockets.append(i + 1)
     return ~(bg | np.isin(lab, pockets))
 
 
@@ -102,26 +131,20 @@ def her(a, a0, ball, ball_there):
     return fg & ~np.isin(lab, drop)
 
 
-# the club at address (video pixels): where the shaft leaves her hands, where it meets the head,
-# and the box the head sits in
-HANDS0 = (228.0, 340.0)
-HOSEL0 = (203.0, 628.0)
-HEAD_BOX = (176, 618, 216, 667)      # x0, y0, x1, y1
-
-
 def neutral(a):
     return (a.max(2) - a.min(2)) <= 30
 
 
-def club_head(a0, keep0):
+def club_head(a0, keep0, cfg):
     """The club head cut from the address frame, as RGBA, and the hosel's place in that image."""
-    x0, y0, x1, y1 = HEAD_BOX
+    x0, y0, x1, y1 = cfg["head_box"]
+    hx, hy = cfg["hosel0"]
     rgba = np.zeros((y1 - y0, x1 - x0, 4), np.uint8)
     rgba[..., :3] = a0[y0:y1, x0:x1]
     m = keep0[y0:y1, x0:x1].copy()
-    m[: int(HOSEL0[1]) - y0 - 2] = False          # just the head: no shaft above the hosel
+    m[: int(hy) - y0 - 2] = False                # just the head: no shaft above the hosel
     rgba[..., 3] = m * 255
-    return Image.fromarray(rgba), (HOSEL0[0] - x0, HOSEL0[1] - y0)
+    return Image.fromarray(rgba), (hx - x0, hy - y0)
 
 
 def exit_point(keep):
@@ -134,7 +157,7 @@ def exit_point(keep):
     return None
 
 
-def finish_club(img, a, keep, head, head_hosel):
+def finish_club(img, a, keep, cfg, head, head_hosel):
     """Carry a club that runs off the picture on to its full length and put the head on the end.
     img is the padded RGBA canvas; a and keep are the video frame and her mask."""
     e = exit_point(keep)
@@ -173,7 +196,8 @@ def finish_club(img, a, keep, head, head_hosel):
     near = np.linalg.norm(pts - e, axis=1) < 40
     # the club carried on is drawn shorter than at address: swinging, it points partly toward or away
     # from the camera, so it looks shorter than it is. Never shorter than what the video shows.
-    shaft_len = CLUB_DEPTH * np.hypot(HOSEL0[0] - HANDS0[0], HOSEL0[1] - HANDS0[1])
+    (hx, hy), (sx, sy) = cfg["hands0"], cfg["hosel0"]
+    shaft_len = CLUB_DEPTH * np.hypot(sx - hx, sy - hy)
     hosel = hands + d * max(shaft_len, np.linalg.norm(e - hands))
     col = tuple(int(v) for v in np.median(a[ys[near], xs[near]], 0)) + (255,)   # the shaft's colour at the edge
     # one straight shaft from her hands to the head: the video's blurred, broken shaft past her hands
@@ -187,7 +211,7 @@ def finish_club(img, a, keep, head, head_hosel):
     p1 = hosel + PAD
     ImageDraw.Draw(img).line([tuple(p0), tuple(p1)], fill=col, width=4)
     # head: turned so its hosel's shaft lines up with this shaft
-    d0 = np.array([HOSEL0[0] - HANDS0[0], HOSEL0[1] - HANDS0[1]])
+    d0 = np.array([sx - hx, sy - hy])
     turn = np.degrees(np.arctan2(d0[1], d0[0]) - np.arctan2(d[1], d[0]))
     big = Image.new("RGBA", (head.width * 3, head.height * 3))
     off = (head.width, head.height)
@@ -213,26 +237,33 @@ def defringe(a, keep):
     return out
 
 
-def ball_leaves(frames, ball):
+def ball_leaves(frames, ball, top):
     """The first frame after the top where the ball's spot is mostly backdrop again."""
     for n in sorted(frames):
-        if n > TOP and foreground(frames[n])[ball].mean() < 0.15:
+        if n > top and foreground(frames[n])[ball].mean() < 0.15:
             return n
     raise SystemExit("couldn't find the frame the ball leaves")
 
 
 def main():
     video, out = sys.argv[1], sys.argv[2]
+    view = sys.argv[sys.argv.index("--view") + 1]
     sheet = sys.argv[sys.argv.index("--sheet") + 1] if "--sheet" in sys.argv else None
+    cfg = VIEWS[view]
     frames = read_frames(video)
-    a0 = frames[ADDRESS]
+    address, top = cfg["address"], cfg["top"]
+    a0 = frames[address]
     ball = ball_shape(foreground(a0))
-    gone = ball_leaves(frames, ball)
     ys, xs = np.nonzero(ball)
+    if view == "face":
+        gone = ball_leaves(frames, ball, top)
+        used = sorted({address, *range(top, cfg["hold_from"]), *range(cfg["hold_from"], cfg["last"] + 1, 2)})
+    else:
+        gone = top + 1                            # the backswing never reaches the ball
+        used = sorted({*range(address, top, cfg["step"]), top})
     print("ball and tee at x %d-%d, y %d-%d; gone from frame %d" % (xs.min(), xs.max(), ys.min(), ys.max(), gone))
 
-    used = sorted({ADDRESS, *range(TOP, HOLD_FROM), *range(HOLD_FROM, LAST + 1, 2)})
-    head = club_head(a0, her(a0, a0, ball, ball_there=True))
+    head = club_head(a0, her(a0, a0, ball, ball_there=True), cfg)
     cut = {}
     for n in used:
         a = frames[n]
@@ -241,7 +272,7 @@ def main():
         rgba = np.zeros((h + 2 * PAD, w + 2 * PAD, 4), np.uint8)
         rgba[PAD:PAD + h, PAD:PAD + w, :3] = defringe(a, keep)
         rgba[PAD:PAD + h, PAD:PAD + w, 3] = keep * 255
-        img, club = finish_club(Image.fromarray(rgba), a, keep, *head)
+        img, club = finish_club(Image.fromarray(rgba), a, keep, cfg, *head)
         if club:
             print("frame %d: club carried on past the edge (hands %s, head %s)" % (n, club[0].round(), club[1].round()))
         cut[n] = np.asarray(img)
@@ -249,17 +280,16 @@ def main():
         contact_sheet(cut, used, sheet)
 
     # one foot anchor for every frame: the floor midway between her soles at address (the lowest
-    # sneaker-coloured pixels; the club head reaches lower, being nearer the camera). The club head
+    # sneaker-coloured pixels; the club head can reach lower, being nearer the camera). The club head
     # at address is where the video's ball sits, so the game's ball lines up with her impact.
     keep0 = her(a0, a0, ball, ball_there=True)
     shoes = keep0 & ~neutral(a0)
     sole = np.nonzero(shoes.any(1))[0].max()
-    top = np.nonzero(keep0.any(1))[0].min()
+    top_px = np.nonzero(keep0.any(1))[0].min()
     feet = np.nonzero(shoes[sole - 30:sole + 1].any(0))[0]
     anchor = ((feet.min() + feet.max()) / 2.0, float(sole))
-    bys, bxs = np.nonzero(ball)
-    club = (float(bxs.mean()), float(sole))
-    body_px = int(sole - top)
+    club = (float(xs.mean()), float(sole))
+    body_px = int(sole - top_px)
     print("anchor", anchor, "club head", club, "body", body_px, "px")
 
     frames_meta = {}
@@ -267,26 +297,32 @@ def main():
         img = Image.fromarray(cut[n])
         x0, y0, x1, y1 = img.getbbox()
         img = img.crop((x0, y0, x1, y1))
-        name = "video_swing_%02d.png" % n
+        name = "%s_%02d.png" % (cfg["prefix"], n)
         img.save(os.path.join(out, name), optimize=True)
         frames_meta[str(n)] = {"file": name, "size": [img.width, img.height],
                                "anchor": [round(anchor[0] + PAD - x0, 1), round(anchor[1] + PAD - y0, 1)],
                                "height": body_px,
                                "club_head": [round(club[0] + PAD - x0, 1), round(club[1] + PAD - y0, 1)]}
-    down = [n for n in used if n >= TOP]
-    contact = down.index(gone - 1)                # the last frame with the ball still on the tee
-    step = round(1000.0 / FPS)
-    down_ms = [step if n < HOLD_FROM else 2 * step for n in down]
-    down_ms[-1] = 600
     path = os.path.join(out, "golfer.json")
     meta = json.load(open(path)) if os.path.exists(path) else {}
+    if view == "face":
+        down = [n for n in used if n >= top]
+        contact = down.index(gone - 1)            # the last frame with the ball still on the tee
+        step = round(1000.0 / FPS)
+        down_ms = [step if n < cfg["hold_from"] else 2 * step for n in down]
+        down_ms[-1] = 600
+        sets = {"view": "face", "body_px": body_px, "frames": frames_meta, "back": [address], "down": down,
+                "contact": contact, "down_ms": down_ms, "ball_ahead_m": BALL_AHEAD_M, "swing_cam_lead_m": 0.0}
+        print("contact at frame %d, %d ms after the top" % (gone - 1, sum(down_ms[:contact])))
+    else:
+        # address first, then the backswing the pull scrubs through; the swing itself is the face set's
+        sets = {"view": "back", "body_px": body_px, "frames": frames_meta, "back": used, "down": [top],
+                "contact": 0, "down_ms": [100]}
     for club_name in ("driver", "iron"):
-        meta["video_" + club_name] = {"view": "face", "body_px": body_px, "frames": frames_meta,
-                                      "back": [ADDRESS], "down": down, "contact": contact, "down_ms": down_ms,
-                                      "ball_ahead_m": BALL_AHEAD_M, "swing_cam_lead_m": 0.0}
+        meta[cfg["set_prefix"] + club_name] = sets
     with open(path, "w") as f:
         json.dump(meta, f, indent=1)
-    print("wrote %d frames; contact at frame %d, %d ms after the top" % (len(used), gone - 1, sum(down_ms[:contact])))
+    print("wrote %d frames" % len(used))
 
 
 def contact_sheet(cut, used, path, cols=10, w=180):

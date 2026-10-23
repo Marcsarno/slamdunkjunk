@@ -204,7 +204,7 @@ func _right() -> Vector2:
 
 func _sprite_set(view_name: String) -> String:
 	var s: String = club.sprite
-	return ("back_" + s) if view_name == "back" else golfer.face_set(s)
+	return golfer.back_set(s) if view_name == "back" else golfer.face_set(s)
 
 
 func _place_golfer_back() -> void:

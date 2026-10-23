@@ -1748,5 +1748,987 @@
   ],
   "ball_ahead_m": 0.15,
   "swing_cam_lead_m": 0.0
+ },
+ "video_back_driver": {
+  "view": "back",
+  "body_px": 579,
+  "frames": {
+   "1": {
+    "file": "video_back_01.png",
+    "size": [
+     330,
+     581
+    ],
+    "anchor": [
+     77.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     259.2,
+     579.0
+    ]
+   },
+   "4": {
+    "file": "video_back_04.png",
+    "size": [
+     326,
+     581
+    ],
+    "anchor": [
+     78.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     260.2,
+     579.0
+    ]
+   },
+   "7": {
+    "file": "video_back_07.png",
+    "size": [
+     319,
+     581
+    ],
+    "anchor": [
+     80.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     262.2,
+     579.0
+    ]
+   },
+   "10": {
+    "file": "video_back_10.png",
+    "size": [
+     304,
+     583
+    ],
+    "anchor": [
+     82.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     264.2,
+     579.0
+    ]
+   },
+   "13": {
+    "file": "video_back_13.png",
+    "size": [
+     279,
+     587
+    ],
+    "anchor": [
+     84.0,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     266.2,
+     577.0
+    ]
+   },
+   "16": {
+    "file": "video_back_16.png",
+    "size": [
+     241,
+     592
+    ],
+    "anchor": [
+     86.0,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     268.2,
+     577.0
+    ]
+   },
+   "19": {
+    "file": "video_back_19.png",
+    "size": [
+     199,
+     577
+    ],
+    "anchor": [
+     88.0,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     270.2,
+     575.0
+    ]
+   },
+   "22": {
+    "file": "video_back_22.png",
+    "size": [
+     202,
+     577
+    ],
+    "anchor": [
+     90.0,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     272.2,
+     575.0
+    ]
+   },
+   "25": {
+    "file": "video_back_25.png",
+    "size": [
+     206,
+     575
+    ],
+    "anchor": [
+     93.0,
+     573.0
+    ],
+    "height": 579,
+    "club_head": [
+     275.2,
+     573.0
+    ]
+   },
+   "28": {
+    "file": "video_back_28.png",
+    "size": [
+     357,
+     573
+    ],
+    "anchor": [
+     243.0,
+     571.0
+    ],
+    "height": 579,
+    "club_head": [
+     425.2,
+     571.0
+    ]
+   },
+   "31": {
+    "file": "video_back_31.png",
+    "size": [
+     416,
+     574
+    ],
+    "anchor": [
+     301.0,
+     571.0
+    ],
+    "height": 579,
+    "club_head": [
+     483.2,
+     571.0
+    ]
+   },
+   "34": {
+    "file": "video_back_34.png",
+    "size": [
+     448,
+     572
+    ],
+    "anchor": [
+     332.0,
+     569.0
+    ],
+    "height": 579,
+    "club_head": [
+     514.2,
+     569.0
+    ]
+   },
+   "37": {
+    "file": "video_back_37.png",
+    "size": [
+     445,
+     570
+    ],
+    "anchor": [
+     327.0,
+     567.0
+    ],
+    "height": 579,
+    "club_head": [
+     509.2,
+     567.0
+    ]
+   },
+   "40": {
+    "file": "video_back_40.png",
+    "size": [
+     458,
+     569
+    ],
+    "anchor": [
+     340.0,
+     566.0
+    ],
+    "height": 579,
+    "club_head": [
+     522.2,
+     566.0
+    ]
+   },
+   "43": {
+    "file": "video_back_43.png",
+    "size": [
+     458,
+     568
+    ],
+    "anchor": [
+     338.0,
+     565.0
+    ],
+    "height": 579,
+    "club_head": [
+     520.2,
+     565.0
+    ]
+   },
+   "46": {
+    "file": "video_back_46.png",
+    "size": [
+     449,
+     593
+    ],
+    "anchor": [
+     329.0,
+     590.0
+    ],
+    "height": 579,
+    "club_head": [
+     511.2,
+     590.0
+    ]
+   },
+   "49": {
+    "file": "video_back_49.png",
+    "size": [
+     434,
+     639
+    ],
+    "anchor": [
+     313.0,
+     636.0
+    ],
+    "height": 579,
+    "club_head": [
+     495.2,
+     636.0
+    ]
+   },
+   "52": {
+    "file": "video_back_52.png",
+    "size": [
+     403,
+     687
+    ],
+    "anchor": [
+     282.0,
+     684.0
+    ],
+    "height": 579,
+    "club_head": [
+     464.2,
+     684.0
+    ]
+   },
+   "55": {
+    "file": "video_back_55.png",
+    "size": [
+     381,
+     721
+    ],
+    "anchor": [
+     259.0,
+     718.0
+    ],
+    "height": 579,
+    "club_head": [
+     441.2,
+     718.0
+    ]
+   },
+   "58": {
+    "file": "video_back_58.png",
+    "size": [
+     345,
+     750
+    ],
+    "anchor": [
+     223.0,
+     747.0
+    ],
+    "height": 579,
+    "club_head": [
+     405.2,
+     747.0
+    ]
+   },
+   "61": {
+    "file": "video_back_61.png",
+    "size": [
+     280,
+     774
+    ],
+    "anchor": [
+     158.0,
+     771.0
+    ],
+    "height": 579,
+    "club_head": [
+     340.2,
+     771.0
+    ]
+   },
+   "64": {
+    "file": "video_back_64.png",
+    "size": [
+     248,
+     780
+    ],
+    "anchor": [
+     126.0,
+     777.0
+    ],
+    "height": 579,
+    "club_head": [
+     308.2,
+     777.0
+    ]
+   },
+   "67": {
+    "file": "video_back_67.png",
+    "size": [
+     245,
+     758
+    ],
+    "anchor": [
+     123.0,
+     755.0
+    ],
+    "height": 579,
+    "club_head": [
+     305.2,
+     755.0
+    ]
+   },
+   "70": {
+    "file": "video_back_70.png",
+    "size": [
+     240,
+     689
+    ],
+    "anchor": [
+     118.0,
+     686.0
+    ],
+    "height": 579,
+    "club_head": [
+     300.2,
+     686.0
+    ]
+   },
+   "73": {
+    "file": "video_back_73.png",
+    "size": [
+     240,
+     686
+    ],
+    "anchor": [
+     115.0,
+     682.0
+    ],
+    "height": 579,
+    "club_head": [
+     297.2,
+     682.0
+    ]
+   },
+   "76": {
+    "file": "video_back_76.png",
+    "size": [
+     234,
+     603
+    ],
+    "anchor": [
+     112.0,
+     599.0
+    ],
+    "height": 579,
+    "club_head": [
+     294.2,
+     599.0
+    ]
+   },
+   "79": {
+    "file": "video_back_79.png",
+    "size": [
+     232,
+     593
+    ],
+    "anchor": [
+     110.0,
+     589.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.2,
+     589.0
+    ]
+   },
+   "81": {
+    "file": "video_back_81.png",
+    "size": [
+     231,
+     589
+    ],
+    "anchor": [
+     109.0,
+     585.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.2,
+     585.0
+    ]
+   }
+  },
+  "back": [
+   1,
+   4,
+   7,
+   10,
+   13,
+   16,
+   19,
+   22,
+   25,
+   28,
+   31,
+   34,
+   37,
+   40,
+   43,
+   46,
+   49,
+   52,
+   55,
+   58,
+   61,
+   64,
+   67,
+   70,
+   73,
+   76,
+   79,
+   81
+  ],
+  "down": [
+   81
+  ],
+  "contact": 0,
+  "down_ms": [
+   100
+  ]
+ },
+ "video_back_iron": {
+  "view": "back",
+  "body_px": 579,
+  "frames": {
+   "1": {
+    "file": "video_back_01.png",
+    "size": [
+     330,
+     581
+    ],
+    "anchor": [
+     77.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     259.2,
+     579.0
+    ]
+   },
+   "4": {
+    "file": "video_back_04.png",
+    "size": [
+     326,
+     581
+    ],
+    "anchor": [
+     78.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     260.2,
+     579.0
+    ]
+   },
+   "7": {
+    "file": "video_back_07.png",
+    "size": [
+     319,
+     581
+    ],
+    "anchor": [
+     80.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     262.2,
+     579.0
+    ]
+   },
+   "10": {
+    "file": "video_back_10.png",
+    "size": [
+     304,
+     583
+    ],
+    "anchor": [
+     82.0,
+     579.0
+    ],
+    "height": 579,
+    "club_head": [
+     264.2,
+     579.0
+    ]
+   },
+   "13": {
+    "file": "video_back_13.png",
+    "size": [
+     279,
+     587
+    ],
+    "anchor": [
+     84.0,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     266.2,
+     577.0
+    ]
+   },
+   "16": {
+    "file": "video_back_16.png",
+    "size": [
+     241,
+     592
+    ],
+    "anchor": [
+     86.0,
+     577.0
+    ],
+    "height": 579,
+    "club_head": [
+     268.2,
+     577.0
+    ]
+   },
+   "19": {
+    "file": "video_back_19.png",
+    "size": [
+     199,
+     577
+    ],
+    "anchor": [
+     88.0,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     270.2,
+     575.0
+    ]
+   },
+   "22": {
+    "file": "video_back_22.png",
+    "size": [
+     202,
+     577
+    ],
+    "anchor": [
+     90.0,
+     575.0
+    ],
+    "height": 579,
+    "club_head": [
+     272.2,
+     575.0
+    ]
+   },
+   "25": {
+    "file": "video_back_25.png",
+    "size": [
+     206,
+     575
+    ],
+    "anchor": [
+     93.0,
+     573.0
+    ],
+    "height": 579,
+    "club_head": [
+     275.2,
+     573.0
+    ]
+   },
+   "28": {
+    "file": "video_back_28.png",
+    "size": [
+     357,
+     573
+    ],
+    "anchor": [
+     243.0,
+     571.0
+    ],
+    "height": 579,
+    "club_head": [
+     425.2,
+     571.0
+    ]
+   },
+   "31": {
+    "file": "video_back_31.png",
+    "size": [
+     416,
+     574
+    ],
+    "anchor": [
+     301.0,
+     571.0
+    ],
+    "height": 579,
+    "club_head": [
+     483.2,
+     571.0
+    ]
+   },
+   "34": {
+    "file": "video_back_34.png",
+    "size": [
+     448,
+     572
+    ],
+    "anchor": [
+     332.0,
+     569.0
+    ],
+    "height": 579,
+    "club_head": [
+     514.2,
+     569.0
+    ]
+   },
+   "37": {
+    "file": "video_back_37.png",
+    "size": [
+     445,
+     570
+    ],
+    "anchor": [
+     327.0,
+     567.0
+    ],
+    "height": 579,
+    "club_head": [
+     509.2,
+     567.0
+    ]
+   },
+   "40": {
+    "file": "video_back_40.png",
+    "size": [
+     458,
+     569
+    ],
+    "anchor": [
+     340.0,
+     566.0
+    ],
+    "height": 579,
+    "club_head": [
+     522.2,
+     566.0
+    ]
+   },
+   "43": {
+    "file": "video_back_43.png",
+    "size": [
+     458,
+     568
+    ],
+    "anchor": [
+     338.0,
+     565.0
+    ],
+    "height": 579,
+    "club_head": [
+     520.2,
+     565.0
+    ]
+   },
+   "46": {
+    "file": "video_back_46.png",
+    "size": [
+     449,
+     593
+    ],
+    "anchor": [
+     329.0,
+     590.0
+    ],
+    "height": 579,
+    "club_head": [
+     511.2,
+     590.0
+    ]
+   },
+   "49": {
+    "file": "video_back_49.png",
+    "size": [
+     434,
+     639
+    ],
+    "anchor": [
+     313.0,
+     636.0
+    ],
+    "height": 579,
+    "club_head": [
+     495.2,
+     636.0
+    ]
+   },
+   "52": {
+    "file": "video_back_52.png",
+    "size": [
+     403,
+     687
+    ],
+    "anchor": [
+     282.0,
+     684.0
+    ],
+    "height": 579,
+    "club_head": [
+     464.2,
+     684.0
+    ]
+   },
+   "55": {
+    "file": "video_back_55.png",
+    "size": [
+     381,
+     721
+    ],
+    "anchor": [
+     259.0,
+     718.0
+    ],
+    "height": 579,
+    "club_head": [
+     441.2,
+     718.0
+    ]
+   },
+   "58": {
+    "file": "video_back_58.png",
+    "size": [
+     345,
+     750
+    ],
+    "anchor": [
+     223.0,
+     747.0
+    ],
+    "height": 579,
+    "club_head": [
+     405.2,
+     747.0
+    ]
+   },
+   "61": {
+    "file": "video_back_61.png",
+    "size": [
+     280,
+     774
+    ],
+    "anchor": [
+     158.0,
+     771.0
+    ],
+    "height": 579,
+    "club_head": [
+     340.2,
+     771.0
+    ]
+   },
+   "64": {
+    "file": "video_back_64.png",
+    "size": [
+     248,
+     780
+    ],
+    "anchor": [
+     126.0,
+     777.0
+    ],
+    "height": 579,
+    "club_head": [
+     308.2,
+     777.0
+    ]
+   },
+   "67": {
+    "file": "video_back_67.png",
+    "size": [
+     245,
+     758
+    ],
+    "anchor": [
+     123.0,
+     755.0
+    ],
+    "height": 579,
+    "club_head": [
+     305.2,
+     755.0
+    ]
+   },
+   "70": {
+    "file": "video_back_70.png",
+    "size": [
+     240,
+     689
+    ],
+    "anchor": [
+     118.0,
+     686.0
+    ],
+    "height": 579,
+    "club_head": [
+     300.2,
+     686.0
+    ]
+   },
+   "73": {
+    "file": "video_back_73.png",
+    "size": [
+     240,
+     686
+    ],
+    "anchor": [
+     115.0,
+     682.0
+    ],
+    "height": 579,
+    "club_head": [
+     297.2,
+     682.0
+    ]
+   },
+   "76": {
+    "file": "video_back_76.png",
+    "size": [
+     234,
+     603
+    ],
+    "anchor": [
+     112.0,
+     599.0
+    ],
+    "height": 579,
+    "club_head": [
+     294.2,
+     599.0
+    ]
+   },
+   "79": {
+    "file": "video_back_79.png",
+    "size": [
+     232,
+     593
+    ],
+    "anchor": [
+     110.0,
+     589.0
+    ],
+    "height": 579,
+    "club_head": [
+     292.2,
+     589.0
+    ]
+   },
+   "81": {
+    "file": "video_back_81.png",
+    "size": [
+     231,
+     589
+    ],
+    "anchor": [
+     109.0,
+     585.0
+    ],
+    "height": 579,
+    "club_head": [
+     291.2,
+     585.0
+    ]
+   }
+  },
+  "back": [
+   1,
+   4,
+   7,
+   10,
+   13,
+   16,
+   19,
+   22,
+   25,
+   28,
+   31,
+   34,
+   37,
+   40,
+   43,
+   46,
+   49,
+   52,
+   55,
+   58,
+   61,
+   64,
+   67,
+   70,
+   73,
+   76,
+   79,
+   81
+  ],
+  "down": [
+   81
+  ],
+  "contact": 0,
+  "down_ms": [
+   100
+  ]
  }
 }
