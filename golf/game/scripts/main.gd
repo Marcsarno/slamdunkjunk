@@ -301,7 +301,7 @@ func _on_green() -> bool:
 
 
 func _setup_shot() -> void:
-	club = Clubs.pick(_to_pin(), _on_green())
+	club = _pick_club()
 	pull = 0.0
 	pull_goal = 0.0
 	target_dragging = false
@@ -322,6 +322,25 @@ func _setup_shot() -> void:
 	cam_target = _want_target
 	cam_fov = _want_fov
 	hud.fade_in()
+
+
+## The club for this shot: the shortest whose full swing reaches the pin with a little in hand
+## (Clubs.PICK_SHARE of its power), worked out over the real ground, so a downhill par 3 gets a
+## shorter club than its flat yardage says and an uphill one a longer. Starting a couple of clubs
+## short of the flat-ground pick keeps it to a few test flights.
+func _pick_club() -> Dictionary:
+	if _on_green():
+		return Clubs.by_id("putter")
+	var d := _to_pin()
+	if d > Clubs.ALL[0].carry_m:
+		return Clubs.ALL[0]             # out of reach: the driver, no need to test
+	var dir := Vector2(terrain.pin().x - ball.x, terrain.pin().y - ball.y).normalized()
+	var start := mini(Clubs.ALL.find(Clubs.pick(d, false)) + 2, Clubs.ALL.size() - 2)
+	for i in range(start, -1, -1):
+		club = Clubs.ALL[i]
+		if _power_for(d, dir) <= Clubs.PICK_SHARE:
+			return club
+	return Clubs.ALL[0]
 
 
 ## A distance as a golfer says it: feet on the green, yards elsewhere.
