@@ -8,7 +8,10 @@ enum Phase { INTRO, AIM, PULL, SWING, FLIGHT, RESULT, HOLED }
 const YD := 1.0936
 const AIM_ZONE := 0.30          # top share of the screen: drag sideways to turn
 const PULL_FULL := 0.28         # pull distance (share of screen height) for 100% power
-const FINE_AIM := 0.45          # radians of aim per screen-width of sideways pull
+const FINE_AIM := 0.35          # radians of aim per screen-width of sideways pull ...
+const FINE_DEAD := 0.05         # ... once the finger drifts more than this share of the width sideways
+const AIM_TURN := 1.8           # radians of aim per screen-width of dragging the sky
+const EASE := 20.0              # aim and power follow the finger at this rate (1/s), smoothing touch jitter
 const MIN_PULL := 0.06
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 5.0
@@ -38,11 +41,16 @@ var strokes := 0
 var par := 4
 var wind := Vector2.ZERO
 var pull := 0.0
+var pull_goal := 0.0          # where the finger says pull and aim should be; pull and aim ease toward it
+var aim_goal := Vector2(0, 1)
 var pull_start := Vector2.ZERO
 var aim_at_pull := Vector2.ZERO
 var aim_dragging := false
 var preview := {}
 var _preview_key := ""
+var _carry_m := 0.0             # the preview shot's carry, and where it stops after rolling (< 0: not yet
+var _finish_m := -1.0           # worked out; that waits until the finger holds still, to spare the phone)
+var _finish_warn := ""
 var cam_pos := Vector3.ZERO
 var cam_target := Vector3.ZERO
 var cam_fov := 64.0
@@ -124,12 +132,14 @@ func _on_green() -> bool:
 func _setup_shot() -> void:
 	club = Clubs.pick(_to_pin(), _on_green())
 	aim = _default_aim()
+	aim_goal = aim
 	pull = 0.0
+	pull_goal = 0.0
 	_place_golfer_back()
 	hud.set_stroke(strokes + 1, par)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	hud.set_club(club.label, club.carry_m * YD)
-	hud.set_power(0)
+	hud.hide_gauge()
 	hud.hint.text = "Pull down to swing · drag the sky to turn" if strokes == 0 else ""
 	ball_mesh.visible = true
 	_preview_key = ""
@@ -216,7 +226,7 @@ func _shoot() -> void:
 	strokes += 1
 	last_ball = ball
 	hud.hint.text = ""
-	hud.set_power(0)
+	hud.hide_gauge()
 	_show_preview(false)
 	phase = Phase.SWING
 	phase_t = 0.0
@@ -309,21 +319,40 @@ func _press(p: Vector2) -> void:
 			else:
 				phase = Phase.PULL
 				pull_start = p
-				aim_at_pull = aim
-				pull = 0.0
+				aim_at_pull = aim_goal
+				pull_goal = 0.0
 				hud.hint.text = ""
 
 
 func _drag(p: Vector2, rel: Vector2) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	if aim_dragging:
-		aim = aim.rotated(-rel.x / vp.x * 2.2).normalized()
-		_place_golfer_back()
+		aim_goal = aim_goal.rotated(-rel.x / vp.x * AIM_TURN).normalized()
 	elif phase == Phase.PULL:
 		var d := p - pull_start
-		pull = clampf(d.y / (vp.y * PULL_FULL), 0.0, 1.0)
-		aim = aim_at_pull.rotated(d.x / vp.x * FINE_AIM).normalized()
+		pull_goal = clampf(d.y / (vp.y * PULL_FULL), 0.0, 1.0)
+		# pulling straight down rarely is: a little sideways drift doesn't turn the shot
+		var side := signf(d.x) * maxf(0.0, absf(d.x) / vp.x - FINE_DEAD)
+		aim_goal = aim_at_pull.rotated(side * FINE_AIM).normalized()
+
+
+## Aim and power ease toward the finger (touch reports arrive unevenly; this keeps her, the camera
+## and the landing marker gliding instead of stepping).
+func _ease_toward_finger(delta: float) -> void:
+	var k := 1.0 - exp(-delta * EASE)
+	var turned := aim != aim_goal
+	if turned:
+		aim = aim.slerp(aim_goal, k).normalized()
+		if aim.distance_to(aim_goal) < 0.0005:
+			aim = aim_goal
+	var pulled := pull != pull_goal
+	if pulled:
+		pull = lerpf(pull, pull_goal, k)
+		if absf(pull - pull_goal) < 0.002:
+			pull = pull_goal
+	if turned:
 		_place_golfer_back()
+	if phase == Phase.PULL and (turned or pulled):
 		golfer.set_pull(_sprite_set("back"), pull)
 
 
@@ -332,12 +361,17 @@ func _release() -> void:
 		aim_dragging = false
 		return
 	if phase == Phase.PULL:
-		if pull < MIN_PULL:
+		if pull_goal < MIN_PULL:
+			# let go without pulling: no shot, and any sideways nudge is undone
 			phase = Phase.AIM
 			pull = 0.0
+			pull_goal = 0.0
+			aim_goal = aim_at_pull
 			golfer.address(_sprite_set("back"))
-			hud.set_power(0)
+			hud.hide_gauge()
 		else:
+			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
+			aim = aim_goal
 			_shoot()
 
 
@@ -350,6 +384,7 @@ func _process(delta: float) -> void:
 			if phase_t >= INTRO_TIME:
 				_end_intro()
 		Phase.AIM, Phase.PULL:
+			_ease_toward_finger(delta)
 			_aim_cam()
 			_update_preview()
 		Phase.SWING:
@@ -407,7 +442,7 @@ func _aim_cam_pos() -> Vector3:
 	var a := Vector3(aim.x, aim.y, 0)
 	if club.id == "putter":
 		return Terrain.to_world(ball - a * 3.0 + Vector3(0, 0, 1.3))
-	return Terrain.to_world(ball - a * (AIM_BACK - pull * 0.8) + Vector3(0, 0, AIM_HEIGHT - pull * 0.3))
+	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))   # held still while pulling, so the landing marker can be read
 
 
 func _aim_cam_target() -> Vector3:
@@ -640,11 +675,17 @@ func _show_preview(on: bool) -> void:
 func _update_preview() -> void:
 	var p := pull if phase == Phase.PULL else 1.0
 	var key := "%.3f|%.4f|%.4f|%s" % [p, aim.x, aim.y, club.id]
+	var putt: bool = club.id == "putter"
 	if key == _preview_key:
+		if phase == Phase.PULL and _finish_m < 0.0:
+			var whole := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
+				Clubs.launch_velocity(club, p, aim), club.lift)
+			_finish_m = Vector2(whole.end.x - ball.x, whole.end.y - ball.y).length()
+			_finish_warn = _trouble(whole.state)
+			_show_gauge()
 		_place_ring()
 		return
 	_preview_key = key
-	var putt: bool = club.id == "putter"
 	var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
 		Clubs.launch_velocity(club, p, aim), club.lift, 0.06, not putt)
 	preview = r
@@ -677,11 +718,31 @@ func _update_preview() -> void:
 	ring.visible = not putt and r.first_land != Vector3.INF
 	var dist_m: float = Vector2(r.end.x - ball.x, r.end.y - ball.y).length() if putt \
 		else Vector2(r.first_land.x - ball.x, r.first_land.y - ball.y).length()
+	_carry_m = dist_m
+	_finish_m = dist_m if putt else -1.0   # a putt's preview already runs to the finish
+	_finish_warn = _trouble(r.state) if putt else ""
 	if phase == Phase.PULL:
-		hud.set_power(pull, _dist_text(dist_m, putt))
+		_show_gauge()
+	else:
+		hud.hide_gauge()
 	_place_ring()
 	if n == 0:
 		pass
+
+
+func _show_gauge() -> void:
+	var putt: bool = club.id == "putter"
+	var per_m := 3.281 if putt else YD
+	hud.gauge.show_shot(_carry_m * per_m, _finish_m * per_m if _finish_m >= 0.0 else -1.0,
+		club.carry_m * per_m * (1.0 if putt else 1.1), _to_pin() * per_m, "ft" if putt else "yds", _finish_warn)
+
+
+func _trouble(state: int) -> String:
+	if state == BallSim.State.WATER:
+		return "into the water!"
+	if state == BallSim.State.OOB:
+		return "out of bounds!"
+	return ""
 
 
 func _place_ring() -> void:

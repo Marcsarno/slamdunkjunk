@@ -15,7 +15,7 @@ var stroke := Label.new()
 var dist := Label.new()
 var wind := Label.new()
 var wind_arrow := WindArrow.new()
-var power := Label.new()
+var gauge := Gauge.new()
 var message := Label.new()
 var hint := Label.new()
 var club := Button.new()
@@ -56,6 +56,100 @@ class WindArrow extends Control:
 		draw_colored_polygon(outline_head, ink)
 		draw_line(c + Vector2(0, -3), c + Vector2(0, 12), col, 4.0)
 		draw_colored_polygon(head, col)
+
+
+## The distance gauge shown while pulling: a yardage scale up to the club's full carry, filled to where
+## this pull will land, a fainter stretch for the roll after it (once the finger holds still), and a
+## flag where the pin is. Line the ball's finish up with the flag; it turns mint when it does.
+class Gauge extends Control:
+	const TRACK_W := 22.0
+	const TOP := 34.0
+	const BOTTOM := 26.0
+	var value := 0.0      # this pull's carry, in the gauge's units
+	var finish := -1.0    # where it stops after rolling; < 0 while not worked out yet
+	var top_value := 1.0  # the top of the scale (a full pull, or a bit over)
+	var pin := 0.0        # distance to the pin, same units
+	var unit := "yds"
+	var warning := ""     # e.g. "into the water": where the preview shot ends up, if it's trouble
+
+	func show_shot(v: float, finish_v: float, top: float, pin_v: float, unit_name: String, warn := "") -> void:
+		value = v
+		warning = warn
+		finish = finish_v
+		top_value = maxf(top, 1.0)
+		pin = pin_v
+		unit = unit_name
+		visible = true
+		queue_redraw()
+
+	func _y(v: float) -> float:
+		return lerpf(size.y - BOTTOM, TOP, clampf(v / top_value, 0.0, 1.0))
+
+	func _draw() -> void:
+		var font := get_theme_default_font()
+		var ink := Color(0.06, 0.02, 0.1)
+		var tx := size.x - TRACK_W - 40.0   # room on the right for the pin flag
+		var y0 := size.y - BOTTOM
+		# the track
+		draw_rect(Rect2(tx - 6, TOP - 6, TRACK_W + 12, y0 - TOP + 12), Color(0.16, 0.08, 0.24, 0.78))
+		draw_rect(Rect2(tx, TOP, TRACK_W, y0 - TOP), Color(0.05, 0.02, 0.09, 0.9))
+		var fy := _y(value)
+		# a tick every 10/25/50 units (whichever gives a handful), labelled on the left except behind the tag
+		var step := 50.0
+		for st in [5.0, 10.0, 25.0, 50.0]:
+			if top_value / st <= 8.0:
+				step = st
+				break
+		var v := step
+		while v < top_value:
+			var ty := _y(v)
+			draw_line(Vector2(tx - 10, ty), Vector2(tx + TRACK_W, ty), Color(1, 0.94, 0.84, 0.55), 2.0)
+			if absf(ty - fy) > 40.0:
+				var t := "%d" % roundi(v)
+				var tw := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
+				draw_string_outline(font, Vector2(tx - 16 - tw, ty + 8), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 6, ink)
+				draw_string(font, Vector2(tx - 16 - tw, ty + 8), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 0.94, 0.84, 0.8))
+			v += step
+		# the fill: orange, mint when it lines up with the pin
+		var close := finish >= 0.0 and absf(finish - pin) <= maxf(top_value * 0.025, 1.0)
+		var fill := Color(0.45, 1.0, 0.7) if close else Color(1.0, 0.62, 0.18)
+		draw_rect(Rect2(tx, fy, TRACK_W, y0 - fy), Color(fill, 0.9))
+		if finish > value:
+			var ry := _y(finish)
+			draw_rect(Rect2(tx, ry, TRACK_W, fy - ry), Color(fill, 0.38))
+		# the pin: a flag on the track (at the top with an arrow if it's out of reach)
+		var py := _y(pin)
+		var px := tx + TRACK_W
+		var flag := Color(1.0, 0.3, 0.25)
+		draw_line(Vector2(tx - 6, py), Vector2(px + 6, py), ink, 8.0)
+		draw_line(Vector2(tx - 4, py), Vector2(px + 4, py), Color.WHITE, 4.0)
+		draw_line(Vector2(px + 6, py + 2), Vector2(px + 6, py - 36), ink, 6.0)
+		draw_line(Vector2(px + 6, py), Vector2(px + 6, py - 34), Color.WHITE, 3.0)
+		var fl := PackedVector2Array([Vector2(px + 7, py - 34), Vector2(px + 30, py - 25), Vector2(px + 7, py - 16)])
+		draw_colored_polygon(PackedVector2Array([fl[0] + Vector2(-1, -3), fl[1] + Vector2(4, 0), fl[2] + Vector2(-1, 3)]), ink)
+		draw_colored_polygon(fl, flag)
+		if pin > top_value:
+			draw_colored_polygon(PackedVector2Array([Vector2(tx + TRACK_W * 0.5, py - 22), Vector2(tx + 3, py - 8), Vector2(tx + TRACK_W - 3, py - 8)]), Color.WHITE)
+		# this pull's distance, in a tag at the top of the fill
+		var big := "%d" % roundi(value)
+		var bw := font.get_string_size(big, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
+		var uw := font.get_string_size(unit, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
+		var roll_text := warning if warning != "" else ("" if finish <= value + 0.5 else "rolls to %d" % roundi(finish))
+		var rw := font.get_string_size(roll_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+		var tag_w := maxf(bw + uw + 30, rw + 24)
+		var tag := Rect2(tx - 28 - tag_w, fy - 30, tag_w, 56 + (24 if roll_text != "" else 0))
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.16, 0.08, 0.24, 0.92)
+		sb.border_color = fill
+		sb.set_border_width_all(3)
+		sb.set_corner_radius_all(12)
+		draw_style_box(sb, tag)
+		draw_line(Vector2(tag.end.x, fy), Vector2(tx + TRACK_W, fy), Color(1, 0.94, 0.84), 4.0)
+		draw_string(font, Vector2(tag.position.x + 12, fy + 16), big, HORIZONTAL_ALIGNMENT_LEFT, -1, 46, Color(1, 0.94, 0.84))
+		draw_string(font, Vector2(tag.position.x + 18 + bw, fy + 15), unit, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 0.94, 0.84, 0.8))
+		if roll_text != "":
+			var note_col := Color(1.0, 0.45, 0.4) if warning != "" else Color(1, 0.94, 0.84, 0.75)
+			draw_string(font, Vector2(tag.position.x + 12, fy + 41), roll_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, note_col)
 
 
 func _label(l: Label, size: int, color := CREAM) -> Label:
@@ -105,11 +199,16 @@ func _ready() -> void:
 	wrow.add_child(wind_arrow)
 	wrow.add_child(_label(wind, 24, Color(0.6, 1.0, 0.8)))
 
-	power.set_anchors_preset(Control.PRESET_CENTER)
-	power.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	power.position = Vector2(-200, 120)
-	power.size = Vector2(400, 120)
-	root.add_child(_label(power, 44, ORANGE))
+	# down the right edge, between the top bar and the club box
+	gauge.anchor_left = 1.0
+	gauge.anchor_right = 1.0
+	gauge.anchor_top = 0.27
+	gauge.anchor_bottom = 0.78
+	gauge.offset_left = -250
+	gauge.offset_right = -8
+	gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gauge.visible = false
+	root.add_child(gauge)
 
 	# just above the horizon, clear of the moon (which sits a fifth to a third of the way down)
 	message.anchor_left = 0.5
@@ -223,8 +322,8 @@ func set_club(label: String, yards: float) -> void:
 	club.text = "%s\n%d yds" % [label, roundi(yards)]
 
 
-func set_power(p: float, distance := "") -> void:
-	power.text = "" if p <= 0.0 else "%d%%\n~%s" % [roundi(p * 100), distance]
+func hide_gauge() -> void:
+	gauge.visible = false
 
 
 func flash(text: String, seconds := 2.2) -> void:

@@ -38,7 +38,7 @@ func best_pull(target: Vector3) -> float:
 	var best := 0.5
 	var best_d := INF
 	for i in 41:
-		var p := 0.2 + 0.8 * i / 40.0
+		var p := 0.07 + 0.93 * i / 40.0   # a person can pull as little as MIN_PULL
 		var r := BallSim.simulate(main.terrain, main.obstacles, main.terrain.pin(), main.wind, main.ball,
 			Clubs.launch_velocity(main.club, p, main.aim), main.club.lift)
 		var d := Vector2(r.end.x - target.x, r.end.y - target.y).length()
@@ -73,6 +73,7 @@ func _process(delta: float) -> void:
 					to_pin = far - Vector2(main.ball.x, main.ball.y)
 					target = Vector3(far.x, far.y, 0)
 				main.aim = to_pin.normalized()
+				main.aim_goal = main.aim
 				main._place_golfer_back()
 				main._aim_cam()
 				await snap("aim")
@@ -80,7 +81,9 @@ func _process(delta: float) -> void:
 				main._press(Vector2(360, 1000))
 				main._drag(Vector2(360, 1000 + p * main.get_viewport().get_visible_rect().size.y * main.PULL_FULL), Vector2.ZERO)
 				main.aim = to_pin.normalized()
+				main.aim_goal = main.aim
 				main.pull = p
+				main.pull_goal = p
 				t = 0.0
 				stage = "pull"
 		"pull":
