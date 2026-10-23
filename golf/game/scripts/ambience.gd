@@ -27,6 +27,8 @@ var _flash_strength := 1.0
 var _base_bg := 1.0
 var _base_ambient := 0.2
 var _rng := RandomNumberGenerator.new()
+var _mist_mat: ShaderMaterial
+var _mist_alpha := 0.35
 
 
 func build(t: Terrain, hole_props: Dictionary, hole_theme: Dictionary, environment: Environment) -> void:
@@ -128,13 +130,21 @@ func _mist() -> void:
 	m.shader = load("res://shaders/mist.gdshader")
 	m.set_shader_parameter("noise", tex)
 	var fog := env.fog_light_color
-	m.set_shader_parameter("color", _col(theme.get("mist_color"), fog.lerp(Color(0.86, 0.86, 0.96), 0.65)))
-	m.set_shader_parameter("alpha", float(theme.get("mist_alpha", 0.45)))
+	m.set_shader_parameter("color", _col(theme.get("mist_color"), fog.lerp(Color(0.55, 0.62, 0.85), 0.55)))
+	_mist_alpha = float(theme.get("mist_alpha", 0.35))
+	m.set_shader_parameter("alpha", _mist_alpha)
+	_mist_mat = m
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.material_override = m
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mmi)
+
+
+## Mist thins when the camera is high (k = 1 near the ground .. lower up high), like the fog.
+func set_height_fade(k: float) -> void:
+	if _mist_mat:
+		_mist_mat.set_shader_parameter("alpha", _mist_alpha * k)
 
 
 # ---------------------------------------------------------------- wisps

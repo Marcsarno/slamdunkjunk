@@ -26,6 +26,7 @@ var _bat_tex: Array[Texture2D] = []
 var _bat_t := 0.0
 var _terrain_mat: ShaderMaterial
 var ambience := Ambience.new()
+var _fog_base := 0.0045
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -81,6 +82,7 @@ func _environment() -> void:
 	mat.shader = load("res://shaders/sky_backdrop.gdshader")
 	mat.set_shader_parameter("paint_mix", 1.0 if style == "painted" else 0.0)
 	mat.set_shader_parameter("haze", float(theme.get("backdrop_haze", 0.45)))
+	mat.set_shader_parameter("star_amount", float(theme.get("stars", 1.0 if style != "painted" else 0.0)))
 	if not bd.is_empty():
 		var all_meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BACKDROP_DIR + "meta.json"))
 		var v: String = bd.get("variant", "a")
@@ -132,6 +134,7 @@ func _environment() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = fog_col
 	env.fog_density = float(theme.get("fog_density", 0.0045))
+	_fog_base = env.fog_density
 	env.fog_sky_affect = 0.0
 	env.glow_enabled = true
 	env.glow_intensity = 1.1
@@ -198,8 +201,8 @@ func _terrain_material() -> ShaderMaterial:
 	blotch.generate_mipmaps = true
 	blotch.noise = noise
 	m.set_shader_parameter("blotch", blotch)
-	m.set_shader_parameter("leaf_color", _col(theme.get("leaf_ground"), Color(0.42, 0.2, 0.07)))
-	m.set_shader_parameter("leaf_amount", float(theme.get("leaf_amount", 0.55)))
+	m.set_shader_parameter("leaf_color", _col(theme.get("leaf_ground"), Color(0.3, 0.14, 0.05)))
+	m.set_shader_parameter("leaf_amount", float(theme.get("leaf_amount", 0.3)))
 	var none: Array[Vector4] = []
 	none.resize(POOLS)
 	m.set_shader_parameter("pools", none)
@@ -482,6 +485,13 @@ func _make_bats() -> void:
 
 func _process(delta: float) -> void:
 	ambience.camera = camera
+	if camera:
+		# the fog thins as the camera rises, so the high aiming view looks out over a clear night,
+		# not a pale haze (from up there it looks through far more of it)
+		var c := Terrain.to_course(camera.global_position)
+		var up := smoothstep(8.0, 45.0, c.z - terrain.height(c.x, c.y))
+		env.fog_density = _fog_base * lerpf(1.0, 0.3, up)
+		ambience.set_height_fade(1.0 - 0.7 * up)
 	_bat_t += delta
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed

@@ -86,13 +86,13 @@
    0.33,
    0.52
   ],
-  "fog_density": 0.006,
+  "fog_density": 0.0036,
   "sky_horizon": [
    0.34,
    0.33,
    0.55
   ],
-  "backdrop_haze": 0.5,
+  "backdrop_haze": 0.18,
   "ambient": 0.19,
   "moon_scale": 0.8,
   "light_azimuth": 205,
@@ -104,7 +104,8 @@
   ],
   "ghosts": 8,
   "lightning": 22,
-  "mist": 30
+  "mist": 30,
+  "leaf_amount": 0.25
  },
  "tee": [
   0.0,

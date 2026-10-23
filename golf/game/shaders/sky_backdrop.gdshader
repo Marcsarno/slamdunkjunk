@@ -21,9 +21,31 @@ uniform float moon_scale = 1.0;
 uniform float moon_glow = 0.0;
 uniform vec3 moon_glow_color = vec3(1.0, 0.72, 0.36);
 uniform vec3 top_color : source_color = vec3(0.12, 0.08, 0.25);
+uniform float star_amount = 0.0;        // stars in the plain night sky (the paintings have their own)
 uniform vec3 horizon_color : source_color = vec3(0.45, 0.32, 0.55);
 uniform vec3 ground_color : source_color = vec3(0.35, 0.3, 0.45);
 uniform float energy = 1.0;
+
+float hash13(vec3 p) {
+	p = fract(p * 0.1031);
+	p += dot(p, p.zyx + 31.32);
+	return fract((p.x + p.y) * p.z);
+}
+
+// A scattering of small stars: about one cell in sixty holds one, at a jittered spot, some brighter.
+float stars(vec3 d, float t) {
+	vec3 p = d * 150.0;
+	vec3 cell = floor(p);
+	float h = hash13(cell);
+	if (h < 0.983) {
+		return 0.0;
+	}
+	vec3 j = vec3(hash13(cell + 1.7), hash13(cell + 3.1), hash13(cell + 5.3)) - 0.5;
+	float r = length(p - (cell + 0.5 + j * 0.6));
+	float bright = 0.35 + 0.65 * (h - 0.983) / 0.017;
+	float twinkle = 0.75 + 0.25 * sin(t * (1.5 + 3.0 * j.x) + h * 60.0);
+	return smoothstep(0.42, 0.0, r) * bright * twinkle;
+}
 
 void sky() {
 	vec3 d = normalize(EYEDIR);
@@ -31,6 +53,7 @@ void sky() {
 	float el = degrees(asin(clamp(d.y, -1.0, 1.0)));
 
 	vec3 night = mix(horizon_color, top_color, pow(clamp(el / 55.0, 0.0, 1.0), 0.6));
+	night += vec3(0.85, 0.9, 1.0) * stars(d, TIME) * star_amount * smoothstep(4.0, 22.0, el);
 	night = mix(night, ground_color, smoothstep(0.0, -3.0, el));
 
 	vec3 c = night;
