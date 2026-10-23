@@ -7,6 +7,12 @@ const HOLES := [
 	{"id": "h01", "name": "Pumpkin Patch", "par": 4},
 	{"id": "h02", "name": "Witch's Hollow", "par": 3},
 	{"id": "h03", "name": "Forgotten Cemetery", "par": 5},
+	{"id": "h04", "name": "Spiderwood", "par": 4},
+	{"id": "h05", "name": "Haunted Harvest", "par": 5},
+	{"id": "h06", "name": "Ghostlight Marsh", "par": 3},
+	{"id": "h07", "name": "Vampire's Garden", "par": 4},
+	{"id": "h08", "name": "Headless Trail", "par": 4},
+	{"id": "h09", "name": "Midnight Homecoming", "par": 4},
 ]
 
 var index := 0

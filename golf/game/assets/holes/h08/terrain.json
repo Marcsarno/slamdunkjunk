@@ -1,0 +1,308 @@
+{
+ "id": "h08_headless_trail",
+ "name": "Headless Trail",
+ "number": 8,
+ "par": 4,
+ "origin": [
+  -65,
+  -49
+ ],
+ "extent": [
+  82,
+  409
+ ],
+ "phys": {
+  "cell": 1.0,
+  "nx": 148,
+  "ny": 459,
+  "file": "heights.bin"
+ },
+ "surf": {
+  "cell": 0.5,
+  "nx": 295,
+  "ny": 917,
+  "file": "surface.bin",
+  "names": [
+   "oob",
+   "rough",
+   "fairway",
+   "green",
+   "sand",
+   "water",
+   "tee",
+   "fringe",
+   "deep_rough"
+  ]
+ },
+ "splat": {
+  "file": "splat.png",
+  "detail": "detail.png",
+  "size": [
+   589,
+   1833
+  ]
+ },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   658,
+   2048
+  ]
+ },
+ "theme": {
+  "light_props_spacing": 22,
+  "light_props": [
+   "light_classic_jack",
+   "light_skull_lantern",
+   "light_haunted_lamppost",
+   "light_glowing_ghoul",
+   "light_lantern_ghost",
+   "light_pumpkin_totem"
+  ],
+  "trees_near": [
+   "tree_lightning_oak",
+   "tree_raven_perch",
+   "tree_windbent_fir",
+   "dead_tree",
+   "tree_silver_snag",
+   "tree_lightning_oak"
+  ],
+  "trees_far": [
+   "tree_windbent_fir",
+   "tree_moonlit_pine",
+   "tree_silver_snag",
+   "pine_blue"
+  ],
+  "backdrop": {
+   "hole": "08-headless-trail",
+   "variant": "a",
+   "span": 95,
+   "yaw": 6,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.55
+   }
+  ],
+  "sky_style": "painted",
+  "sky_top": [
+   0.004,
+   0.005,
+   0.02
+  ],
+  "sky_horizon": [
+   0.06,
+   0.05,
+   0.12
+  ],
+  "fog": [
+   0.08,
+   0.08,
+   0.15
+  ],
+  "fog_density": 0.0042,
+  "backdrop_haze": 0.18,
+  "moon": "white",
+  "moon_azimuth": 30,
+  "moon_elevation": 16,
+  "light_azimuth": 150,
+  "light_elevation": 34,
+  "wisp_color": [
+   1.0,
+   0.55,
+   0.2
+  ],
+  "ghosts": 4,
+  "lightning": 12,
+  "mist": 30,
+  "clouds": 0.95,
+  "leaf_amount": 0.4
+ },
+ "tee": [
+  0.0,
+  0.0,
+  11.117884027420539
+ ],
+ "pin": [
+  -13,
+  363,
+  8.140886113469149
+ ],
+ "green": {
+  "center": [
+   -16,
+   360
+  ],
+  "radius": [
+   12,
+   10
+  ],
+  "rotation": -0.4,
+  "slope": [
+   0.016,
+   0.016
+  ]
+ },
+ "length": 371.5,
+ "path": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.75,
+   10.0
+  ],
+  [
+   1.36,
+   20.0
+  ],
+  [
+   1.94,
+   30.0
+  ],
+  [
+   2.59,
+   40.0
+  ],
+  [
+   3.41,
+   50.0
+  ],
+  [
+   4.51,
+   60.0
+  ],
+  [
+   6.0,
+   70.0
+  ],
+  [
+   7.97,
+   79.76
+  ],
+  [
+   10.41,
+   89.58
+  ],
+  [
+   13.16,
+   99.42
+  ],
+  [
+   16.03,
+   109.23
+  ],
+  [
+   18.85,
+   118.98
+  ],
+  [
+   21.44,
+   128.62
+  ],
+  [
+   23.63,
+   138.12
+  ],
+  [
+   25.6,
+   148.27
+  ],
+  [
+   27.55,
+   158.5
+  ],
+  [
+   29.31,
+   168.61
+  ],
+  [
+   30.74,
+   178.61
+  ],
+  [
+   31.73,
+   188.48
+  ],
+  [
+   32.13,
+   198.24
+  ],
+  [
+   31.81,
+   208.05
+  ],
+  [
+   30.66,
+   218.13
+  ],
+  [
+   28.81,
+   228.11
+  ],
+  [
+   26.42,
+   237.95
+  ],
+  [
+   23.64,
+   247.62
+  ],
+  [
+   20.63,
+   257.11
+  ],
+  [
+   17.5,
+   266.46
+  ],
+  [
+   13.66,
+   276.13
+  ],
+  [
+   9.23,
+   285.64
+  ],
+  [
+   4.59,
+   294.92
+  ],
+  [
+   0.1,
+   303.93
+  ],
+  [
+   -3.87,
+   312.59
+  ],
+  [
+   -7.29,
+   321.8
+  ],
+  [
+   -10.17,
+   332.0
+  ],
+  [
+   -12.25,
+   341.57
+  ],
+  [
+   -14.06,
+   350.93
+  ]
+ ],
+ "water": [],
+ "wind": {
+  "min": 3,
+  "max": 8
+ }
+}

@@ -1,0 +1,379 @@
+{
+ "id": "h05_haunted_harvest",
+ "name": "Haunted Harvest",
+ "number": 5,
+ "par": 5,
+ "origin": [
+  -62,
+  -56
+ ],
+ "extent": [
+  79,
+  484
+ ],
+ "phys": {
+  "cell": 1.0,
+  "nx": 142,
+  "ny": 541,
+  "file": "heights.bin"
+ },
+ "surf": {
+  "cell": 0.5,
+  "nx": 283,
+  "ny": 1081,
+  "file": "surface.bin",
+  "names": [
+   "oob",
+   "rough",
+   "fairway",
+   "green",
+   "sand",
+   "water",
+   "tee",
+   "fringe",
+   "deep_rough"
+  ]
+ },
+ "splat": {
+  "file": "splat.png",
+  "detail": "detail.png",
+  "size": [
+   565,
+   2161
+  ]
+ },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   535,
+   2048
+  ]
+ },
+ "theme": {
+  "light_props_spacing": 26,
+  "light_props": [
+   "light_classic_jack",
+   "light_pumpkin_totem",
+   "light_hanging_harvest",
+   "light_pumpkin_path_lights",
+   "light_skeleton_groundskeeper",
+   "light_hollow_heart_tree"
+  ],
+  "trees_near": [
+   "tree_harvest_pear",
+   "tree_crooked_plum",
+   "tree_copper_oak",
+   "apple_tree",
+   "tree_scarlet_maple",
+   "tree_golden_aspen",
+   "tree_harvest_pear"
+  ],
+  "trees_far": [
+   "tree_copper_oak",
+   "tree_scarlet_maple",
+   "maple_orange",
+   "tree_golden_aspen",
+   "tree_moonlit_pine"
+  ],
+  "cornfield": {
+   "side": "left",
+   "from": 0.08,
+   "to": 0.6,
+   "gap": 5.0,
+   "depth": 26
+  },
+  "backdrop": {
+   "hole": "05-haunted-harvest",
+   "variant": "a",
+   "span": 95,
+   "yaw": -8,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 440,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.5
+   }
+  ],
+  "sky_style": "painted",
+  "sky_top": [
+   0.012,
+   0.004,
+   0.02
+  ],
+  "sky_horizon": [
+   0.16,
+   0.05,
+   0.06
+  ],
+  "fog": [
+   0.14,
+   0.07,
+   0.12
+  ],
+  "fog_density": 0.0034,
+  "backdrop_haze": 0.16,
+  "moon": "harvest",
+  "moon_azimuth": 18,
+  "moon_elevation": 12,
+  "moon_size": 0.04,
+  "light_azimuth": 160,
+  "light_elevation": 28,
+  "moon_light": [
+   0.9,
+   0.7,
+   0.85
+  ],
+  "water_deep": [
+   0.04,
+   0.015,
+   0.03
+  ],
+  "water_glow": [
+   1.0,
+   0.45,
+   0.12
+  ],
+  "wisp_color": [
+   1.0,
+   0.6,
+   0.25
+  ],
+  "ghosts": 2,
+  "lightning": 0,
+  "mist": 20,
+  "clouds": 0.55,
+  "cloud_tint": [
+   0.65,
+   0.45,
+   0.6
+  ],
+  "leaf_amount": 0.45
+ },
+ "tee": [
+  0.0,
+  0.0,
+  2.3407870283289287
+ ],
+ "pin": [
+  -3,
+  431,
+  4.890771774476239
+ ],
+ "green": {
+  "center": [
+   -6,
+   428
+  ],
+  "radius": [
+   13,
+   11
+  ],
+  "rotation": -0.3,
+  "slope": [
+   0.012,
+   0.02
+  ]
+ },
+ "length": 433.1,
+ "path": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   -0.34,
+   9.91
+  ],
+  [
+   -0.75,
+   19.71
+  ],
+  [
+   -1.17,
+   29.48
+  ],
+  [
+   -1.56,
+   39.3
+  ],
+  [
+   -1.87,
+   49.27
+  ],
+  [
+   -2.03,
+   59.48
+  ],
+  [
+   -2.0,
+   70.0
+  ],
+  [
+   -1.84,
+   79.54
+  ],
+  [
+   -1.61,
+   89.34
+  ],
+  [
+   -1.29,
+   99.36
+  ],
+  [
+   -0.88,
+   109.5
+  ],
+  [
+   -0.35,
+   119.71
+  ],
+  [
+   0.3,
+   129.91
+  ],
+  [
+   1.08,
+   140.03
+  ],
+  [
+   2.0,
+   150.0
+  ],
+  [
+   3.17,
+   160.09
+  ],
+  [
+   4.59,
+   170.21
+  ],
+  [
+   6.18,
+   180.32
+  ],
+  [
+   7.88,
+   190.38
+  ],
+  [
+   9.6,
+   200.35
+  ],
+  [
+   11.28,
+   210.21
+  ],
+  [
+   12.83,
+   219.91
+  ],
+  [
+   14.22,
+   229.58
+  ],
+  [
+   15.75,
+   239.96
+  ],
+  [
+   17.34,
+   250.09
+  ],
+  [
+   18.87,
+   260.04
+  ],
+  [
+   20.23,
+   269.89
+  ],
+  [
+   21.28,
+   279.71
+  ],
+  [
+   21.9,
+   289.55
+  ],
+  [
+   21.97,
+   299.49
+  ],
+  [
+   21.49,
+   309.53
+  ],
+  [
+   20.53,
+   319.67
+  ],
+  [
+   19.2,
+   329.83
+  ],
+  [
+   17.58,
+   339.92
+  ],
+  [
+   15.75,
+   349.85
+  ],
+  [
+   13.79,
+   359.55
+  ],
+  [
+   11.77,
+   369.04
+  ],
+  [
+   9.31,
+   379.16
+  ],
+  [
+   6.54,
+   388.9
+  ],
+  [
+   3.58,
+   398.39
+  ],
+  [
+   0.5,
+   407.75
+  ],
+  [
+   -2.58,
+   417.1
+  ],
+  [
+   -5.57,
+   426.56
+  ]
+ ],
+ "water": [
+  {
+   "center": [
+    46,
+    262
+   ],
+   "radius": [
+    15,
+    26
+   ],
+   "rotation": 0.15,
+   "level": 5.104
+  }
+ ],
+ "wind": {
+  "min": 1,
+  "max": 5
+ }
+}

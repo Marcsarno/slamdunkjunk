@@ -11,9 +11,9 @@ const CHALK := Color(0.96, 0.95, 0.9)
 const CHALK_DIM := Color(0.96, 0.95, 0.9, 0.58)
 const CHALK_ORANGE := Color(1.0, 0.72, 0.38)
 const HOLES := [
-	["Pumpkin Patch", 4], ["Witch's Hollow", 3], ["Forgotten Cemetery", 5], ["Spiderwood", 0],
-	["Haunted Harvest", 0], ["Ghostlight Marsh", 0], ["Vampire's Garden", 0], ["Headless Trail", 0],
-	["Midnight Homecoming", 0],
+	["Pumpkin Patch", 4], ["Witch's Hollow", 3], ["Forgotten Cemetery", 5], ["Spiderwood", 4],
+	["Haunted Harvest", 5], ["Ghostlight Marsh", 3], ["Vampire's Garden", 4], ["Headless Trail", 4],
+	["Midnight Homecoming", 4],
 ]   # par 0: not built yet (the built ones are Round.HOLES, in the same order)
 const HELP := [
 	"Drag the gold ring to where you want to land.",

@@ -1,0 +1,324 @@
+{
+  "id": "h09_midnight_homecoming",
+  "name": "Midnight Homecoming",
+  "number": 9,
+  "par": 4,
+  "seed": 909,
+  "note": "The Walk Home: a wide, welcoming finale climbing toward the village lights, lined with lanterns all the way. A pond waits short-left of the green and a big bunker short-right, so the last shot still asks something. Course coords in meters: x right, y down-range, z up.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      -2,
+      60
+    ],
+    [
+      2,
+      130
+    ],
+    [
+      12,
+      196
+    ],
+    [
+      16,
+      252
+    ],
+    [
+      10,
+      298
+    ]
+  ],
+  "fairway_start": 34,
+  "fairway_width": [
+    26,
+    32,
+    34,
+    32,
+    28,
+    24
+  ],
+  "rough_width": 16,
+  "deep_rough_width": 16,
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      10
+    ]
+  },
+  "green": {
+    "center": [
+      10,
+      298
+    ],
+    "radius": [
+      14,
+      12
+    ],
+    "rotation": 0.1,
+    "slope": [
+      0.01,
+      0.022
+    ]
+  },
+  "pin": [
+    13,
+    301
+  ],
+  "bunkers": [
+    {
+      "center": [
+        28,
+        280
+      ],
+      "radius": [
+        7,
+        3.4
+      ],
+      "rotation": 0.5,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        26,
+        312
+      ],
+      "radius": [
+        4.4,
+        2.4
+      ],
+      "rotation": -0.5,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -12,
+        186
+      ],
+      "radius": [
+        7,
+        3.4
+      ],
+      "rotation": -0.3,
+      "depth": 0.45
+    }
+  ],
+  "water": [
+    {
+      "center": [
+        -14,
+        268
+      ],
+      "radius": [
+        12,
+        16
+      ],
+      "rotation": 0.3
+    }
+  ],
+  "elevation": {
+    "tee": 2.0,
+    "green": 7.0,
+    "cross_tilt": 0.01,
+    "roll_height": 0.35,
+    "bank_height": 3.0,
+    "mounds": [
+      {
+        "center": [
+          44,
+          110
+        ],
+        "radius": 24,
+        "height": 2.4
+      },
+      {
+        "center": [
+          -42,
+          160
+        ],
+        "radius": 22,
+        "height": 2.2
+      },
+      {
+        "center": [
+          44,
+          330
+        ],
+        "radius": 22,
+        "height": 2.4
+      }
+    ]
+  },
+  "wind": {
+    "min": 1,
+    "max": 3
+  },
+  "graveyards": [
+    {
+      "center": [
+        -40,
+        230
+      ],
+      "radius": 7,
+      "count": 8,
+      "fence": true
+    }
+  ],
+  "lantern_spacing": 11,
+  "trees_spacing": 8.5,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.4
+      ],
+      "carved": 2,
+      "plain": 1,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        -5.2,
+        6.2
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.0
+    },
+    {
+      "center": [
+        20,
+        60
+      ],
+      "carved": 2,
+      "plain": 2
+    },
+    {
+      "center": [
+        -20,
+        120
+      ],
+      "carved": 2,
+      "plain": 2
+    },
+    {
+      "center": [
+        32,
+        250
+      ],
+      "carved": 3,
+      "plain": 2
+    },
+    {
+      "center": [
+        -8,
+        322
+      ],
+      "carved": 3,
+      "plain": 2
+    },
+    {
+      "center": [
+        30,
+        296
+      ],
+      "carved": 2,
+      "plain": 1
+    }
+  ],
+  "theme": {
+    "light_props_spacing": 13,
+    "light_props": [
+      "light_haunted_lamppost",
+      "light_pumpkin_path_lights",
+      "light_hanging_harvest",
+      "light_classic_jack",
+      "light_lantern_ghost",
+      "light_skeleton_groundskeeper",
+      "light_grave_candles",
+      "light_pumpkin_totem"
+    ],
+    "trees_near": [
+      "maple_orange",
+      "tree_copper_oak",
+      "tree_golden_aspen",
+      "tree_scarlet_maple",
+      "lantern_tree",
+      "tree_harvest_pear"
+    ],
+    "trees_far": [
+      "tree_moonlit_pine",
+      "pine_blue",
+      "tree_copper_oak",
+      "tree_golden_aspen"
+    ],
+    "backdrop": {
+      "hole": "09-midnight-homecoming",
+      "variant": "a",
+      "span": 95,
+      "yaw": 4,
+      "horizon_v": 0.8
+    },
+    "rings": [
+      {
+        "image": "horizon_pines",
+        "radius": 420,
+        "height": 44,
+        "base": -6,
+        "repeats": 9,
+        "haze": 0.45
+      }
+    ],
+    "sky_style": "painted",
+    "sky_top": [
+      0.006,
+      0.004,
+      0.024
+    ],
+    "sky_horizon": [
+      0.12,
+      0.06,
+      0.13
+    ],
+    "fog": [
+      0.11,
+      0.08,
+      0.16
+    ],
+    "fog_density": 0.0032,
+    "backdrop_haze": 0.15,
+    "moon": "harvest",
+    "moon_azimuth": -10,
+    "moon_elevation": 14,
+    "moon_size": 0.045,
+    "light_azimuth": 200,
+    "light_elevation": 34,
+    "water_deep": [
+      0.03,
+      0.015,
+      0.04
+    ],
+    "water_glow": [
+      1.0,
+      0.6,
+      0.22
+    ],
+    "wisp_color": [
+      1.0,
+      0.7,
+      0.3
+    ],
+    "wisps": 80,
+    "ghosts": 3,
+    "lightning": 0,
+    "mist": 22,
+    "clouds": 0.45,
+    "leaf_amount": 0.35
+  }
+}

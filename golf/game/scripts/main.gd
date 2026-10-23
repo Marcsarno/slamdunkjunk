@@ -100,6 +100,21 @@ var _landed_fx := false         # the first landing's puff and thud have been sh
 
 func _ready() -> void:
 	randomize()
+	var id: String = Round.current().id
+	if not Holes.is_ready(id):
+		set_process(false)            # nothing runs until the hole is built
+		set_process_unhandled_input(false)
+		# on the web, holes past the first arrive when the round reaches them (scripts/holes.gd)
+		var wait := _waiting_note("Fog is lifting over %s..." % Round.current().name)
+		if not await Holes.fetch(id):
+			wait.text = "The fog won't lift (no connection?).\nBack to the clubhouse..."
+			await get_tree().create_timer(2.5).timeout
+			get_tree().set_meta("front_menu", true)
+			get_tree().change_scene_to_file("res://scenes/front.tscn")
+			return
+		wait.get_parent().get_parent().queue_free()
+		set_process(true)
+		set_process_unhandled_input(true)
 	terrain = Terrain.load_hole(Round.dir())
 	view.build(Round.dir(), terrain)
 	add_child(view)
@@ -130,11 +145,34 @@ func _ready() -> void:
 	var w: Dictionary = terrain.meta.wind
 	wind = Vector2.from_angle(randf() * TAU) * randf_range(float(w.min), float(w.max))
 	_start_hole()
+	if Round.has_next():
+		Holes.prefetch(Round.HOLES[Round.index + 1].id)     # fetched while this hole is played
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--capture="):
 			add_child(load("res://tests/capture.gd").new())
 		elif a.begins_with("--capture-hole="):
 			add_child(load("res://tests/capture_hole.gd").new())
+
+
+## A line of text on a dark screen while a hole is fetched.
+func _waiting_note(text: String) -> Label:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var bg := ColorRect.new()
+	bg.color = Color(0.05, 0.02, 0.08)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(bg)
+	var l := Label.new()
+	l.text = text
+	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.add_theme_font_override("font", Chalk.hand_font())
+	l.add_theme_font_size_override("font_size", 40)
+	l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.6))
+	bg.add_child(l)
+	return l
 
 
 # ---------------------------------------------------------------- hole / shot flow

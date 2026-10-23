@@ -16,6 +16,7 @@ boot_splash/show_image=false
 Music="*res://scripts/music.gd"
 Round="*res://scripts/round.gd"
 Sfx="*res://scripts/sfx.gd"
+Holes="*res://scripts/holes.gd"
 
 [display]
 

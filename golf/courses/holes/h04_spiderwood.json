@@ -1,0 +1,323 @@
+{
+  "id": "h04_spiderwood",
+  "name": "Spiderwood",
+  "number": 4,
+  "par": 4,
+  "seed": 404,
+  "note": "The Web: a narrow dogleg right through dark, misty woods, falling into a ravine where a creek crosses in front of the green. Lay up short of it, or carry it and climb to the green on the far bank. Course coords in meters: x right, y down-range, z up.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      60
+    ],
+    [
+      4,
+      130
+    ],
+    [
+      20,
+      190
+    ],
+    [
+      46,
+      238
+    ],
+    [
+      74,
+      282
+    ],
+    [
+      88,
+      320
+    ]
+  ],
+  "fairway_start": 40,
+  "fairway_width": [
+    20,
+    22,
+    24,
+    24,
+    22,
+    20,
+    20
+  ],
+  "rough_width": 13,
+  "deep_rough_width": 16,
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      10
+    ]
+  },
+  "green": {
+    "center": [
+      88,
+      320
+    ],
+    "radius": [
+      12,
+      10
+    ],
+    "rotation": 0.6,
+    "slope": [
+      -0.01,
+      0.022
+    ]
+  },
+  "pin": [
+    91,
+    323
+  ],
+  "bunkers": [
+    {
+      "center": [
+        101,
+        309
+      ],
+      "radius": [
+        5,
+        2.8
+      ],
+      "rotation": 0.9,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        76,
+        333
+      ],
+      "radius": [
+        4.5,
+        2.6
+      ],
+      "rotation": 0.4,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -8,
+        176
+      ],
+      "radius": [
+        7,
+        3.2
+      ],
+      "rotation": 0.3,
+      "depth": 0.45
+    }
+  ],
+  "water": [
+    {
+      "center": [
+        62,
+        266
+      ],
+      "radius": [
+        40,
+        6.5
+      ],
+      "rotation": -0.75,
+      "level_offset": -0.7
+    }
+  ],
+  "carry": [
+    252,
+    276
+  ],
+  "elevation": {
+    "tee": 6.0,
+    "green": 4.5,
+    "profile": [
+      [
+        0,
+        6.0
+      ],
+      [
+        120,
+        5.3
+      ],
+      [
+        200,
+        4.2
+      ],
+      [
+        240,
+        3.0
+      ],
+      [
+        266,
+        2.4
+      ],
+      [
+        294,
+        3.4
+      ],
+      [
+        320,
+        4.2
+      ]
+    ],
+    "cross_tilt": 0.01,
+    "roll_height": 0.35,
+    "bank_height": 5.0,
+    "mounds": [
+      {
+        "center": [
+          -34,
+          120
+        ],
+        "radius": 22,
+        "height": 2.4
+      },
+      {
+        "center": [
+          50,
+          160
+        ],
+        "radius": 24,
+        "height": 2.6
+      },
+      {
+        "center": [
+          120,
+          300
+        ],
+        "radius": 22,
+        "height": 2.4
+      }
+    ]
+  },
+  "wind": {
+    "min": 0,
+    "max": 3
+  },
+  "graveyards": [
+    {
+      "center": [
+        -24,
+        214
+      ],
+      "radius": 6,
+      "count": 6,
+      "fence": false
+    }
+  ],
+  "lantern_spacing": 17,
+  "trees_spacing": 7.0,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.4
+      ],
+      "carved": 2,
+      "plain": 1,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        -5.2,
+        6.2
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.0
+    }
+  ],
+  "theme": {
+    "light_props_spacing": 20,
+    "light_props": [
+      "light_captured_spirit",
+      "light_marsh_wisp",
+      "light_moon_mushrooms",
+      "light_lantern_ghost",
+      "light_skull_lantern",
+      "light_haunted_lamppost"
+    ],
+    "trees_near": [
+      "tree_ghost_birch",
+      "tree_moonlit_pine",
+      "tree_twisted_cypress",
+      "tree_windbent_fir",
+      "tree_hollow_sentinel",
+      "birch",
+      "tree_moonlit_pine"
+    ],
+    "trees_far": [
+      "tree_moonlit_pine",
+      "tree_windbent_fir",
+      "pine_blue",
+      "tree_moonlit_pine",
+      "tree_ghost_birch"
+    ],
+    "backdrop": {
+      "hole": "04-spiderwood",
+      "variant": "a",
+      "span": 95,
+      "yaw": 10,
+      "horizon_v": 0.8
+    },
+    "rings": [
+      {
+        "image": "horizon_pines",
+        "radius": 400,
+        "height": 44,
+        "base": -6,
+        "repeats": 9,
+        "haze": 0.6
+      }
+    ],
+    "sky_style": "painted",
+    "sky_top": [
+      0.006,
+      0.004,
+      0.026
+    ],
+    "sky_horizon": [
+      0.07,
+      0.045,
+      0.14
+    ],
+    "fog": [
+      0.1,
+      0.08,
+      0.19
+    ],
+    "fog_density": 0.0048,
+    "backdrop_haze": 0.2,
+    "moon": "white",
+    "moon_azimuth": -22,
+    "moon_elevation": 14,
+    "light_azimuth": 210,
+    "light_elevation": 30,
+    "water_deep": [
+      0.02,
+      0.02,
+      0.06
+    ],
+    "water_glow": [
+      0.45,
+      0.35,
+      1.0
+    ],
+    "wisp_color": [
+      0.75,
+      0.6,
+      1.0
+    ],
+    "ghosts": 4,
+    "lightning": 0,
+    "mist": 44,
+    "mist_alpha": 0.42,
+    "clouds": 0.7,
+    "leaf_amount": 0.2
+  }
+}

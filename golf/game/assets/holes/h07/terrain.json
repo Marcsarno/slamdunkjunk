@@ -1,0 +1,339 @@
+{
+ "id": "h07_vampires_garden",
+ "name": "Vampire's Garden",
+ "number": 7,
+ "par": 4,
+ "origin": [
+  -139,
+  -53
+ ],
+ "extent": [
+  56,
+  345
+ ],
+ "phys": {
+  "cell": 1.0,
+  "nx": 196,
+  "ny": 399,
+  "file": "heights.bin"
+ },
+ "surf": {
+  "cell": 0.5,
+  "nx": 391,
+  "ny": 797,
+  "file": "surface.bin",
+  "names": [
+   "oob",
+   "rough",
+   "fairway",
+   "green",
+   "sand",
+   "water",
+   "tee",
+   "fringe",
+   "deep_rough"
+  ]
+ },
+ "splat": {
+  "file": "splat.png",
+  "detail": "detail.png",
+  "size": [
+   781,
+   1593
+  ]
+ },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   976,
+   1991
+  ]
+ },
+ "theme": {
+  "light_props_spacing": 20,
+  "light_props": [
+   "light_haunted_lamppost",
+   "light_grave_candles",
+   "light_skull_lantern",
+   "light_hollow_heart_tree",
+   "light_lantern_ghost",
+   "light_glowing_ghoul"
+  ],
+  "trees_near": [
+   "tree_scarlet_maple",
+   "tree_twisted_cypress",
+   "tree_crooked_plum",
+   "tree_ancient_yew",
+   "tree_hollow_sentinel",
+   "tree_twisted_cypress"
+  ],
+  "trees_far": [
+   "tree_twisted_cypress",
+   "tree_moonlit_pine",
+   "tree_scarlet_maple",
+   "tree_windbent_fir"
+  ],
+  "backdrop": {
+   "hole": "07-vampires-garden",
+   "variant": "a",
+   "span": 95,
+   "yaw": -14,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.5
+   }
+  ],
+  "sky_style": "painted",
+  "sky_top": [
+   0.01,
+   0.003,
+   0.02
+  ],
+  "sky_horizon": [
+   0.14,
+   0.03,
+   0.08
+  ],
+  "fog": [
+   0.12,
+   0.05,
+   0.12
+  ],
+  "fog_density": 0.0036,
+  "backdrop_haze": 0.17,
+  "moon": "harvest",
+  "moon_azimuth": -30,
+  "moon_elevation": 15,
+  "moon_size": 0.03,
+  "light_azimuth": 220,
+  "light_elevation": 32,
+  "moon_light": [
+   0.95,
+   0.6,
+   0.8
+  ],
+  "water_deep": [
+   0.06,
+   0.005,
+   0.02
+  ],
+  "water_glow": [
+   1.0,
+   0.1,
+   0.25
+  ],
+  "wisp_color": [
+   1.0,
+   0.3,
+   0.45
+  ],
+  "ghosts": 3,
+  "lightning": 30,
+  "mist": 28,
+  "clouds": 0.6,
+  "cloud_tint": [
+   0.7,
+   0.4,
+   0.6
+  ],
+  "leaf_amount": 0.3,
+  "leaf_colors": [
+   [
+    0.6,
+    0.05,
+    0.1
+   ],
+   [
+    0.45,
+    0.02,
+    0.12
+   ],
+   [
+    0.75,
+    0.15,
+    0.1
+   ]
+  ]
+ },
+ "tee": [
+  0.0,
+  0.0,
+  4.810321182606494
+ ],
+ "pin": [
+  -89,
+  295,
+  6.8662106668763
+ ],
+ "green": {
+  "center": [
+   -86,
+   292
+  ],
+  "radius": [
+   12,
+   10.5
+  ],
+  "rotation": 0.7,
+  "slope": [
+   -0.014,
+   0.018
+  ]
+ },
+ "length": 316.4,
+ "path": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.38,
+   9.94
+  ],
+  [
+   0.81,
+   19.81
+  ],
+  [
+   1.25,
+   29.69
+  ],
+  [
+   1.63,
+   39.63
+  ],
+  [
+   1.9,
+   49.71
+  ],
+  [
+   2.0,
+   60.0
+  ],
+  [
+   2.03,
+   69.8
+  ],
+  [
+   2.07,
+   79.89
+  ],
+  [
+   2.03,
+   90.12
+  ],
+  [
+   1.83,
+   100.36
+  ],
+  [
+   1.36,
+   110.44
+  ],
+  [
+   0.56,
+   120.25
+  ],
+  [
+   -0.73,
+   130.19
+  ],
+  [
+   -2.45,
+   140.45
+  ],
+  [
+   -4.51,
+   150.49
+  ],
+  [
+   -6.93,
+   160.28
+  ],
+  [
+   -9.7,
+   169.76
+  ],
+  [
+   -12.82,
+   178.89
+  ],
+  [
+   -16.62,
+   188.3
+  ],
+  [
+   -21.15,
+   197.68
+  ],
+  [
+   -26.13,
+   206.66
+  ],
+  [
+   -31.39,
+   215.22
+  ],
+  [
+   -36.78,
+   223.34
+  ],
+  [
+   -42.57,
+   231.48
+  ],
+  [
+   -49.5,
+   239.6
+  ],
+  [
+   -56.7,
+   247.1
+  ],
+  [
+   -63.55,
+   254.24
+  ],
+  [
+   -69.48,
+   261.29
+  ],
+  [
+   -75.24,
+   270.23
+  ],
+  [
+   -79.7,
+   278.98
+  ],
+  [
+   -83.78,
+   287.63
+  ]
+ ],
+ "water": [
+  {
+   "center": [
+    -40,
+    160
+   ],
+   "radius": [
+    14,
+    22
+   ],
+   "rotation": 0.4,
+   "level": 5.555
+  }
+ ],
+ "wind": {
+  "min": 0,
+  "max": 4
+ }
+}

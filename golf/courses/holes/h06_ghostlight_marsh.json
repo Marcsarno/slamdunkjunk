@@ -1,0 +1,264 @@
+{
+  "id": "h06_ghostlight_marsh",
+  "name": "Ghostlight Marsh",
+  "number": 6,
+  "par": 3,
+  "seed": 606,
+  "note": "Will-o'-the-Wisp: from a boardwalk tee, carry the glowing lagoon to a green on the far shore. Bail out short-left on the reed bank, but the wisps keep watch. Course coords in meters: x right, y down-range, z up.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      -4,
+      50
+    ],
+    [
+      -9,
+      105
+    ],
+    [
+      -12,
+      158
+    ]
+  ],
+  "fairway_start": 118,
+  "fairway_width": [
+    18,
+    20,
+    22,
+    22
+  ],
+  "rough_width": 14,
+  "deep_rough_width": 14,
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      9
+    ]
+  },
+  "green": {
+    "center": [
+      -12,
+      158
+    ],
+    "radius": [
+      12,
+      10
+    ],
+    "rotation": -0.2,
+    "slope": [
+      -0.012,
+      0.02
+    ]
+  },
+  "pin": [
+    -10,
+    161
+  ],
+  "bunkers": [
+    {
+      "center": [
+        2,
+        166
+      ],
+      "radius": [
+        4.5,
+        2.6
+      ],
+      "rotation": 0.6,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -27,
+        170
+      ],
+      "radius": [
+        4.2,
+        2.4
+      ],
+      "rotation": -0.8,
+      "depth": 0.45
+    }
+  ],
+  "water": [
+    {
+      "center": [
+        -4,
+        66
+      ],
+      "radius": [
+        32,
+        36
+      ],
+      "rotation": -0.08,
+      "level_offset": -0.5
+    }
+  ],
+  "carry": [
+    10,
+    116
+  ],
+  "elevation": {
+    "tee": 2.4,
+    "green": 2.2,
+    "cross_tilt": 0.006,
+    "roll_height": 0.2,
+    "bank_height": 3.0,
+    "mounds": [
+      {
+        "center": [
+          -46,
+          40
+        ],
+        "radius": 18,
+        "height": 1.8
+      },
+      {
+        "center": [
+          36,
+          120
+        ],
+        "radius": 20,
+        "height": 2.0
+      },
+      {
+        "center": [
+          -12,
+          214
+        ],
+        "radius": 24,
+        "height": 2.4
+      }
+    ]
+  },
+  "wind": {
+    "min": 1,
+    "max": 6
+  },
+  "graveyards": [
+    {
+      "center": [
+        -40,
+        128
+      ],
+      "radius": 5,
+      "count": 5,
+      "fence": false
+    }
+  ],
+  "lantern_spacing": 13,
+  "trees_spacing": 8.0,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.4
+      ],
+      "carved": 2,
+      "plain": 1,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        -5.2,
+        6.2
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.0
+    }
+  ],
+  "theme": {
+    "light_props_spacing": 14,
+    "light_props": [
+      "light_marsh_wisp",
+      "light_captured_spirit",
+      "light_moon_mushrooms",
+      "light_marsh_wisp",
+      "light_skull_lantern",
+      "light_lantern_ghost"
+    ],
+    "trees_near": [
+      "tree_bent_willow",
+      "tree_twisted_cypress",
+      "tree_ancient_yew",
+      "tree_bent_willow",
+      "tree_raven_perch"
+    ],
+    "trees_far": [
+      "tree_moonlit_pine",
+      "tree_twisted_cypress",
+      "tree_windbent_fir",
+      "tree_moonlit_pine"
+    ],
+    "backdrop": {
+      "hole": "06-ghostlight-marsh",
+      "variant": "a",
+      "span": 95,
+      "yaw": 0,
+      "horizon_v": 0.8
+    },
+    "rings": [
+      {
+        "image": "horizon_pines",
+        "radius": 380,
+        "height": 44,
+        "base": -6,
+        "repeats": 9,
+        "haze": 0.6
+      }
+    ],
+    "sky_style": "painted",
+    "sky_top": [
+      0.003,
+      0.008,
+      0.024
+    ],
+    "sky_horizon": [
+      0.03,
+      0.07,
+      0.12
+    ],
+    "fog": [
+      0.05,
+      0.1,
+      0.13
+    ],
+    "fog_density": 0.0046,
+    "backdrop_haze": 0.2,
+    "moon": "white",
+    "moon_azimuth": 26,
+    "moon_elevation": 13,
+    "light_azimuth": 195,
+    "light_elevation": 30,
+    "water_deep": [
+      0.01,
+      0.03,
+      0.05
+    ],
+    "water_glow": [
+      0.15,
+      0.9,
+      1.0
+    ],
+    "wisp_color": [
+      0.35,
+      1.0,
+      0.95
+    ],
+    "wisps": 110,
+    "ghosts": 5,
+    "lightning": 0,
+    "mist": 46,
+    "mist_alpha": 0.42,
+    "clouds": 0.5,
+    "leaf_amount": 0.12
+  }
+}

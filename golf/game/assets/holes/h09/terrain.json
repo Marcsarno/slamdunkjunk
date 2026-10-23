@@ -1,0 +1,307 @@
+{
+ "id": "h09_midnight_homecoming",
+ "name": "Midnight Homecoming",
+ "number": 9,
+ "par": 4,
+ "origin": [
+  -60,
+  -57
+ ],
+ "extent": [
+  74,
+  355
+ ],
+ "phys": {
+  "cell": 1.0,
+  "nx": 135,
+  "ny": 413,
+  "file": "heights.bin"
+ },
+ "surf": {
+  "cell": 0.5,
+  "nx": 269,
+  "ny": 825,
+  "file": "surface.bin",
+  "names": [
+   "oob",
+   "rough",
+   "fairway",
+   "green",
+   "sand",
+   "water",
+   "tee",
+   "fringe",
+   "deep_rough"
+  ]
+ },
+ "splat": {
+  "file": "splat.png",
+  "detail": "detail.png",
+  "size": [
+   537,
+   1649
+  ]
+ },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   666,
+   2048
+  ]
+ },
+ "theme": {
+  "light_props_spacing": 13,
+  "light_props": [
+   "light_haunted_lamppost",
+   "light_pumpkin_path_lights",
+   "light_hanging_harvest",
+   "light_classic_jack",
+   "light_lantern_ghost",
+   "light_skeleton_groundskeeper",
+   "light_grave_candles",
+   "light_pumpkin_totem"
+  ],
+  "trees_near": [
+   "maple_orange",
+   "tree_copper_oak",
+   "tree_golden_aspen",
+   "tree_scarlet_maple",
+   "lantern_tree",
+   "tree_harvest_pear"
+  ],
+  "trees_far": [
+   "tree_moonlit_pine",
+   "pine_blue",
+   "tree_copper_oak",
+   "tree_golden_aspen"
+  ],
+  "backdrop": {
+   "hole": "09-midnight-homecoming",
+   "variant": "a",
+   "span": 95,
+   "yaw": 4,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.45
+   }
+  ],
+  "sky_style": "painted",
+  "sky_top": [
+   0.006,
+   0.004,
+   0.024
+  ],
+  "sky_horizon": [
+   0.12,
+   0.06,
+   0.13
+  ],
+  "fog": [
+   0.11,
+   0.08,
+   0.16
+  ],
+  "fog_density": 0.0032,
+  "backdrop_haze": 0.15,
+  "moon": "harvest",
+  "moon_azimuth": -10,
+  "moon_elevation": 14,
+  "moon_size": 0.045,
+  "light_azimuth": 200,
+  "light_elevation": 34,
+  "water_deep": [
+   0.03,
+   0.015,
+   0.04
+  ],
+  "water_glow": [
+   1.0,
+   0.6,
+   0.22
+  ],
+  "wisp_color": [
+   1.0,
+   0.7,
+   0.3
+  ],
+  "wisps": 80,
+  "ghosts": 3,
+  "lightning": 0,
+  "mist": 22,
+  "clouds": 0.45,
+  "leaf_amount": 0.35
+ },
+ "tee": [
+  0.0,
+  0.0,
+  2.018769063563103
+ ],
+ "pin": [
+  13,
+  301,
+  7.148448244647869
+ ],
+ "green": {
+  "center": [
+   10,
+   298
+  ],
+  "radius": [
+   14,
+   12
+  ],
+  "rotation": 0.1,
+  "slope": [
+   0.01,
+   0.022
+  ]
+ },
+ "length": 299.6,
+ "path": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   -0.4,
+   9.88
+  ],
+  [
+   -0.89,
+   19.63
+  ],
+  [
+   -1.38,
+   29.38
+  ],
+  [
+   -1.78,
+   39.26
+  ],
+  [
+   -2.01,
+   49.42
+  ],
+  [
+   -2.0,
+   60.0
+  ],
+  [
+   -1.8,
+   69.51
+  ],
+  [
+   -1.47,
+   79.39
+  ],
+  [
+   -1.02,
+   89.51
+  ],
+  [
+   -0.45,
+   99.76
+  ],
+  [
+   0.24,
+   110.0
+  ],
+  [
+   1.06,
+   120.12
+  ],
+  [
+   2.0,
+   130.0
+  ],
+  [
+   3.24,
+   140.24
+  ],
+  [
+   4.76,
+   150.46
+  ],
+  [
+   6.44,
+   160.6
+  ],
+  [
+   8.16,
+   170.61
+  ],
+  [
+   9.8,
+   180.42
+  ],
+  [
+   11.24,
+   189.96
+  ],
+  [
+   12.43,
+   199.79
+  ],
+  [
+   13.6,
+   210.41
+  ],
+  [
+   14.61,
+   220.72
+  ],
+  [
+   15.4,
+   230.7
+  ],
+  [
+   15.9,
+   240.37
+  ],
+  [
+   16.03,
+   249.71
+  ],
+  [
+   15.59,
+   260.07
+  ],
+  [
+   14.45,
+   270.23
+  ],
+  [
+   12.9,
+   279.98
+  ],
+  [
+   11.25,
+   289.64
+  ]
+ ],
+ "water": [
+  {
+   "center": [
+    -14,
+    268
+   ],
+   "radius": [
+    12,
+    16
+   ],
+   "rotation": 0.3,
+   "level": 6.017
+  }
+ ],
+ "wind": {
+  "min": 1,
+  "max": 3
+ }
+}

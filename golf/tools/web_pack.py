@@ -7,6 +7,8 @@ the cap. The page's own loader is untouched: a small fetch shim, run before inde
 requests for index.wasm and index.pck by joining the parts and un-gzipping in the browser
 (DecompressionStream), so the engine gets the same bytes it would have fetched.
 Export first:  godot --headless --path golf/game --export-release "Web" ../build/web/index.html
+and pack the holes left out of it (all but the first):
+  godot --headless --path golf/game -s res://tools/pack_holes.gd -- --out=../build/web h02 h03 ... h09
 """
 import gzip
 import json
@@ -38,7 +40,11 @@ plan = {
     'index.pck': {'parts': parts('index.pck', pck), 'gzip': False, 'type': 'application/octet-stream'},
 }
 for f in os.listdir(src):
-    if f not in ('index.html', 'index.wasm', 'index.pck'):
+    if f.startswith('hole_') and f.endswith('.pck'):
+        # a hole's own pack (tools/pack_holes.gd), fetched by the game when the round reaches it;
+        # hosted as .wasm like the parts above
+        shutil.copy(os.path.join(src, f), os.path.join(out, f + '.wasm'))
+    elif f not in ('index.html', 'index.wasm', 'index.pck'):
         shutil.copy(os.path.join(src, f), out)
 
 # On-screen checks while it loads, and any error in plain words instead of a blank screen (the host's

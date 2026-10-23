@@ -1,0 +1,306 @@
+{
+  "id": "h08_headless_trail",
+  "name": "Headless Trail",
+  "number": 8,
+  "par": 4,
+  "seed": 808,
+  "note": "The Horseman's Ride: an S-shaped par 4 along a sidehill ridge in a storm. The ground falls away to the right off the tee and to the left at the green, the wind gusts, and the horseman watches from the crag. Course coords in meters: x right, y down-range, z up.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      6,
+      70
+    ],
+    [
+      24,
+      140
+    ],
+    [
+      32,
+      205
+    ],
+    [
+      18,
+      265
+    ],
+    [
+      -6,
+      318
+    ],
+    [
+      -16,
+      360
+    ]
+  ],
+  "fairway_start": 40,
+  "fairway_width": [
+    22,
+    24,
+    26,
+    26,
+    24,
+    22,
+    20
+  ],
+  "rough_width": 13,
+  "deep_rough_width": 15,
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      10
+    ]
+  },
+  "green": {
+    "center": [
+      -16,
+      360
+    ],
+    "radius": [
+      12,
+      10
+    ],
+    "rotation": -0.4,
+    "slope": [
+      0.016,
+      0.016
+    ]
+  },
+  "pin": [
+    -13,
+    363
+  ],
+  "bunkers": [
+    {
+      "center": [
+        44,
+        192
+      ],
+      "radius": [
+        7,
+        3.2
+      ],
+      "rotation": -0.2,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -30,
+        350
+      ],
+      "radius": [
+        5,
+        2.6
+      ],
+      "rotation": -1.0,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -2,
+        372
+      ],
+      "radius": [
+        4.4,
+        2.4
+      ],
+      "rotation": 0.7,
+      "depth": 0.45
+    }
+  ],
+  "water": [],
+  "elevation": {
+    "tee": 10.0,
+    "green": 8.0,
+    "profile": [
+      [
+        0,
+        10.0
+      ],
+      [
+        90,
+        8.6
+      ],
+      [
+        170,
+        7.0
+      ],
+      [
+        230,
+        7.6
+      ],
+      [
+        300,
+        8.4
+      ],
+      [
+        360,
+        8.0
+      ]
+    ],
+    "cross_tilt": 0.024,
+    "roll_height": 0.4,
+    "bank_height": 6.0,
+    "mounds": [
+      {
+        "center": [
+          -30,
+          90
+        ],
+        "radius": 24,
+        "height": 2.6
+      },
+      {
+        "center": [
+          60,
+          260
+        ],
+        "radius": 24,
+        "height": 2.6
+      },
+      {
+        "center": [
+          -46,
+          300
+        ],
+        "radius": 20,
+        "height": 2.2
+      }
+    ]
+  },
+  "wind": {
+    "min": 3,
+    "max": 8
+  },
+  "graveyards": [
+    {
+      "center": [
+        58,
+        130
+      ],
+      "radius": 7,
+      "count": 7,
+      "fence": false
+    },
+    {
+      "center": [
+        -34,
+        240
+      ],
+      "radius": 6,
+      "count": 6,
+      "fence": true
+    }
+  ],
+  "lantern_spacing": 15,
+  "trees_spacing": 8.0,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.4
+      ],
+      "carved": 2,
+      "plain": 1,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        -5.2,
+        6.2
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.0
+    },
+    {
+      "center": [
+        12,
+        300
+      ],
+      "carved": 3,
+      "plain": 1
+    }
+  ],
+  "theme": {
+    "light_props_spacing": 22,
+    "light_props": [
+      "light_classic_jack",
+      "light_skull_lantern",
+      "light_haunted_lamppost",
+      "light_glowing_ghoul",
+      "light_lantern_ghost",
+      "light_pumpkin_totem"
+    ],
+    "trees_near": [
+      "tree_lightning_oak",
+      "tree_raven_perch",
+      "tree_windbent_fir",
+      "dead_tree",
+      "tree_silver_snag",
+      "tree_lightning_oak"
+    ],
+    "trees_far": [
+      "tree_windbent_fir",
+      "tree_moonlit_pine",
+      "tree_silver_snag",
+      "pine_blue"
+    ],
+    "backdrop": {
+      "hole": "08-headless-trail",
+      "variant": "a",
+      "span": 95,
+      "yaw": 6,
+      "horizon_v": 0.8
+    },
+    "rings": [
+      {
+        "image": "horizon_pines",
+        "radius": 420,
+        "height": 44,
+        "base": -6,
+        "repeats": 9,
+        "haze": 0.55
+      }
+    ],
+    "sky_style": "painted",
+    "sky_top": [
+      0.004,
+      0.005,
+      0.02
+    ],
+    "sky_horizon": [
+      0.06,
+      0.05,
+      0.12
+    ],
+    "fog": [
+      0.08,
+      0.08,
+      0.15
+    ],
+    "fog_density": 0.0042,
+    "backdrop_haze": 0.18,
+    "moon": "white",
+    "moon_azimuth": 30,
+    "moon_elevation": 16,
+    "light_azimuth": 150,
+    "light_elevation": 34,
+    "wisp_color": [
+      1.0,
+      0.55,
+      0.2
+    ],
+    "ghosts": 4,
+    "lightning": 12,
+    "mist": 30,
+    "clouds": 0.95,
+    "leaf_amount": 0.4
+  }
+}

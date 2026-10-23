@@ -1,0 +1,371 @@
+{
+  "id": "h07_vampires_garden",
+  "name": "Vampire's Garden",
+  "number": 7,
+  "par": 4,
+  "seed": 707,
+  "note": "The Count's Lawn: a dogleg left through the castle gardens. A crypt sits in the fairway at the turn, a blood-red pond guards the inside of the corner, and the green is ringed with bunkers like a rose bed. Course coords in meters: x right, y down-range, z up.",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      2,
+      60
+    ],
+    [
+      0,
+      125
+    ],
+    [
+      -14,
+      182
+    ],
+    [
+      -40,
+      228
+    ],
+    [
+      -70,
+      262
+    ],
+    [
+      -86,
+      292
+    ]
+  ],
+  "fairway_start": 36,
+  "fairway_width": [
+    22,
+    26,
+    28,
+    26,
+    24,
+    22,
+    20
+  ],
+  "rough_width": 15,
+  "deep_rough_width": 16,
+  "rough_islands": [
+    {
+      "center": [
+        -6,
+        176
+      ],
+      "radius": [
+        7,
+        9
+      ],
+      "rotation": 0.4
+    }
+  ],
+  "tee": {
+    "center": [
+      0,
+      0
+    ],
+    "size": [
+      8,
+      10
+    ]
+  },
+  "green": {
+    "center": [
+      -86,
+      292
+    ],
+    "radius": [
+      12,
+      10.5
+    ],
+    "rotation": 0.7,
+    "slope": [
+      -0.014,
+      0.018
+    ]
+  },
+  "pin": [
+    -89,
+    295
+  ],
+  "bunkers": [
+    {
+      "center": [
+        -72,
+        300
+      ],
+      "radius": [
+        5,
+        2.6
+      ],
+      "rotation": 1.4,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -98,
+        282
+      ],
+      "radius": [
+        5,
+        2.6
+      ],
+      "rotation": 0.2,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -92,
+        306
+      ],
+      "radius": [
+        4.6,
+        2.4
+      ],
+      "rotation": -0.4,
+      "depth": 0.5
+    },
+    {
+      "center": [
+        -80,
+        278
+      ],
+      "radius": [
+        4.2,
+        2.2
+      ],
+      "rotation": 0.8,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        18,
+        150
+      ],
+      "radius": [
+        7,
+        3.4
+      ],
+      "rotation": -0.3,
+      "depth": 0.45
+    },
+    {
+      "center": [
+        -26,
+        230
+      ],
+      "radius": [
+        6,
+        3
+      ],
+      "rotation": 0.6,
+      "depth": 0.45
+    }
+  ],
+  "water": [
+    {
+      "center": [
+        -40,
+        160
+      ],
+      "radius": [
+        14,
+        22
+      ],
+      "rotation": 0.4
+    }
+  ],
+  "elevation": {
+    "tee": 4.0,
+    "green": 7.0,
+    "cross_tilt": 0.01,
+    "roll_height": 0.4,
+    "bank_height": 3.5,
+    "mounds": [
+      {
+        "center": [
+          36,
+          100
+        ],
+        "radius": 22,
+        "height": 2.2
+      },
+      {
+        "center": [
+          -100,
+          240
+        ],
+        "radius": 22,
+        "height": 2.4
+      },
+      {
+        "center": [
+          -116,
+          316
+        ],
+        "radius": 22,
+        "height": 2.6
+      }
+    ]
+  },
+  "wind": {
+    "min": 0,
+    "max": 4
+  },
+  "graveyards": [
+    {
+      "center": [
+        -6,
+        176
+      ],
+      "radius": 5.5,
+      "count": 7,
+      "fence": true
+    },
+    {
+      "center": [
+        30,
+        220
+      ],
+      "radius": 8,
+      "count": 9,
+      "fence": true
+    }
+  ],
+  "lantern_spacing": 16,
+  "trees_spacing": 8.0,
+  "pumpkin_clusters": [
+    {
+      "center": [
+        4.9,
+        3.4
+      ],
+      "carved": 2,
+      "plain": 1,
+      "radius": 1.1
+    },
+    {
+      "center": [
+        -5.2,
+        6.2
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 1.0
+    }
+  ],
+  "theme": {
+    "light_props_spacing": 20,
+    "light_props": [
+      "light_haunted_lamppost",
+      "light_grave_candles",
+      "light_skull_lantern",
+      "light_hollow_heart_tree",
+      "light_lantern_ghost",
+      "light_glowing_ghoul"
+    ],
+    "trees_near": [
+      "tree_scarlet_maple",
+      "tree_twisted_cypress",
+      "tree_crooked_plum",
+      "tree_ancient_yew",
+      "tree_hollow_sentinel",
+      "tree_twisted_cypress"
+    ],
+    "trees_far": [
+      "tree_twisted_cypress",
+      "tree_moonlit_pine",
+      "tree_scarlet_maple",
+      "tree_windbent_fir"
+    ],
+    "backdrop": {
+      "hole": "07-vampires-garden",
+      "variant": "a",
+      "span": 95,
+      "yaw": -14,
+      "horizon_v": 0.8
+    },
+    "rings": [
+      {
+        "image": "horizon_pines",
+        "radius": 420,
+        "height": 44,
+        "base": -6,
+        "repeats": 9,
+        "haze": 0.5
+      }
+    ],
+    "sky_style": "painted",
+    "sky_top": [
+      0.01,
+      0.003,
+      0.02
+    ],
+    "sky_horizon": [
+      0.14,
+      0.03,
+      0.08
+    ],
+    "fog": [
+      0.12,
+      0.05,
+      0.12
+    ],
+    "fog_density": 0.0036,
+    "backdrop_haze": 0.17,
+    "moon": "harvest",
+    "moon_azimuth": -30,
+    "moon_elevation": 15,
+    "moon_size": 0.03,
+    "light_azimuth": 220,
+    "light_elevation": 32,
+    "moon_light": [
+      0.95,
+      0.6,
+      0.8
+    ],
+    "water_deep": [
+      0.06,
+      0.005,
+      0.02
+    ],
+    "water_glow": [
+      1.0,
+      0.1,
+      0.25
+    ],
+    "wisp_color": [
+      1.0,
+      0.3,
+      0.45
+    ],
+    "ghosts": 3,
+    "lightning": 30,
+    "mist": 28,
+    "clouds": 0.6,
+    "cloud_tint": [
+      0.7,
+      0.4,
+      0.6
+    ],
+    "leaf_amount": 0.3,
+    "leaf_colors": [
+      [
+        0.6,
+        0.05,
+        0.1
+      ],
+      [
+        0.45,
+        0.02,
+        0.12
+      ],
+      [
+        0.75,
+        0.15,
+        0.1
+      ]
+    ]
+  }
+}
