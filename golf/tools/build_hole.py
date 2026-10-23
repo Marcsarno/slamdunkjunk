@@ -260,12 +260,15 @@ for g, gy_ in enumerate(spec.get("graveyards", [])):
         name = f"Grave_{g}_{placed}"
         tilt = (random.uniform(-0.1, 0.1), random.uniform(-0.12, 0.12))
         sc = random.uniform(0.85, 1.15)
-        if kind < 0.33:                 # Marc's tall RIP stone
+        if kind < 0.24:                 # Marc's tall RIP stone
             props.headstone_rip(col, name, (x, y, z), scale=sc, rot_z=face, tilt=tilt)
             obstacles.append({"type": "box", "pos": [x, y, z], "size": [0.72 * sc, 0.26 * sc, 1.42 * sc], "rot": face})
-        elif kind < 0.62:               # ... and his wide crescent-moon stone
+        elif kind < 0.46:               # ... his wide crescent-moon stone ...
             props.headstone_moon(col, name, (x, y, z), scale=sc, rot_z=face, tilt=tilt)
             obstacles.append({"type": "box", "pos": [x, y, z], "size": [1.08 * sc, 0.3 * sc, 1.0 * sc], "rot": face})
+        elif kind < 0.66:               # ... and his tall slab with a broken corner
+            props.headstone_broken(col, name, (x, y, z), scale=sc, rot_z=face, tilt=tilt)
+            obstacles.append({"type": "box", "pos": [x, y, z], "size": [0.7 * sc, 0.3 * sc, 1.7 * sc], "rot": face})
         elif kind < 0.86:
             props.cross_stone(col, name, (x, y, z), h=random.uniform(1.0, 1.4), rot_z=face, tilt=tilt)
             obstacles.append({"type": "box", "pos": [x, y, z], "size": [0.6, 0.3, 1.3], "rot": face})

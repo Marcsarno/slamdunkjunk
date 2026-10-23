@@ -117,7 +117,7 @@ def headstone(col, name, pos, w=0.7, h=1.0, d=0.16, rot_z=0.0, tilt=(0, 0)):
     return _finish_stone(bm, name, pos, rot_z, tilt, h, col)
 
 
-def _slab(bm, pts, d, z0, inset):
+def _slab(bm, pts, d, z0, inset=None):
     """An extruded stone slab from a profile [(x, z), ...] (front at -y), sitting at z0, with its front
     panel set back into a frame. Returns the panel's y (where carvings go)."""
     face = bm.faces.new([bm.verts.new((x, -d / 2, z + z0)) for x, z in pts])
@@ -127,6 +127,8 @@ def _slab(bm, pts, d, z0, inset):
     # the slab's own front (not the plinth's, which stands further out)
     front = next(f for f in bm.faces if f.normal.y < -0.9 and abs(f.calc_center_median().y + d / 2) < 1e-4
                  and f.calc_center_median().z > z0 + 0.05)
+    if inset is None:
+        return front.calc_center_median().y         # a plain face
     bmesh.ops.inset_region(bm, faces=[front], thickness=inset, depth=0.0)       # the frame round it ...
     bmesh.ops.inset_region(bm, faces=[front], thickness=0.004, depth=0.0)       # ... and a sharp step down
     for v in front.verts:
@@ -240,6 +242,27 @@ def headstone_moon(col, name, pos, scale=1.0, rot_z=0.0, tilt=(0, 0)):
         pi_ = (cx + 0.04 * scale + ro * 0.8 * math.cos(a_in), cz + 0.025 * scale + ro * 0.8 * math.sin(a_in))
         strip.append((po, pi_))
     quads = [[strip[k][0], strip[k + 1][0], strip[k + 1][1], strip[k][1]] for k in range(n)]
+    _carving(bm, quads, panel)
+    return _finish_concept_stone(bm, name, pos, rot_z, tilt, base + h, col)
+
+
+def headstone_broken(col, name, pos, scale=1.0, rot_z=0.0, tilt=(0, 0)):
+    """Marc's tall plain slab with its top corner broken off and a crack running down from the break,
+    on a plinth. About 150 triangles."""
+    bm = bmesh.new()
+    w, h, d, base = 0.6 * scale, 1.45 * scale, 0.2 * scale, 0.26 * scale
+    _plinth(bm, w + 0.22 * scale, d + 0.24 * scale, base)
+    pts = [(-w / 2, 0), (w / 2, 0), (w / 2, h - 0.32 * scale),          # the broken corner: a jagged step down
+           (w / 2 - 0.07 * scale, h - 0.24 * scale), (w / 2 - 0.1 * scale, h - 0.16 * scale),
+           (w / 2 - 0.18 * scale, h - 0.09 * scale), (w / 2 - 0.2 * scale, h), (-w / 2, h)]
+    panel = _slab(bm, pts, d, base - 0.02 * scale, None)
+    # the crack, from the break down and across the face
+    crack = [(w / 2 - 0.12 * scale, h - 0.12 * scale), (w / 2 - 0.16 * scale, h - 0.24 * scale),
+             (w / 2 - 0.11 * scale, h - 0.36 * scale), (w / 2 - 0.02 * scale, h - 0.5 * scale)]
+    quads = []
+    for (ax, az), (bx, bz) in zip(crack[:-1], crack[1:]):
+        t = 0.008 * scale
+        quads.append([(ax - t, az + base), (bx - t, bz + base), (bx + t, bz + base), (ax + t, az + base)])
     _carving(bm, quads, panel)
     return _finish_concept_stone(bm, name, pos, rot_z, tilt, base + h, col)
 

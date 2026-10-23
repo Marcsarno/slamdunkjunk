@@ -1067,8 +1067,7 @@ func _path_height(f: float) -> float:
 ## the tee into the flight down the hole to the pin.
 func _intro_cam() -> void:
 	var s := smoothstep(0.0, INTRO_SWING, phase_t)
-	var l2 := Terrain.to_course(lantern.position)
-	var lc := Vector3(l2.x, l2.y, l2.z + HeroLantern.CENTRE_Y)
+	var lc := Terrain.to_course(lantern.pumpkin_world())
 	var a0 := _lantern_face.angle()
 	var a1 := a0 + angle_difference(a0, (-aim + _right() * 0.25).angle())
 	var ang := lerpf(a0, a1, s)
