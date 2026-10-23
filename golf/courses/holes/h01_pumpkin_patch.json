@@ -4,42 +4,42 @@
   "number": 1,
   "par": 4,
   "seed": 101,
-  "note": "Course coords in meters: x right, y down-range, z up. Tee at the origin.",
+  "note": "The Pumpkin Pond: a par 4 that runs up the right and bends left round a moonlit pond to a green past its far shore. Play it round, or carry the pond's corner from the tee to the pad beyond it and pitch on. A fenced pumpkin patch and the corn sit off the left of the tee. Course coords in meters: x right, y down-range, z up. Tee at the origin.",
   "path": [
     [
       0,
       0
     ],
     [
-      1,
-      45
+      3,
+      60
     ],
     [
-      2,
-      110
+      8,
+      120
     ],
     [
-      -6,
-      170
+      6,
+      172
     ],
     [
-      -24,
-      222
+      -14,
+      218
     ],
     [
-      -44,
-      262
+      -42,
+      252
     ],
     [
-      -52,
-      292
+      -64,
+      272
     ]
   ],
-  "fairway_start": 38,
+  "fairway_start": 36,
   "fairway_width": [
-    20,
+    22,
     26,
-    30,
+    28,
     28,
     26,
     24,
@@ -59,113 +59,91 @@
   },
   "green": {
     "center": [
-      -52,
-      292
+      -64,
+      272
     ],
     "radius": [
       13,
       11
     ],
-    "rotation": 0.35,
+    "rotation": 0.45,
     "slope": [
-      0.008,
-      0.02
+      0.01,
+      0.018
     ]
   },
   "pin": [
-    -49,
-    295
+    -67,
+    275
   ],
   "bunkers": [
     {
       "center": [
-        6,
-        214
+        -48,
+        286
       ],
       "radius": [
-        8,
-        4.5
+        5.2,
+        2.8
       ],
-      "rotation": -0.5,
-      "depth": 0.45
+      "rotation": -0.7,
+      "depth": 0.5
     },
     {
       "center": [
-        -36,
-        196
+        22,
+        182
       ],
       "radius": [
-        6,
-        3.5
+        3,
+        7
       ],
-      "rotation": 0.6,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        -34,
-        291
-      ],
-      "radius": [
-        5,
-        3.2
-      ],
-      "rotation": 1.3,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        -65,
-        277
-      ],
-      "radius": [
-        6,
-        3
-      ],
-      "rotation": 0.4,
+      "rotation": 0.15,
       "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -33,
-        118
+        -36,
+        140
       ],
       "radius": [
-        11,
-        26
+        16,
+        30
       ],
-      "rotation": 0.12
+      "rotation": 0.25,
+      "level_offset": -0.5,
+      "island": true
     }
   ],
   "elevation": {
     "tee": 1.6,
     "green": 4.2,
-    "cross_tilt": 0.012,
-    "roll_height": 0.45,
-    "bank_height": 3.0,
+    "cross_tilt": 0.008,
+    "roll_height": 0.35,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          36,
-          150
+          48,
+          140
         ],
         "radius": 24,
         "height": 2.4
       },
       {
         "center": [
-          -46,
-          232
+          -100,
+          190
         ],
-        "radius": 16,
-        "height": 1.6
+        "radius": 22,
+        "height": 2.2
       },
       {
         "center": [
-          -74,
-          304
+          -80,
+          320
         ],
         "radius": 24,
         "height": 2.6
@@ -236,11 +214,11 @@
       "tree_windbent_fir"
     ],
     "cornfield": {
-      "side": "right",
-      "from": 0.12,
-      "to": 0.5,
-      "gap": 5.0,
-      "depth": 24
+      "side": "left",
+      "from": 0.02,
+      "to": 0.22,
+      "gap": 30.0,
+      "depth": 20
     },
     "backdrop": {
       "hole": "01-pumpkin-patch",
@@ -291,6 +269,16 @@
       0.09,
       0.09,
       0.18
+    ],
+    "water_deep": [
+      0.02,
+      0.05,
+      0.13
+    ],
+    "water_glow": [
+      0.3,
+      0.6,
+      1.0
     ]
   },
   "trees_spacing": 8.5,
@@ -315,39 +303,191 @@
     },
     {
       "center": [
-        6.5,
-        5
+        -52,
+        36
       ],
       "carved": 2,
-      "plain": 3
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
-        -6.5,
-        2
+        -64,
+        34
       ],
       "carved": 1,
-      "plain": 3
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
-        9,
-        26
+        -76,
+        40
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -50,
+        52
       ],
       "carved": 2,
-      "plain": 2
+      "plain": 2,
+      "radius": 2.2
     },
     {
       "center": [
-        -8,
-        31
+        -62,
+        50
       ],
       "carved": 1,
-      "plain": 3
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -76,
+        56
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -54,
+        68
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -68,
+        68
+      ],
+      "carved": 1,
+      "plain": 2,
+      "radius": 2.2
+    },
+    {
+      "center": [
+        -80,
+        70
+      ],
+      "carved": 2,
+      "plain": 2,
+      "radius": 2.2
     }
   ],
   "cart_path": {
     "side": 1,
     "offset": 6.0
+  },
+  "pads": [
+    {
+      "center": [
+        -42,
+        190
+      ],
+      "radius": [
+        14,
+        11
+      ],
+      "rotation": 0.35
+    }
+  ],
+  "zones": [
+    {
+      "center": [
+        -36,
+        150
+      ],
+      "radius": [
+        28,
+        50
+      ],
+      "rotation": 0.25,
+      "surface": "rough"
+    },
+    {
+      "center": [
+        -64,
+        52
+      ],
+      "radius": [
+        26,
+        30
+      ],
+      "rotation": 0.0,
+      "surface": "deep_rough"
+    }
+  ],
+  "fences": [
+    {
+      "points": [
+        [
+          -40,
+          26
+        ],
+        [
+          -44,
+          52
+        ],
+        [
+          -46,
+          78
+        ],
+        [
+          -60,
+          84
+        ],
+        [
+          -80,
+          80
+        ],
+        [
+          -88,
+          58
+        ],
+        [
+          -86,
+          32
+        ],
+        [
+          -70,
+          22
+        ],
+        [
+          -52,
+          22
+        ]
+      ]
+    }
+  ],
+  "plan": {
+    "safe": [
+      [
+        6,
+        176
+      ],
+      [
+        -67,
+        275
+      ]
+    ],
+    "risk": [
+      [
+        -42,
+        190
+      ],
+      [
+        -67,
+        275
+      ]
+    ]
   }
 }
