@@ -1,0 +1,174 @@
+<title>The Midnight Nine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Karla:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single reading column of hole "scorecards", each a tall top-down plan beside its notes */
+:root {
+  --bg: #eef0f4;
+  --surface: #ffffff;
+  --ink: #1b1d29;
+  --muted: #5b5f72;
+  --line: #d6d9e2;
+  --pumpkin: #c8561a;
+  --moon: #2f6f86;
+  --gold: #e0a526;
+  --font-display: "IM Fell English", "Iowan Old Style", Georgia, serif;
+  --font-body: "Karla", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131b; --surface: #1a1d28; --ink: #e8e5ee; --muted: #a3a6b8; --line: #2c3040;
+    --pumpkin: #f08a3c; --moon: #7cc4dc; --gold: #f2c14e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131b; --surface: #1a1d28; --ink: #e8e5ee; --muted: #a3a6b8; --line: #2c3040;
+  --pumpkin: #f08a3c; --moon: #7cc4dc; --gold: #f2c14e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.55 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1.05; }
+h2 { font-size: 1.9rem; }
+h3 { font-size: 1.6rem; line-height: 1.15; }
+h3 span { font-style: italic; color: var(--pumpkin); }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font: 600 0.78rem/1.2 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+header { display: grid; gap: 14px; }
+.lede { font-size: 1.1rem; }
+section { display: grid; gap: 18px; }
+.principles { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.principles li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.principles strong { display: block; font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; margin-bottom: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; font-size: 0.9rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid rgba(0,0,0,0.25); }
+.ln { width: 28px; height: 8px; display: inline-block; }
+.bars { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: 22px 1fr 54px; gap: 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.bar-n, .bar-par { font: 500 0.85rem var(--font-data); color: var(--muted); }
+.bar { height: 22px; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; min-width: 70px; }
+.bar span { font: 500 0.78rem var(--font-data); color: #fff; }
+.bar.par3 { background: var(--moon); }
+.bar.par4 { background: #6b7f3a; }
+.bar.par5 { background: var(--pumpkin); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tfoot td { font-weight: 700; }
+.holes { display: grid; gap: 28px; }
+.hole { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 24px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.map-wrap { background: #182419; border-radius: 8px; overflow: hidden; line-height: 0; }
+.map { width: 100%; height: auto; max-height: 640px; display: block; }
+.hole-text { display: grid; gap: 12px; min-width: 0; }
+.question { font-family: var(--font-display); font-size: 1.2rem; font-style: italic; line-height: 1.35; }
+dl { margin: 0; display: grid; gap: 6px; }
+dl div { display: grid; grid-template-columns: 86px 1fr; gap: 10px; }
+dt { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dd { margin: 0; }
+.today { font-size: 0.92rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+.chip { font: 600 0.7rem/1 var(--font-body); letter-spacing: 0.06em; padding: 4px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.chip-new { border-color: var(--pumpkin); color: var(--pumpkin); }
+/* plan drawing */
+.map .safe { fill: none; stroke: #f3ecd8; stroke-width: calc(var(--u) * 2.2px); stroke-dasharray: calc(var(--u) * 6px) calc(var(--u) * 5px); stroke-linecap: round; }
+.map .hero { fill: none; stroke: #f2c14e; stroke-width: calc(var(--u) * 2.6px); stroke-linecap: round; }
+.map .bridge { fill: none; stroke: #8a5a34; stroke-width: calc(var(--u) * 5px); stroke-linecap: butt; }
+.map .tee { fill: #f3ecd8; stroke: #182419; stroke-width: calc(var(--u) * 1.5px); }
+.map .pole { stroke: #f3ecd8; stroke-width: calc(var(--u) * 1.5px); }
+.map .flag { fill: #e2452f; }
+.map .pin-dot { fill: #f3ecd8; stroke: #182419; stroke-width: calc(var(--u) * 1px); }
+.map .note { font-family: var(--font-body); font-weight: 700; font-size: calc(var(--u) * 11px); fill: #fff; paint-order: stroke; stroke: rgba(10, 14, 12, 0.85); stroke-width: calc(var(--u) * 3px); }
+.map .scale line { stroke: #f3ecd8; stroke-width: calc(var(--u) * 2px); }
+.map .scale text { font-family: var(--font-data); font-size: calc(var(--u) * 10px); fill: #f3ecd8; paint-order: stroke; stroke: #182419; stroke-width: calc(var(--u) * 2.5px); }
+.ideas { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 70ch; }
+.next { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: grid; gap: 10px; }
+@media (max-width: 640px) {
+  .hole { grid-template-columns: 1fr; }
+  .map-wrap { max-width: 260px; justify-self: center; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr-hero" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f2c14e"/></marker>
+    <marker id="arr-safe" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f3ecd8"/></marker>
+  </defs>
+</svg>
+
+<main>
+  <header>
+    <p class="eyebrow">Graveyard Shift: Midnight Golf · Course plan</p>
+    <h1>The Midnight Nine</h1>
+    <p class="lede">Nine holes, each asking a different question. No two in a row bend the same way, use the same hazard, or end on the same kind of green. Every hole has a safe way round and a brave way through, and the cart path ties it together with a bridge at every crossing.</p>
+  </header>
+
+  <section aria-labelledby="ideas-h">
+    <h2 id="ideas-h">What makes it varied</h2>
+    <ul class="principles">
+      <li><strong>A new question each hole</strong>Carry it, cut it, thread it, choose a road, or go for it in two. Each hole has one signature decision.</li>
+      <li><strong>Bends both ways</strong>Left, straight, S, right, right, straight, left, S, S. The eye never settles into one shot shape.</li>
+      <li><strong>Lengths that swing</strong>From a 135-yard wedge to a 500-yard finale, with a drivable 270-yard par 4 in the middle.</li>
+      <li><strong>Different greens</strong>An island, two tiers, a creek shelf, a peninsula, a bunker ring, a punchbowl.</li>
+      <li><strong>Brave line, safe line</strong>The game starts aimed safe (the dashed line). The gold line is the risk you can choose.</li>
+      <li><strong>Hazards that change</strong>Pond, island, graveyard split, ravine, diagonal cape, marsh, hedge maze and moat, ridge, stream.</li>
+    </ul>
+    <div class="legend">
+      <span><i class="sw" style="background:#76a648"></i>Fairway</span>
+      <span><i class="sw" style="background:#9ccc62"></i>Green</span>
+      <span><i class="sw" style="background:#345832"></i>Rough</span>
+      <span><i class="sw" style="background:#e4d2a0"></i>Bunker</span>
+      <span><i class="sw" style="background:#b8ac98"></i>Cart path</span>
+      <span><i class="sw" style="background:#8a5a34"></i>Bridge</span>
+      <span><i class="sw" style="background:#5f8de0"></i>Water</span>
+      <span><svg class="ln" viewBox="0 0 28 8" aria-hidden="true"><line x1="1" y1="4" x2="27" y2="4" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="5 4"/></svg>Safe line</span>
+      <span><svg class="ln" viewBox="0 0 28 8" aria-hidden="true"><line x1="1" y1="4" x2="27" y2="4" stroke="var(--gold)" stroke-width="3"/></svg>Brave line</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="glance-h">
+    <h2 id="glance-h">The round at a glance</h2>
+    <div class="bars">{{BARS}}</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Hole</th><th>Par</th><th>Yards</th><th>Shape</th><th>Signature hazard</th><th>Green</th></tr></thead>
+        <tbody>{{ROWS}}</tbody>
+        <tfoot><tr><td></td><td>Total</td><td class="num">{{TOTAL_PAR}}</td><td class="num">{{TOTAL_YD}}</td><td colspan="3"></td></tr></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="holes-h">
+    <h2 id="holes-h">Hole by hole</h2>
+    <div class="holes">{{CARDS}}</div>
+  </section>
+
+  <section aria-labelledby="fun-h">
+    <h2 id="fun-h">Fun on top of the layout</h2>
+    <p>Ideas for later, once the shapes are built. Each one is small and fits a hole that's already designed for it.</p>
+    <ul class="ideas">
+      <li><strong>Tombstone kicks.</strong> Graveyards already bounce the ball. On hole 3 a lucky kick off a stone can pop it back onto the fairway.</li>
+      <li><strong>Bridge bounces.</strong> A ball that lands on a bridge rattles across the planks and runs on instead of splashing.</li>
+      <li><strong>The drifting wisps.</strong> On hole 6 two wisps float across the line. A ball that clips one gets a little gust.</li>
+      <li><strong>The Horseman.</strong> On hole 8 he gallops along the ridge after a good drive on the high road.</li>
+      <li><strong>The homecoming.</strong> Hole the last putt and the village lanterns light up one by one round the green.</li>
+    </ul>
+  </section>
+
+  <section class="next" aria-labelledby="next-h">
+    <h2 id="next-h">What building it takes</h2>
+    <p>Holes 1 and 2 stay as they are. The other seven are redesigns, and each layout on this page is already written in the course builder's own format, so building one is a rebuild in Blender plus a test round.</p>
+    <p>New landmarks I'd model in Blender, like the jack-o'-lantern: the windmill (hole 5), the castle drawbridge (hole 7), the covered bridge (hole 8) and the village square (hole 9). Spider webs (hole 4) and hedge-maze blocks (hole 7) would look best as painted art if you can make them.</p>
+  </section>
+</main>
