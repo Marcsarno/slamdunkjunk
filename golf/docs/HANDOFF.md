@@ -67,9 +67,13 @@ project's convention), then `--import` again.
   left, `SLING_AIM` 0.35 of the tilt past a 4 degree dead zone). Its face goes still -> launch -> panic
   (past 90%). The view stays up on the course while pulling (no zoom down; the corner map is off,
   `AIM_MAP`), cuts to her swing on release. Putts: a full pull is 2x the putt. Past 90% power the
-  margin of error widens. Marc's balls (pumpkin, ghost, skull; still + launch faces; no panic face yet,
-  it falls back to launch) are cut from `art_src/balls/balls_sheet.png` by `tools/prep_balls.py` into
-  `assets/balls/<name>/<pose>.png`; picked on the clubhouse bar (remembered in `user://settings.cfg`).
+  margin of error widens. Marc's seven balls (pumpkin, ghost, skull, mummy, vampire, frank, bat; still +
+  launch faces; no panic face yet, it falls back to launch) are cut from `art_src/balls/balls_sheet*.png`
+  by `tools/prep_balls.py` (usage in its docstring) into `assets/balls/<name>/<pose>.png`; picked on a
+  turntable on the clubhouse bar (`front.gd`, names in `Sling.NAMES`, remembered in `user://settings.cfg`).
+  Putts: the default target is read for break (`_read_putt`: a foot past, moved across the slope until
+  the roll runs over the cup). The caddie, cat and cart appear on the tee only.
+- Chalkboard fonts: Fredericka the Great (headings) and Caveat Brush (writing), `scripts/chalk.gd`.
   `--ball-size=0.13` tries sizes (default 0.15 of the screen width).
 - Landings: turf bounce by descent angle and spin (drive skips and runs ~9%, iron rolls a few metres,
   wedge stops; tuned in `scripts/ball_sim.gd` SURF table).
