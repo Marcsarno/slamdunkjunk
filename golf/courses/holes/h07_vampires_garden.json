@@ -4,42 +4,38 @@
   "number": 7,
   "par": 4,
   "seed": 707,
-  "note": "The Count's Lawn: the drive drifts right past a fenced crypt in the fairway, then the hole turns hard left round a blood-red pond. A moat crosses in front of the green, which is ringed with bunkers like a rose bed. Course coords in meters: x right, y down-range, z up.",
+  "note": "Vampire's Garden: up the right past a walled hedge maze, then left to a green under the old house. Play it round, or drive over the blood-red pond to the pad beyond it and pitch on. Gargoyles watch from the gate pillars at the tee. Course coords in meters: x right, y down-range, z up.",
   "path": [
     [
       0,
       0
     ],
     [
-      2,
-      55
-    ],
-    [
-      18,
-      115
-    ],
-    [
-      22,
-      170
-    ],
-    [
       6,
-      220
+      70
     ],
     [
-      -24,
-      262
+      12,
+      140
+    ],
+    [
+      8,
+      200
+    ],
+    [
+      -12,
+      250
+    ],
+    [
+      -36,
+      285
     ],
     [
       -50,
-      292
-    ],
-    [
-      -62,
-      318
+      302
     ]
   ],
-  "fairway_start": 36,
+  "fairway_start": 34,
   "fairway_width": [
     22,
     26,
@@ -47,24 +43,10 @@
     28,
     26,
     24,
-    22,
-    20
+    22
   ],
-  "rough_width": 15,
-  "deep_rough_width": 16,
-  "rough_islands": [
-    {
-      "center": [
-        20,
-        148
-      ],
-      "radius": [
-        6,
-        8
-      ],
-      "rotation": 0.2
-    }
-  ],
+  "rough_width": 12,
+  "deep_rough_width": 14,
   "tee": {
     "center": [
       0,
@@ -77,147 +59,344 @@
   },
   "green": {
     "center": [
-      -62,
-      318
+      -50,
+      304
     ],
     "radius": [
-      12,
-      10.5
+      13,
+      11
     ],
-    "rotation": 0.8,
+    "rotation": -0.3,
     "slope": [
-      -0.014,
+      0.012,
       0.018
     ]
   },
   "pin": [
-    -64,
-    321
+    -52,
+    306
   ],
   "bunkers": [
     {
       "center": [
-        -49,
-        326
+        -28,
+        300
       ],
       "radius": [
         5,
-        2.6
+        2.8
       ],
-      "rotation": 1.4,
+      "rotation": 0.9,
       "depth": 0.5
     },
     {
       "center": [
-        -75,
-        310
+        -62,
+        318
       ],
       "radius": [
-        5,
-        2.6
-      ],
-      "rotation": 0.2,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        -68,
-        333
-      ],
-      "radius": [
-        4.6,
+        4.4,
         2.4
       ],
       "rotation": -0.4,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        -58,
-        304
-      ],
-      "radius": [
-        4.0,
-        2.2
-      ],
-      "rotation": 0.8,
       "depth": 0.45
     },
     {
       "center": [
-        36,
-        132
+        24,
+        178
       ],
       "radius": [
-        7,
-        3.4
+        3,
+        6.5
       ],
-      "rotation": -0.3,
+      "rotation": 0.1,
       "depth": 0.45
     }
   ],
   "water": [
     {
       "center": [
-        -22,
-        206
+        -30,
+        128
       ],
       "radius": [
-        11,
-        15
+        14,
+        24
+      ],
+      "rotation": 0.2,
+      "level_offset": -0.5,
+      "island": true
+    }
+  ],
+  "pads": [
+    {
+      "center": [
+        -26,
+        168
+      ],
+      "radius": [
+        13,
+        10
       ],
       "rotation": 0.3
+    }
+  ],
+  "zones": [
+    {
+      "center": [
+        -28,
+        145
+      ],
+      "radius": [
+        26,
+        46
+      ],
+      "rotation": 0.2,
+      "surface": "rough"
     },
     {
       "center": [
-        -43,
-        288
+        -36,
+        236
       ],
       "radius": [
-        24,
-        4.5
+        18,
+        52
       ],
-      "rotation": 0.71,
-      "level_offset": -0.7
+      "rotation": -0.15,
+      "surface": "rough"
+    },
+    {
+      "center": [
+        70,
+        160
+      ],
+      "radius": [
+        36,
+        128
+      ],
+      "rotation": 0.0,
+      "surface": "rough"
+    },
+    {
+      "center": [
+        -12,
+        346
+      ],
+      "radius": [
+        42,
+        30
+      ],
+      "rotation": 0.3,
+      "surface": "rough"
+    }
+  ],
+  "hedges": [
+    {
+      "points": [
+        [
+          44,
+          40
+        ],
+        [
+          44,
+          120
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          44,
+          140
+        ],
+        [
+          44,
+          280
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          44,
+          280
+        ],
+        [
+          96,
+          280
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          96,
+          280
+        ],
+        [
+          96,
+          40
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          96,
+          40
+        ],
+        [
+          76,
+          40
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          64,
+          40
+        ],
+        [
+          44,
+          40
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          44,
+          90
+        ],
+        [
+          82,
+          90
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          58,
+          140
+        ],
+        [
+          96,
+          140
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          44,
+          190
+        ],
+        [
+          82,
+          190
+        ]
+      ]
+    },
+    {
+      "points": [
+        [
+          58,
+          235
+        ],
+        [
+          96,
+          235
+        ]
+      ]
+    }
+  ],
+  "features": [
+    {
+      "model": "mansion",
+      "pos": [
+        -4,
+        356
+      ],
+      "face": [
+        -20,
+        200
+      ],
+      "clear": 20
+    },
+    {
+      "model": "pillar",
+      "pos": [
+        -10,
+        7
+      ],
+      "clear": 2
+    },
+    {
+      "model": "pillar",
+      "pos": [
+        10,
+        7
+      ],
+      "clear": 2
+    },
+    {
+      "image": "statue_gargoyle",
+      "pos": [
+        -10,
+        7
+      ],
+      "scale": 1.3,
+      "lift": 3.35,
+      "clear": 2
+    },
+    {
+      "image": "statue_gargoyle",
+      "pos": [
+        10,
+        7
+      ],
+      "scale": 1.3,
+      "lift": 3.35,
+      "clear": 2
     }
   ],
   "elevation": {
-    "tee": 4.0,
-    "green": 6.0,
-    "cross_tilt": 0.01,
-    "roll_height": 0.4,
-    "bank_height": 3.5,
+    "tee": 3.0,
+    "green": 5.0,
+    "cross_tilt": 0.006,
+    "roll_height": 0.3,
+    "bank_height": 2.5,
     "mounds": [
       {
         "center": [
-          44,
-          80
+          -80,
+          120
+        ],
+        "radius": 24,
+        "height": 2.4
+      },
+      {
+        "center": [
+          130,
+          200
         ],
         "radius": 22,
         "height": 2.2
       },
       {
         "center": [
-          -70,
-          240
+          -90,
+          300
         ],
-        "radius": 22,
-        "height": 2.4
-      },
-      {
-        "center": [
-          -92,
-          336
-        ],
-        "radius": 22,
+        "radius": 24,
         "height": 2.6
       }
     ]
   },
-  "carry": [
-    296,
-    314
-  ],
   "wind": {
     "min": 0,
     "max": 4
@@ -225,25 +404,38 @@
   "graveyards": [
     {
       "center": [
-        20,
-        148
+        -70,
+        230
       ],
-      "radius": 5.5,
+      "radius": 6,
       "count": 7,
-      "fence": true
-    },
-    {
-      "center": [
-        60,
-        210
-      ],
-      "radius": 8,
-      "count": 9,
       "fence": true
     }
   ],
+  "plan": {
+    "safe": [
+      [
+        10,
+        172
+      ],
+      [
+        -52,
+        306
+      ]
+    ],
+    "risk": [
+      [
+        -26,
+        168
+      ],
+      [
+        -52,
+        306
+      ]
+    ]
+  },
   "lantern_spacing": 16,
-  "trees_spacing": 8.0,
+  "trees_spacing": 7.0,
   "pumpkin_clusters": [
     {
       "center": [
@@ -339,14 +531,14 @@
       0.8
     ],
     "water_deep": [
-      0.06,
-      0.005,
+      0.12,
+      0.0,
       0.02
     ],
     "water_glow": [
       1.0,
-      0.1,
-      0.25
+      0.08,
+      0.12
     ],
     "wisp_color": [
       1.0,

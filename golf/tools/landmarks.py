@@ -156,3 +156,115 @@ def barn(col, name, pos, rot_z=0.0, scale=1.0):
     _window(p, sx, sy - r, 0.6 + sh - 2.2, 0.5, 0.9, -1)
     obs = p.finish(col, name, pos, rot_z, scale)
     return obs, [(hw + 5.0) * scale, (hd + 0.5) * scale]
+
+
+SIDING = (0.3, 0.33, 0.28)        # weathered grey-green boards
+SLATE = (0.2, 0.24, 0.29)
+DOOR = (0.28, 0.16, 0.1)
+CHIMNEY = (0.36, 0.22, 0.18)
+
+
+def _prism_x(p, profile, x0, x1, color, caps_color=None):
+    """A shape extruded along x from x0 to x1; profile: [(y, z), ...]."""
+    bm = p.body
+    a = [bm.verts.new((x0, y, z)) for y, z in profile]
+    b = [bm.verts.new((x1, y, z)) for y, z in profile]
+    n = len(profile)
+    sides = [bm.faces.new((a[i], a[(i + 1) % n], b[(i + 1) % n], b[i])) for i in range(n)]
+    caps = [bm.faces.new(list(reversed(a))), bm.faces.new(b)]
+    p._paint(bm, p.lay, sides, color)
+    p._paint(bm, p.lay, caps, caps_color or color)
+
+
+def mansion(col, name, pos, rot_z=0.0, scale=1.0):
+    """The vampire's house (concept B): two storeys of grey-green boards on a stone footing under a slate
+    gable roof with a dormer, an eight-sided tower with a spire on its left, a porch with a little gable
+    over the door, a brick chimney, and lit windows on both floors. ~19 m wide; the front faces -y."""
+    p = Parts(seed=707)
+    W, D, H = 14.0, 10.0, 7.0
+    hw, hd = W / 2, D / 2
+    base = 0.8
+    p.box((0, 0, base / 2), (W + 0.4, D + 0.4, base), STONE)
+    p.box((0, 0, base + H / 2), (W, D, H), SIDING, jitter=0.08)
+    p.box((0, 0, base + H / 2), (W + 0.12, D + 0.12, 0.25), TRIM)                # the band between floors
+    top = base + H
+    _prism_x(p, [(-hd - 0.6, top - 0.1), (hd + 0.6, top - 0.1), (0, top + 4.6)], -hw - 0.5, hw + 0.5, SLATE, SIDING)
+    _prism_x(p, [(-hd + 0.05, top), (hd - 0.05, top), (0, top + 4.3)], -hw + 0.02, hw - 0.02, SIDING)
+    # a dormer on the front slope
+    p.box((2.5, -hd + 1.6, top + 1.6), (1.8, 1.6, 1.6), SIDING)
+    _prism_x(p, [(-hd + 0.7, top + 2.4), (-hd + 2.5, top + 2.4), (-hd + 1.6, top + 3.3)], 1.4, 3.6, SLATE)
+    _window(p, 2.5, -hd + 0.8, top + 1.0, 0.8, 1.0, -1)
+    # chimney
+    p.box((4.8, 1.5, top + 3.0), (1.1, 1.1, 5.0), CHIMNEY)
+    # the tower: eight-sided, three storeys, a tall slate spire
+    tx, ty, tr = -hw - 1.4, -hd + 2.6, 2.7
+    p.cylinder((tx, ty, 0), tr + 0.2, base, STONE, segments=8)
+    p.cylinder((tx, ty, base), tr, 11.5, SIDING, segments=8)
+    p.cone((tx, ty, base + 11.5), tr + 0.5, 6.0, SLATE, segments=8)
+    p.cylinder((tx, ty, base + 17.3), 0.08, 1.2, IRON, segments=4)
+    for z in (base + 1.4, base + 4.8, base + 8.2):
+        _window(p, tx, ty - tr * 0.92, z, 0.8, 1.6, -1)
+    # porch: a deck, two posts, a roof and a little gable over the door
+    px, pw, pd = 1.2, 4.2, 2.4
+    p.box((px, -hd - pd / 2, base * 0.6), (pw, pd, 0.25), STONE)
+    for sx in (-1, 1):
+        p.box((px + sx * (pw / 2 - 0.25), -hd - pd + 0.25, base + 1.4), (0.25, 0.25, 2.8), TRIM)
+    p.box((px, -hd - pd / 2, base + 2.9), (pw + 0.3, pd + 0.3, 0.2), SLATE)
+    _prism_x(p, [(-hd - pd - 0.1, base + 3.0), (-hd + 0.1, base + 3.0), (-hd - pd / 2, base + 4.3)],
+             px - pw / 2 - 0.1, px + pw / 2 + 0.1, SLATE, TRIM)
+    p.box((px, -hd - 0.06, base + 1.15), (1.2, 0.12, 2.3), DOOR)
+    p.box((px, -hd - 0.4, base + 2.6), (0.25, 0.25, 0.25), GLOW, glow=True)       # porch lamp
+    # windows: ground floor either side of the porch, upstairs across the front, and down the sides
+    for x in (-4.6, -2.0, 4.4):
+        _window(p, x, -hd, base + 1.2, 1.1, 1.6, -1)
+    for x in (-4.6, -1.6, 1.6, 4.6):
+        _window(p, x, -hd, base + H / 2 + 1.0, 1.0, 1.5, -1)
+    for sx in (-1, 1):
+        for y in (-2.0, 2.0):
+            for z in (base + 1.2, base + H / 2 + 1.0):
+                _window(p, sx * hw, y, z, 1.0, 1.5, "x+" if sx > 0 else "x-")
+    obs = p.finish(col, name, pos, rot_z, scale)
+    return obs, [(hw + 4.5) * scale, (hd + 3.0) * scale]
+
+
+def pillar(col, name, pos, rot_z=0.0, scale=1.0):
+    """A stone gate pillar with a cap and a slab on top for a gargoyle to sit on (3.2 m tall)."""
+    p = Parts(seed=17)
+    p.box((0, 0, 0.2), (1.5, 1.5, 0.4), STONE)
+    p.box((0, 0, 1.75), (1.1, 1.1, 2.7), STONE, jitter=0.1)
+    p.box((0, 0, 3.2), (1.45, 1.45, 0.3), STONE)
+    obs = p.finish(col, name, pos, rot_z, scale)
+    return obs, [0.75 * scale, 0.75 * scale]
+
+
+def hedge(col, name, points, height_at, height=2.4, width=1.3):
+    """A clipped hedge wall along a polyline, a box per stretch standing on the ground. Returns the
+    boxes ([cx, cy, cz, length, width, height, rot]) for the ball to bounce off."""
+    bm = bmesh.new()
+    lay = props.vcol_layer(bm)
+    rng = random.Random(len(points))
+    boxes = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        dx, dy = x1 - x0, y1 - y0
+        ln = math.hypot(dx, dy)
+        steps = max(1, int(ln / 6.0))                  # short boxes follow the ground's rise and fall
+        for k in range(steps):
+            a = k / steps
+            b = (k + 1) / steps
+            ax, ay = x0 + dx * a, y0 + dy * a
+            bx, by = x0 + dx * b, y0 + dy * b
+            cx, cy = (ax + bx) / 2, (ay + by) / 2
+            z0 = min(height_at(ax, ay), height_at(bx, by)) - 0.3
+            seg = ln / steps + width * 0.5
+            ret = bmesh.ops.create_cube(bm, size=1.0)
+            bmesh.ops.scale(bm, vec=Vector((seg, width, height + 0.3)), verts=ret["verts"])
+            bmesh.ops.rotate(bm, cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(math.atan2(dy, dx), 3, "Z"), verts=ret["verts"])
+            bmesh.ops.translate(bm, vec=Vector((cx, cy, z0 + (height + 0.3) / 2)), verts=ret["verts"])
+            for f in {f for v in ret["verts"] for f in v.link_faces}:
+                shade = 0.85 + rng.uniform(-0.08, 0.08) + (0.12 if f.normal.z > 0.5 else 0.0)
+                for lp in f.loops:
+                    lp[lay] = (0.16 * shade, 0.3 * shade, 0.14 * shade, 1.0)
+            boxes.append([cx, cy, z0 + 0.3, seg, width, height, math.atan2(dy, dx)])
+    bm.normal_update()
+    props.link(name, bm, [props.material("hedge_vc", 0.9)], col)
+    return boxes

@@ -69,18 +69,21 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   (04-18) and glowing light props (01-15) per hole theme. Graveyards use Marc's three headstones
   (`props.py` `headstone_rip`, `headstone_moon`, `headstone_broken`, ~130-250 tris each) with crosses and
   obelisks; the builder merges small props (stones, pumpkins) into one mesh per 40 m of ground.
-- **Revised holes from Marc's concepts** (`art_src/concepts/`): 2 (bend right past a giant cauldron round
-  a purple pool that wraps the green; lay up or fly the deep rough at the flag), 3 (loop round a walled
-  graveyard, carry to a pad for eagle), 6 (bend round the ghost-lit marsh or fly it), 9 (curl round a
-  fenced pumpkin patch, or carry it to a pad) are built. Next in order: 1 (pond, island pads), then 4, 5, 8 (new ground:
-  web = ball stops dead, corn = very deep rough, ravine = hazard), then 7 (hedge maze, mansion).
-  The builder now takes `pads` (fairway ellipses with a rough ring), `zones` (open rough/deep-rough areas,
-  no woods or trees, no framing banks), `fences` (polylines) and `features` (a painted light prop stood
-  at a set spot and scale, as a landmark) in a layout. Water next to a green needs `"island": true`, or
-  its banks (out to 1.5x its radius) tip the green. `capture_hole.gd --target=x,y` makes the bot's first
-  shot go there (to play the safe route). Check a layout in 2D first:
-  `python3 -I tools/plan_check.py <layout.json> <out.png>` draws its `plan` ("safe"/"risk" landing
-  points) as shots with yards, the club the game picks, and the margin of error at each landing.
+- **All nine holes are rebuilt from Marc's concepts** (`art_src/concepts/`, `art_src/redesign/`), each with a
+  safe and a risky route (layouts: `courses/holes/h01..h03`, h04-h09 written by `tools/make_holes_4_9.py`):
+  1 pond (carry its corner to a pad), 2 purple pool and giant cauldron, 3 walled graveyard loop, 4 giant
+  spider web inside an L, 5 fenced cornfield and Marc's barn and silo, 6 ghost-lit marsh, 7 hedge maze,
+  blood-red pond, the vampire's house and gargoyles on the tee's gate pillars, 8 rocky ravine and the
+  Headless Horseman statue, 9 fenced pumpkin patch.
+  Layout keys beyond the fairway: `pads`, `zones` (open rough, no trees), `fences`, `hedges` (walls the ball
+  bounces off), `webs` / `web_art` (ball stops dead, 40% short next shot), `cornfields` (corn, fence, hay;
+  35% short), `features` (a painted prop by `image`, or a 3D landmark by `model` from `tools/landmarks.py`:
+  barn, mansion, pillar; `face` turns its front to a point, `lift` raises a painted one), and
+  `make_holes_4_9.ravine()` for a ravine (deep narrow water; theme `ravine` changes the message). The hole's
+  ground grows to take in all of these. Lies cost power (`main.LIE`: rough 8%, deep 22%, bunker 15%).
+  Check a layout in 2D first: `python3 -I tools/plan_check.py <layout.json> <out.png>` (webs, corn, hedges
+  drawn). `tests/look_at.gd` (`--look-from=x,y,h --look-at=x,y,h --look-out=f.png`) takes a still of any spot.
+  Landmarks still to make: the chapel (3) and the clubhouse (9).
 - Clubs (`scripts/clubs.gd`): Driver 205 m, 3 Wood 185, 5/7/9 Iron 165/145/125, P/S/L Wedge 105/82/58,
   Chip 32 (skips and runs), Putter. Auto-picked: the shortest club whose full swing covers the shot
   with 10% in hand (`PICK_SHARE`), so most shots want 80-90% of a full pull. The club button steps down

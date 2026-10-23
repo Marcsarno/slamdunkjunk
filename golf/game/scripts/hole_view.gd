@@ -287,6 +287,7 @@ func _apply_materials(root: Node) -> void:
 		"iron_vc": _textured_vc("", 1.0, 1.0, 0.45),
 		"wood_vc": _textured_vc("wood", 0.7, 1.6, 0.85),
 		"LandmarkBody": _textured_vc("wood", 0.5, 2.0, 0.95),
+		"hedge_vc": _textured_vc("hedge", 0.45, 2.2, 0.95),
 		"LandmarkGlow": _two_sided(glow),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
@@ -410,7 +411,7 @@ func _glow_props() -> void:
 		halo.position = Vector3(0, h * float(m.glow[1]), 0)
 		node.add_child(halo)
 		_light_points.append([Vector3(g.pos[0], g.pos[1], g.pos[2] + lift + h * float(m.glow[1])), parts[4]])
-		if lift > 0.0:
+		if lift > 0.0 and not g.get("still", false):          # ghosts and the skull hover; a gargoyle sits
 			_floaters.append([node, node.position.y, randf() * TAU])
 
 

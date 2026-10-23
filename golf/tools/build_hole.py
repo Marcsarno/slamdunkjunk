@@ -338,6 +338,15 @@ def in_open(x, y, grow=1.1):
 
 
 # free-standing fences: [{"points": [[x, y], ...]}] (round a pumpkin patch, along a lane)
+# clipped hedge walls ("hedges": polylines), the ball bouncing off them
+for k, hg_ in enumerate(spec.get("hedges", [])):
+    pts = [tuple(p) for p in hg_["points"]]
+    for (cx, cy, cz, ln, wd, ht, rot) in landmarks.hedge(col, f"Hedge_{k}", pts, h_at, hg_.get("height", 2.4),
+                                                         hg_.get("width", 1.3)):
+        obstacles.append({"type": "box", "pos": [cx, cy, cz], "size": [ln, wd, ht], "rot": rot})
+    for p in pts[::1]:
+        taken.append((p[0], p[1], 2.0))
+
 for k, fen in enumerate(spec.get("fences", [])):
     props.fence(col, f"FenceLine_{k}", [tuple(p) for p in fen["points"]], h_at, post_gap=1.1)
 
@@ -642,6 +651,7 @@ LIGHT_PROPS = {
     "light_moon_mushrooms": (1.3, 0.0, 0.4), "light_hollow_heart_tree": (2.4, 0.0, 0.6),
     "light_skeleton_groundskeeper": (1.65, 0.0, 0.3),
     "statue_horseman": (4.2, 0.0, 1.6),       # Marc's statue (concept sheet, option B), a landmark
+    "statue_gargoyle": (1.1, 0.0, 0.0),       # his gargoyle (option A), set on a gate pillar
 }
 LIGHT_SCALE = 1.6      # storybook scale, bigger than life, so they read from the tee and the fairway
 glows = []
@@ -686,9 +696,10 @@ for f in spec.get("features", []):
         obstacles.append({"type": "box", "pos": [x, y, z], "size": [2 * hx, 2 * hy, 10.0], "rot": rot})
         continue
     ht, lift, r = (v * LIGHT_SCALE * f.get("scale", 1.0) for v in LIGHT_PROPS[f["image"]])
+    lift = f.get("lift", lift)
     z = h_at(x, y)
     glows.append({"image": f["image"], "pos": [round(float(x), 2), round(float(y), 2), round(z - 0.05, 2)],
-                  "height": round(ht, 2), "lift": round(lift, 2)})
+                  "height": round(ht, 2), "lift": round(lift, 2), "still": bool(f.get("lift"))})
     if r > 0:
         obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": r, "h": ht * 0.8})
 

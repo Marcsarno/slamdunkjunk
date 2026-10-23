@@ -112,8 +112,21 @@ class Hole:
         lo = self.path.min(axis=0)
         hi = self.path.max(axis=0)
         reach = max(self.widths) / 2 + spec["rough_width"] + spec["deep_rough_width"] + MARGIN
-        self.x0, self.y0 = math.floor(lo[0] - reach), math.floor(lo[1] - reach)
-        self.x1, self.y1 = math.ceil(hi[0] + reach), math.ceil(hi[1] + reach)
+        # take in the areas, hedges and landmarks a layout puts off to the side (with ground round them)
+        pts = [lo, hi]
+        for z in (spec.get("zones", []) + spec.get("pads", []) + spec.get("cornfields", [])
+                  + spec.get("web_art", spec.get("webs", []))):
+            r = max(z["radius"]) + 8.0
+            pts += [np.array(z["center"]) - r, np.array(z["center"]) + r]
+        for hg in spec.get("hedges", []):
+            for p in hg["points"]:
+                pts += [np.array(p) - 10.0, np.array(p) + 10.0]
+        for f in spec.get("features", []):
+            pts += [np.array(f["pos"]) - 24.0, np.array(f["pos"]) + 24.0]
+        lo, hi = np.min(pts, axis=0), np.max(pts, axis=0)
+        reach = min(reach, max(reach, 0.0))
+        self.x0, self.y0 = math.floor(min(lo[0], self.path.min(axis=0)[0] - reach)), math.floor(min(lo[1], self.path.min(axis=0)[1] - reach))
+        self.x1, self.y1 = math.ceil(max(hi[0], self.path.max(axis=0)[0] + reach)), math.ceil(max(hi[1], self.path.max(axis=0)[1] + reach))
         for w in spec.get("water", []):
             c = np.array([[w["center"][0]]], float), np.array([[w["center"][1]]], float)
             w["level"] = round(float(self.base_height(*c)[0, 0]) + w.get("level_offset", -0.6), 3)

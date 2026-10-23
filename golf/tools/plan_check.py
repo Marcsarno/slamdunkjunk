@@ -62,6 +62,10 @@ def main():
         r, _ = hg.ellipse_r(gx, gy, w)
         rgb[r < 1.0] = (rgb[r < 1.0] * 0.3 + np.array([200, 160, 60]) * 0.7).astype(np.uint8)
     img = Image.fromarray(rgb[::-1])
+    dr0 = ImageDraw.Draw(img)
+    for hg_ in spec.get("hedges", []):                 # hedge walls
+        pts = [((x - h.x0) * K, (ys[-1] - y) * K) for x, y in hg_["points"]]
+        dr0.line(pts, fill=(20, 60, 24), width=max(2, int(1.3 * K)))
     dr = ImageDraw.Draw(img)
     top = ys[-1]
 
