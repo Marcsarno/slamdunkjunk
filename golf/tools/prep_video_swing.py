@@ -42,7 +42,7 @@ VIEWS = {
     "back": dict(
         address=1,
         top=81,             # address to the top of the backswing (then she holds it a long while)
-        step=3,             # every third frame: the pull scrubs through them
+        step=1,             # every frame: the pull scrubs through them, as smooth as the video
         hands0=(252.0, 358.0), hosel0=(372.0, 562.0), head_box=(364, 552, 432, 606),
         prefix="video_back", set_prefix="video_back_"),
 }
@@ -157,7 +157,22 @@ def exit_point(keep):
     return None
 
 
-def finish_club(img, a, keep, cfg, head, head_hosel):
+def shaft_colour(a0, keep0, cfg):
+    """The shaft's colour at address: the median of the grey pixels within a few pixels of its middle
+    stretch, between hands and head."""
+    (hx, hy), (sx, sy) = cfg["hands0"], cfg["hosel0"]
+    p0, d = np.array([hx, hy]), np.array([sx - hx, sy - hy])
+    length = np.linalg.norm(d)
+    d = d / length
+    ys, xs = np.nonzero(keep0 & neutral(a0))
+    rel = np.stack([xs, ys], 1) - p0
+    along = rel @ d
+    off = np.abs(rel @ np.array([-d[1], d[0]]))
+    band = (along > 0.25 * length) & (along < 0.85 * length) & (off < 4)
+    return tuple(int(v) for v in np.median(a0[ys[band], xs[band]], 0)) + (255,)
+
+
+def finish_club(img, a, keep, cfg, head, head_hosel, col):
     """Carry a club that runs off the picture on to its full length and put the head on the end.
     img is the padded RGBA canvas; a and keep are the video frame and her mask."""
     e = exit_point(keep)
@@ -199,7 +214,6 @@ def finish_club(img, a, keep, cfg, head, head_hosel):
     (hx, hy), (sx, sy) = cfg["hands0"], cfg["hosel0"]
     shaft_len = CLUB_DEPTH * np.hypot(sx - hx, sy - hy)
     hosel = hands + d * max(shaft_len, np.linalg.norm(e - hands))
-    col = tuple(int(v) for v in np.median(a[ys[near], xs[near]], 0)) + (255,)   # the shaft's colour at the edge
     # one straight shaft from her hands to the head: the video's blurred, broken shaft past her hands
     # is cleared and the line drawn over the whole length
     stray = (pts - hands) @ d > 6
@@ -263,7 +277,10 @@ def main():
         used = sorted({*range(address, top, cfg["step"]), top})
     print("ball and tee at x %d-%d, y %d-%d; gone from frame %d" % (xs.min(), xs.max(), ys.min(), ys.max(), gone))
 
-    head = club_head(a0, her(a0, a0, ball, ball_there=True), cfg)
+    keep0 = her(a0, a0, ball, ball_there=True)
+    head = club_head(a0, keep0, cfg)
+    col = shaft_colour(a0, keep0, cfg)       # one colour for every carried-on shaft, so it doesn't flicker
+    print("shaft colour", col)
     cut = {}
     for n in used:
         a = frames[n]
@@ -272,7 +289,7 @@ def main():
         rgba = np.zeros((h + 2 * PAD, w + 2 * PAD, 4), np.uint8)
         rgba[PAD:PAD + h, PAD:PAD + w, :3] = defringe(a, keep)
         rgba[PAD:PAD + h, PAD:PAD + w, 3] = keep * 255
-        img, club = finish_club(Image.fromarray(rgba), a, keep, cfg, *head)
+        img, club = finish_club(Image.fromarray(rgba), a, keep, cfg, *head, col)
         if club:
             print("frame %d: club carried on past the edge (hands %s, head %s)" % (n, club[0].round(), club[1].round()))
         cut[n] = np.asarray(img)
