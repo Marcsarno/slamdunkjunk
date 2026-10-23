@@ -43,19 +43,26 @@ const SLING_AIM_MAX := deg_to_rad(18.0)
 const SLING_AIM_PUTT := deg_to_rad(8.0)
 const SLING_DEAD := 0.06        # share of SLING_SPAN
 const SIDE_EASE := 12.0         # the aim follows the finger at this rate (1/s): smooth, not laggy
-const BALL_FOLLOW := 0.5        # the slingshot ball moves this share of the finger's travel ...
-const BALL_ABOVE := 2.8         # ... and keeps at least this many radii above it, clear of the thumb
-const PANIC_PULL := 0.9         # the ball's face goes from worried to panic past this share of the pull
-const HINT := "Drag the target to aim · pull the ball back to shoot"
+const DRAG_TURN := 0.9          # dragging the target: radians of aim per screen width across ...
+const DRAG_REACH := 1.4         # ... and club ranges of distance per screen height up or down
+const HINT := "Drag up top to move the target · pull down from the bottom to shoot"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 6.5
 const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
-const AIM_BACK := 3.7           # aim camera: meters behind the ball ...
-const AIM_HEIGHT := 2.0         # ... and above it; fixed so she is the same size every shot
+const AIM_BACK := 3.1           # aim camera: meters behind the ball ...
+const AIM_HEIGHT := 1.65        # ... and above it; fixed so she is the same size every shot
+const AIM_FOV := 60.0
+const ORBIT_TIME := 0.42        # the sweep round from behind her to her side as she swings
+const CHASE_BACK := 5.0         # the camera after the ball in the air: this far behind it ...
+const CHASE_SIDE := 1.8         # ... to the side ...
+const CHASE_UP := 0.9           # ... and above
 const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
-const AIM_BALL_Y := 0.62        # the aiming view tips down until the ball sits this far down the screen,
-                                # clear of the slingshot under it
-const SWING_HOLD := 0.75        # seconds the swing view holds after contact, for her follow-through
+const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
+const BALL_LOOK_GROUND := 0.03  # the ball's drawn width as a share of its distance from the camera ...
+const BALL_LOOK_AIR := 0.11     # ... and in the air, where its face is the show
+const STREAKS_PER_S := 45.0     # wind streaks round the ball in flight ...
+const STREAK_LIFE := 0.32       # ... and how long each lasts (s)
+const SWING_HOLD := 0.45        # seconds the swing view holds after contact, for her follow-through
 
 var terrain: Terrain
 var obstacles: ObstacleGrid
@@ -65,7 +72,13 @@ var golfer := Golfer.new()
 var lantern := HeroLantern.new()
 var hud := Hud.new()
 var cam := Camera3D.new()
-var ball_mesh := MeshInstance3D.new()
+var ball_mesh := Sprite3D.new()          # the ball she plays: Marc's design picked in the clubhouse
+var _ball_tex := {}                       # its faces: "still", "launch" (scared)
+var _ball_pose := "still"
+var wind_fx := MeshInstance3D.new()       # streaks of air rushing past it in flight
+var wind_mesh := ImmediateMesh.new()
+var _streaks: Array = []                  # [start, direction, length, age]
+var _streak_due := 0.0
 var trail := MeshInstance3D.new()
 var trail_mesh := ImmediateMesh.new()
 var ring := MeshInstance3D.new()           # where the wind carries a perfect full shot: flat, mint
@@ -98,7 +111,7 @@ var _dist_at_pull := 0.0            # pull began, and how far the band says to t
 var _side_goal := 0.0
 var _side := 0.0
 var target_dragging := false
-var _drag_hit0 := Vector2.ZERO  # target dragging: the ground under the finger at press, and the target then
+var _drag_from := Vector2.ZERO  # target dragging: where the finger went down, and the target then
 var _target0 := Vector2.ZERO
 var _power_scale := 1.0         # last solved power against distance / club carry, for estimates mid-drag
 var preview := {}               # this pull's flight, no wind
@@ -204,7 +217,7 @@ func _prewarm() -> void:
 	await _drawn(1)
 	# the aiming view with its markers, a ball trail, and every landing effect (out of sight underground)
 	phase = Phase.AIM
-	_target_cam()
+	_aim_cam()
 	cam_pos = _want_pos
 	cam_target = _want_target
 	cam_fov = _want_fov
@@ -216,9 +229,12 @@ func _prewarm() -> void:
 	fx.holed(under, Color(1.0, 0.6, 0.25))
 	for i in 8:
 		trail_pts.append(under + Vector3(i, 0, 0))
+	_streaks.append([under, Vector3.FORWARD, 1.0, 0.1])
+	_ball_pose = "launch"
 	_update_ball_visual()
 	await _drawn(2)
 	trail_pts.clear()
+	_streaks.clear()
 	_show_preview(false)
 	# then the opening for real
 	_start_hole()
@@ -278,7 +294,7 @@ func _start_hole() -> void:
 	_setup_shot()
 	phase = Phase.INTRO
 	phase_t = 0.0
-	hud.sling.visible = false
+	hud.hide_aim_map()
 	hud.hint.text = "Tap to skip"
 	_place_lantern()
 	# the hole's name once the camera has swung round the lantern and starts down the hole
@@ -314,10 +330,9 @@ func _setup_shot() -> void:
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
-	hud.sling.appear()
-	hud.sling.hint = strokes == 0
+	_ball_pose = "still"
 	phase = Phase.AIM
-	_target_cam()
+	_aim_cam()
 	cam_pos = _want_pos
 	cam_target = _want_target
 	cam_fov = _want_fov
@@ -532,13 +547,14 @@ func _place_golfer_back(pose := true) -> void:
 		golfer.address(set_name)
 
 
-## The giant jack-o'-lantern sits off the right of the tee, its face turned back across the tee box.
+## The giant jack-o'-lantern sits off the left of the tee (clear of the camera's sweep round to her
+## right side as she swings), its face turned back across the tee box.
 var _lantern_face := Vector2.ZERO
 
 
 func _place_lantern() -> void:
-	var l2 := Vector2(ball.x, ball.y) + _right() * 2.6 + aim * 0.8
-	_lantern_face = (-_right() + aim * 0.4).normalized()
+	var l2 := Vector2(ball.x, ball.y) - _right() * 3.2 + aim * 1.2
+	_lantern_face = (_right() + aim * 0.4).normalized()
 	var w := Terrain.to_world(Vector3(l2.x, l2.y, terrain.height(l2.x, l2.y) - 0.04))
 	lantern.position = w
 	var f := Terrain.to_world(Vector3(_lantern_face.x, _lantern_face.y, 0)) - Terrain.to_world(Vector3.ZERO)
@@ -567,6 +583,7 @@ func _shoot() -> void:
 	last_ball = ball
 	hud.hint.text = ""
 	hud.hide_gauge()
+	hud.hide_aim_map()
 	# where in its margin this one lands: anywhere in it, more often toward the middle (putts are exact)
 	_shot_offset = Vector2.ZERO
 	if club.id != "putter":
@@ -590,9 +607,7 @@ func _shoot() -> void:
 		cam_fov = _want_fov
 		golfer.play_downswing(_sprite_set("back"))
 	else:
-		_place_golfer_face()
-		golfer.play_downswing(_sprite_set("face"))
-		_cut_to_swing_cam()
+		_start_orbit()
 
 
 func _on_contact() -> void:
@@ -684,7 +699,7 @@ func _press(p: Vector2) -> void:
 		Phase.INTRO:
 			_end_intro()
 		Phase.AIM:
-			if p.y > vp.y * PULL_ZONE or hud.sling.hit(p):
+			if p.y > vp.y * PULL_ZONE:
 				phase = Phase.PULL
 				pull_start = p
 				pull_goal = 0.0
@@ -697,23 +712,25 @@ func _press(p: Vector2) -> void:
 				_side_goal = 0.0
 				_side = 0.0
 				hud.hint.text = ""
-				hud.sling.hint = false
 				_pull_quarter = 0
-				_sling_follow(p)
 				Input.vibrate_handheld(10)
 			else:
-				var hit: Variant = _ground_at(p)
-				if hit != null:
-					target_dragging = true
-					_drag_hit0 = hit
-					_target0 = target
+				target_dragging = true
+				_drag_from = p
+				_target0 = target
 
 
 func _drag(p: Vector2, _rel: Vector2) -> void:
 	if target_dragging:
-		var hit: Variant = _ground_at(p)
-		if hit != null:
-			_set_target(_target0 + (hit - _drag_hit0), false)
+		# from behind her the target is far off, so a drag moves it by how far the finger goes: across
+		# swings it left or right, up pushes it longer, down brings it shorter
+		var vp := get_viewport().get_visible_rect().size
+		var b := Vector2(ball.x, ball.y)
+		var v0 := _target0 - b
+		var d := (p - _drag_from) / vp
+		var reach: float = club.carry_m * (PUTT_HEADROOM if club.id == "putter" else 1.0)
+		var dist := clampf(v0.length() - d.y * reach * DRAG_REACH, 0.5, reach)
+		_set_target(b + v0.normalized().rotated(-d.x * DRAG_TURN) * dist, false)
 	elif phase == Phase.PULL:
 		# the band, from where the finger went down: how far down it is drawn is the power, its tilt the aim
 		var v := p - pull_start
@@ -728,15 +745,6 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 		var u := clampf(v.x / (get_viewport().get_visible_rect().size.x * SLING_SPAN), -1.0, 1.0)
 		u *= smoothstep(0.0, 2.0 * SLING_DEAD, absf(u))
 		_side_goal = u * (SLING_AIM_PUTT if club.id == "putter" else SLING_AIM_MAX)
-		_sling_follow(p)
-
-
-## The slingshot ball follows the finger part of the way, always riding clear above the thumb.
-func _sling_follow(p: Vector2) -> void:
-	var s := hud.sling
-	var o := (p - pull_start) * BALL_FOLLOW
-	o.y = minf(o.y, p.y - s.radius() * BALL_ABOVE - s.rest().y)
-	s.offset = o
 
 
 ## The power of a full pull: the club's full power, or for a putt PUTT_HEADROOM times this putt.
@@ -749,35 +757,6 @@ func _full_pull_power() -> float:
 ## Where on the pull (0 .. 1) the target is.
 func mark_pull() -> float:
 	return clampf(full_power / maxf(max_power, 0.0001), 0.0, 1.0)
-
-
-## The ground point (course xy) under a screen point, by walking the camera ray down to the terrain.
-func _ground_at(p: Vector2) -> Variant:
-	var o := cam.project_ray_origin(p)
-	var n := cam.project_ray_normal(p)
-	if n.y > -0.005:
-		return null
-	var t := 0.0
-	var step := 1.0
-	for i in 800:
-		var c := Terrain.to_course(o + n * (t + step))
-		if c.z <= terrain.height(c.x, c.y):
-			var lo := t
-			var hi := t + step
-			for k in 14:
-				var mid := (lo + hi) * 0.5
-				var m := Terrain.to_course(o + n * mid)
-				if m.z <= terrain.height(m.x, m.y):
-					hi = mid
-				else:
-					lo = mid
-			var g := Terrain.to_course(o + n * hi)
-			return Vector2(g.x, g.y)
-		t += step
-		step = maxf(1.0, t * 0.02)
-		if t > 3000.0:
-			break
-	return null
 
 
 ## Power and the sideways aim follow the finger smoothly (touch reports arrive unevenly), and her
@@ -796,18 +775,16 @@ func _ease_toward_finger(delta: float) -> void:
 		_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull, false)
 	if phase == Phase.PULL:
 		golfer.set_pull(_sprite_set("back"), pull)
-		_sling_face()
+		_pull_feel()
 
 
-## The slingshot ball's face and the band's creak as it stretches: a creak (and a tap of the phone)
+## As the pull grows the ball at her feet turns scared, and there's a creak (and a tap of the phone)
 ## each quarter of the way, higher as it goes.
 var _pull_quarter := 0
 
 
-func _sling_face() -> void:
-	var s := hud.sling
-	s.stretch = pull
-	s.pose = "still" if pull < 0.12 else ("panic" if pull >= PANIC_PULL else "launch")
+func _pull_feel() -> void:
+	_ball_pose = "still" if pull < 0.12 else "launch"
 	var q := int(pull * 4.0 + 0.001)
 	if q > _pull_quarter:
 		Sfx.play("stretch", -14.0 + 2.0 * q, 0.85 + 0.12 * q)
@@ -830,15 +807,13 @@ func _release() -> void:
 			_side_goal = 0.0
 			_set_target(Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull)
 			hud.hide_gauge()
-			hud.sling.cancel()
+			_ball_pose = "still"
 			golfer.address(_sprite_set("back"))
 		else:
 			pull = pull_goal   # the shot is what the finger said, even if the ease hadn't caught up
 			if _side != 0.0 or _side_goal != 0.0:
 				_side = _side_goal
 				_set_target(Vector2(ball.x, ball.y) + _aim_at_pull.rotated(_side) * _dist_at_pull)
-			hud.sling.stretch = pull
-			hud.sling.release()
 			Sfx.play("twang", lerpf(-12.0, -4.0, pull), lerpf(1.15, 0.9, pull))
 			Input.vibrate_handheld(25)
 			_shoot()
@@ -854,11 +829,10 @@ func _process(delta: float) -> void:
 				_end_intro()
 		Phase.AIM, Phase.PULL:
 			_ease_toward_finger(delta)
-			if not target_dragging:     # the view holds still under a dragging finger
-				_target_cam()
+			_aim_cam()
 			_update_preview()
 		Phase.SWING:
-			pass
+			_orbit(delta)
 		Phase.FLIGHT:
 			var was_flying := sim.state == BallSim.State.FLYING
 			# a ball trickling up to the cup goes into slow motion: will it drop?
@@ -910,9 +884,7 @@ func _end_intro() -> void:
 	Quality.watching = true          # the scene's sharpness adapts from here on, never mid-flyover
 	hud.flash("", 0.01)
 	hud.hint.text = HINT
-	hud.sling.appear()
-	hud.sling.hint = true
-	_target_cam()
+	_aim_cam()
 
 
 # ---------------------------------------------------------------- camera
@@ -922,7 +894,9 @@ var _want_fov := 64.0
 var _cam_rate := 8.0
 
 
-## Down behind her, for the putting stroke.
+## Aiming and pulling: close behind her, so she fills the frame (the map in the corner shows where the
+## shot comes down). While pulling the view holds the line the pull began on, so the sideways aim
+## visibly swings the shot's line across the screen.
 func _aim_cam_dir() -> Vector3:
 	var d := _aim_at_pull if phase == Phase.PULL else aim
 	return Vector3(d.x, d.y, 0)
@@ -937,36 +911,19 @@ func _aim_cam_pos() -> Vector3:
 
 func _aim_cam_target() -> Vector3:
 	var a := _aim_cam_dir()
-	if club.id == "putter":
-		# her low in the picture, the green and the hole up it (not a stretch of empty grass under her)
-		return _look_with_ball_at(Terrain.to_course(_aim_cam_pos()), a, PUTT_BALL_Y, 66.0)
-	var t2 := ball + a * 40.0
-	return Terrain.to_world(Vector3(t2.x, t2.y, terrain.height(t2.x, t2.y) + 2.5))
+	return _look_with_ball_at(Terrain.to_course(_aim_cam_pos()), a, PUTT_BALL_Y if club.id == "putter" else AIM_BALL_Y,
+		_aim_fov())
+
+
+func _aim_fov() -> float:
+	return 66.0 if club.id == "putter" else AIM_FOV
 
 
 func _aim_cam() -> void:
 	_want_pos = _aim_cam_pos()
 	_want_target = _aim_cam_target()
-	_want_fov = 66.0
-	_cam_rate = 5.0
-
-
-## Aiming: up behind the ball, high enough to see the ball at the bottom and the target well up the
-## screen, so where the shot is going reads at a glance. While pulling it holds the line the pull
-## began on (so the slingshot's aim visibly swings the target and its flight across the screen) and
-## leans in a little as the band stretches.
-func _target_cam() -> void:
-	var pulling := phase == Phase.PULL
-	var a2 := _aim_at_pull if pulling else aim
-	var t2 := Vector2(ball.x, ball.y) + _aim_at_pull * _dist_at_pull if pulling else target
-	var d := maxf(Vector2(t2.x - ball.x, t2.y - ball.y).length(), 5.0)
-	var a := Vector3(a2.x, a2.y, 0)
-	var p := ball - a * (0.24 * d + 6.0) + Vector3(0, 0, 0.16 * d + 4.0)   # 34 degrees down onto the ball, whatever the length
-	p.z = maxf(p.z, terrain.height(p.x, p.y) + 3.0)
-	_want_fov = 50.0 - (4.0 * pull if pulling else 0.0)
-	_want_pos = Terrain.to_world(p)
-	_want_target = _look_with_ball_at(p, a, AIM_BALL_Y, _want_fov)
-	_cam_rate = 4.0
+	_want_fov = _aim_fov()
+	_cam_rate = 6.0
 
 
 ## A point to look at from `p` (course) straight along `a`, tipped down just enough to put the ball
@@ -979,18 +936,63 @@ func _look_with_ball_at(p: Vector3, a: Vector3, ball_y: float, fov: float) -> Ve
 	return Terrain.to_world(p + (a * cos(pitch) - Vector3(0, 0, sin(pitch))) * 30.0)
 
 
-func _cut_to_swing_cam() -> void:
+## The side-on view of her swing: beside her, level with her hips, looking a little ahead of her.
+func _swing_cam() -> Array:
 	var g := Terrain.to_course(golfer.position)
 	var a := Vector3(aim.x, aim.y, 0)
 	var r := Vector3(_right().x, _right().y, 0)
 	var lead := golfer.swing_cam_lead(golfer.current_set)
-	_want_pos = Terrain.to_world(g + r * 3.0 + a * (lead - 0.1) + Vector3(0, 0, 0.95))
-	_want_target = Terrain.to_world(g + a * lead + Vector3(0, 0, 0.8))
-	_want_fov = 52.0
-	cam_pos = _want_pos
-	cam_target = _want_target
-	cam_fov = _want_fov
-	_cam_rate = 20.0
+	return [Terrain.to_world(g + r * 3.0 + a * (lead - 0.1) + Vector3(0, 0, 0.95)),
+		Terrain.to_world(g + a * lead + Vector3(0, 0, 0.8)), 52.0]
+
+
+## Let go on a full swing: the camera sweeps round from behind her to her side (she turns to face it
+## half way round), then she swings. No cut, so the eye follows her round.
+var _orbit_t := -1.0
+var _orbit_from: Array = []
+var _orbit_to: Array = []
+var _orbit_turned := false
+
+
+func _start_orbit() -> void:
+	var back_pos := golfer.position
+	var back_set := golfer.current_set
+	_place_golfer_face()
+	golfer.address(_sprite_set("face"))
+	_orbit_to = _swing_cam()
+	golfer.position = back_pos                  # she stays as she is until half way round
+	golfer.set_pull(back_set, pull)
+	_orbit_from = [cam_pos, cam_target, cam_fov]
+	_orbit_turned = false
+	_orbit_t = 0.0
+
+
+func _orbit(delta: float) -> void:
+	if _orbit_t < 0.0:
+		return
+	_orbit_t += delta
+	var u := smoothstep(0.0, 1.0, clampf(_orbit_t / ORBIT_TIME, 0.0, 1.0))
+	if u > 0.5 and not _orbit_turned:
+		_orbit_turned = true
+		_place_golfer_face()
+		golfer.address(_sprite_set("face"))
+	# round her: the angle and the distance from her eased, not a straight line through her
+	var pivot := golfer.global_position
+	var v0: Vector3 = _orbit_from[0] - pivot
+	var v1: Vector3 = _orbit_to[0] - pivot
+	var a0 := atan2(v0.x, v0.z)
+	var a1 := a0 + angle_difference(a0, atan2(v1.x, v1.z))
+	var ang := lerpf(a0, a1, u)
+	var flat := lerpf(Vector2(v0.x, v0.z).length(), Vector2(v1.x, v1.z).length(), u)
+	cam_pos = pivot + Vector3(sin(ang) * flat, lerpf(v0.y, v1.y, u), cos(ang) * flat)
+	cam_target = (_orbit_from[1] as Vector3).lerp(_orbit_to[1], u)
+	cam_fov = lerpf(_orbit_from[2], _orbit_to[2], u)
+	_want_pos = cam_pos
+	_want_target = cam_target
+	_want_fov = cam_fov
+	if _orbit_t >= ORBIT_TIME:
+		_orbit_t = -1.0
+		golfer.play_downswing(_sprite_set("face"))
 
 
 func _chase_cam(_delta: float) -> void:
@@ -1001,18 +1003,18 @@ func _chase_cam(_delta: float) -> void:
 	var side := Vector3(flight_dir.y, -flight_dir.x, 0)
 	var p: Vector3
 	if sim.state == BallSim.State.FLYING:
-		# swing out to the side mid-flight so the course slides past in depth, then tuck back in
-		var air := clampf(sim.time / 4.5, 0.0, 1.0)
-		var lateral := 9.0 * sin(air * PI)
-		p = b - dir * 12.0 + side * lateral + Vector3(0, 0, 4.0 + 3.0 * sin(air * PI))
-		_cam_rate = 3.2 if sim.time > 0.4 else 1.6
-		_want_fov = 60.0
+		# close behind the ball and a little to the side, so its scared face is in the picture all the
+		# way; easing after it, so the camera falls behind as it leaves her and closes in as it slows
+		# toward the top of its flight
+		p = b - dir * CHASE_BACK + side * CHASE_SIDE + Vector3(0, 0, CHASE_UP)
+		_cam_rate = lerpf(2.0, 5.5, clampf(sim.time / 1.2, 0.0, 1.0))
+		_want_fov = 58.0
 	else:
 		p = b - dir * 6.5 + Vector3(0, 0, 2.6)
 		_cam_rate = 2.5
 	p.z = maxf(p.z, terrain.height(p.x, p.y) + 1.5)
 	_want_pos = Terrain.to_world(p)
-	_want_target = Terrain.to_world(b + sim.vel * 0.12 + Vector3(0, 0, 0.3))
+	_want_target = Terrain.to_world(b + sim.vel * (0.06 if sim.state == BallSim.State.FLYING else 0.12) + Vector3(0, 0, 0.3))
 
 
 ## A point on the hole's centre line at a fractional index, on a smooth (Catmull-Rom) curve through the
@@ -1098,19 +1100,28 @@ func _apply_cam(delta: float) -> void:
 
 # ---------------------------------------------------------------- ball, trail, preview
 func _make_ball_visuals() -> void:
-	var sm := SphereMesh.new()
-	sm.radius = BallSim.RADIUS
-	sm.height = BallSim.RADIUS * 2.0
-	sm.radial_segments = 16
-	sm.rings = 8
-	ball_mesh.mesh = sm
-	var bm := StandardMaterial3D.new()
-	bm.albedo_color = Color(0.95, 0.95, 0.92)
-	bm.emission_enabled = true
-	bm.emission = Color(0.6, 0.65, 0.7)
-	bm.emission_energy_multiplier = 0.4
-	ball_mesh.material_override = bm
+	var name := Balls.chosen()
+	for pose in ["still", "launch"]:
+		_ball_tex[pose] = Balls.texture(name, pose)
+	ball_mesh.texture = _ball_tex.still
+	ball_mesh.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	ball_mesh.shaded = false
+	ball_mesh.double_sided = true
+	ball_mesh.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	ball_mesh.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
+	ball_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ball_mesh)
+	wind_fx.mesh = wind_mesh
+	var wm := StandardMaterial3D.new()
+	wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	wm.vertex_color_use_as_albedo = true
+	wm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	wm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	wm.disable_fog = true
+	wind_fx.material_override = wm
+	wind_fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(wind_fx)
 
 	trail.mesh = trail_mesh
 	var tm := StandardMaterial3D.new()
@@ -1233,10 +1244,22 @@ func _target_texture() -> ImageTexture:
 func _update_ball_visual() -> void:
 	var b := sim.draw_pos() if (phase == Phase.FLIGHT or phase == Phase.RESULT or phase == Phase.HOLED) and sim else ball
 	var w := Terrain.to_world(b)
-	ball_mesh.position = w
 	var d := cam.global_position.distance_to(w)
-	ball_mesh.scale = Vector3.ONE * maxf(1.0, d * 0.0045 / BallSim.RADIUS)
+	# drawn bigger than a real ball, and bigger the farther away, so its face always reads: a little
+	# at her feet, more in the air where the camera chases it
+	var flying := phase == Phase.FLIGHT and sim != null and sim.state == BallSim.State.FLYING
+	var rolling_fast := phase == Phase.FLIGHT and sim != null and sim.vel.length() > 3.0
+	_ball_look = lerpf(_ball_look, BALL_LOOK_AIR if flying else BALL_LOOK_GROUND, 0.12)
+	var size := maxf(2.0 * BallSim.RADIUS, d * _ball_look)       # the ball's own width on screen, in metres here
+	if phase == Phase.FLIGHT or phase == Phase.SWING:
+		_ball_pose = "launch" if (flying or rolling_fast or phase == Phase.SWING) else "still"
+	var tex: Texture2D = _ball_tex.get(_ball_pose)
+	if tex:
+		ball_mesh.texture = tex
+		ball_mesh.pixel_size = size / (tex.get_height() * Balls.ART_FILL)
+	ball_mesh.position = w + (Vector3.ZERO if flying else Vector3(0, size * 0.5, 0))   # sitting on the grass
 	ball_mesh.visible = phase != Phase.HOLED
+	_update_wind(w, size, flying)
 	# trail
 	if phase == Phase.FLIGHT and sim.state == BallSim.State.FLYING:
 		trail_pts.append(w)
@@ -1265,6 +1288,46 @@ func _update_ball_visual() -> void:
 	trail_mesh.surface_end()
 
 
+var _ball_look := BALL_LOOK_GROUND
+
+
+## Air rushing past the ball in flight: short pale streaks spawned round it that stay where they were
+## made, so the ball flies on through them and they whip back past its face.
+func _update_wind(w: Vector3, size: float, flying: bool) -> void:
+	var dt := get_process_delta_time()
+	var dir := Vector3.ZERO
+	if sim != null and flying:
+		dir = (Terrain.to_world(sim.vel) - Terrain.to_world(Vector3.ZERO)).normalized()
+		_streak_due += dt * STREAKS_PER_S
+		while _streak_due >= 1.0:
+			_streak_due -= 1.0
+			var across := dir.cross(Vector3.UP).normalized()
+			var up := across.cross(dir).normalized()
+			var a := randf() * TAU
+			var off := (across * cos(a) + up * sin(a)) * size * randf_range(0.6, 1.4)
+			_streaks.append([w + off + dir * size * randf_range(-0.5, 1.5), dir, size * randf_range(2.0, 3.5), 0.0])
+	for st in _streaks:
+		st[3] += dt
+	_streaks = _streaks.filter(func(st): return st[3] < STREAK_LIFE)
+	wind_mesh.clear_surfaces()
+	if _streaks.is_empty():
+		return
+	var cp := cam.global_position
+	wind_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	for st in _streaks:
+		var p0: Vector3 = st[0]
+		var p1: Vector3 = p0 - (st[1] as Vector3) * float(st[2])
+		var wdt := float(st[2]) * 0.05
+		var side := (st[1] as Vector3).cross(cp - p0).normalized() * wdt
+		var k: float = st[3] / STREAK_LIFE
+		var c := Color(0.85, 0.92, 1.0, 0.75 * (1.0 - k) * minf(1.0, k * 6.0))
+		var c_tail := Color(c, 0.0)
+		for v in [[p0 + side, c], [p0 - side, c], [p1, c_tail], [p0 - side, c], [p1 - side * 0.2, c_tail], [p1, c_tail]]:
+			wind_mesh.surface_set_color(v[1])
+			wind_mesh.surface_add_vertex(v[0])
+	wind_mesh.surface_end()
+
+
 func _show_preview(on: bool) -> void:
 	var full: bool = club.get("id", "") != "putter"
 	ring.visible = on and full and _wind_land != Vector3.INF
@@ -1287,8 +1350,7 @@ func _update_preview() -> void:
 	if not still and phase == Phase.PULL and Time.get_ticks_msec() - _preview_ms < PREVIEW_EVERY_MS:
 		_draw_preview(putt)
 		_show_gauge()
-		if AIM_MAP:
-			_show_aim_map(putt)
+		_show_aim_map(putt)
 		return
 	_preview_key = key
 	if not still:
@@ -1325,17 +1387,15 @@ func _update_preview() -> void:
 				Clubs.launch_velocity(club, full_power, aim), club.lift, 0.0, true)
 			_wind_land = w.first_land if w.first_land != Vector3.INF else w.end
 	_draw_preview(putt)
+	_show_aim_map(putt)
 	if phase == Phase.PULL:
 		_show_gauge()
-		if AIM_MAP:
-			_show_aim_map(putt)
 	else:
 		hud.hide_gauge()
 
 
 var _roll_pts: Array = []
 const PREVIEW_EVERY_MS := 100
-const AIM_MAP := false          # the corner map while pulling: off now the view stays up on the course
 var _preview_ms := 0
 
 
@@ -1401,22 +1461,24 @@ func _draw_preview(putt: bool) -> void:
 		ring.global_transform = Transform3D(Basis().scaled(Vector3(size * 0.7, 1.0, size * 0.7)), ww)
 
 
-## The map in the corner while pulling: where this pull lands, against the target and the course.
+## The map in the corner while aiming and pulling: where the shot lands, against the target and the
+## course (aiming: where the target's pull lands; pulling: where this pull does).
 func _show_aim_map(putt: bool) -> void:
 	var m := hud.aim_map
 	var b2 := Vector2(ball.x, ball.y)
 	var dist := b2.distance_to(target)
+	var pulling := phase == Phase.PULL
 	m.ball = b2
-	m.aim = _aim_at_pull
+	m.aim = _aim_at_pull if pulling else aim
 	m.shot_dir = aim
 	m.target = target
-	m.land = b2 + aim * minf(_carry_m, maxf(_max_carry, dist) * 1.2)
+	m.land = b2 + aim * minf(_carry_m, maxf(_max_carry if pulling else dist, dist) * 1.2)
 	var r := _spread(_carry_m)
 	m.spread = Vector2(r, r * SPREAD_LONG)
-	m.span = maxf(maxf(_max_carry, dist) * 1.08, 10.0 if putt else 40.0)
-	var on_mark := absf(pull - mark_pull()) < 0.005
+	m.span = maxf(maxf(_max_carry if pulling else dist * 1.15, dist) * 1.08, 10.0 if putt else 40.0)
+	var on_mark := not pulling or absf(pull - mark_pull()) < 0.005
 	m.fill = Color(0.45, 1.0, 0.7) if on_mark else (Color(1.0, 0.32, 0.28) if pull > mark_pull() else Color(1.0, 0.62, 0.18))
-	m.label = _dist_text(_carry_m, putt)
+	m.label = _dist_text(_carry_m if pulling else dist, putt)
 	hud.show_aim_map()
 
 

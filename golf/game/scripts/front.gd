@@ -16,8 +16,8 @@ const HOLES := [
 	["Midnight Homecoming", 4],
 ]   # par 0: not built yet (the built ones are Round.HOLES, in the same order)
 const HELP := [
-	"Drag the gold ring to where you want to land.",
-	"Pull the ball back like a slingshot, to the gauge's mark.",
+	"Drag the top of the screen to move the gold ring: across to aim, up for longer.",
+	"Pull down from the bottom like a slingshot, to the gauge's mark.",
 	"Pull to the right to send it left, to the left to send it right.",
 	"The white circle: where it may land.",
 	"Wind blows a shot to the mint ring: aim off.",
@@ -44,10 +44,10 @@ var head_font: Font = Chalk.head_font()
 var hand_font: Font = Chalk.hand_font()
 var _t := 0.0
 var _busy := false
-var _ball_pics: Array[TextureRect] = []   # in Hud.Sling.BALLS order
+var _ball_pics: Array[TextureRect] = []   # in Balls.BALLS order
 var _ball_glow := TextureRect.new()
 var _ball_name := Label.new()
-var _ball_i := maxi(0, Hud.Sling.BALLS.find(Hud.Sling.chosen()))
+var _ball_i := maxi(0, Balls.BALLS.find(Balls.chosen()))
 var _spin := float(_ball_i)                 # where the turntable is, easing toward _ball_i
 var _press_x := 0.0
 
@@ -229,7 +229,7 @@ func _build_clubhouse() -> void:
 	_ball_glow.position = BALL_MID - Vector2(0, BALL_BIG * 0.5) - _ball_glow.size * 0.5
 	_ball_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clubhouse.add_child(_ball_glow)
-	for n: String in Hud.Sling.BALLS:
+	for n: String in Balls.BALLS:
 		var pic := TextureRect.new()
 		pic.texture = load("res://assets/balls/%s/still.png" % n)
 		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -257,7 +257,7 @@ func _build_clubhouse() -> void:
 
 ## Turn the turntable toward the picked ball: each ball's place, size and fade from how far round it is.
 func _turn_balls(delta: float) -> void:
-	var n := Hud.Sling.BALLS.size()
+	var n := Balls.BALLS.size()
 	if n == 0 or _ball_pics.is_empty():
 		return
 	var to := float(_ball_i)
@@ -269,18 +269,18 @@ func _turn_balls(delta: float) -> void:
 		var near := clampf(1.0 - absf(o), 0.0, 1.0)
 		var h := lerpf(BALL_SMALL, BALL_BIG, near)
 		var bob := sin(_t * 2.6) * 5.0 - 5.0 if absf(o) < 0.05 else 0.0
-		pic.size = Vector2.ONE * h / Hud.Sling.ART_FILL
+		pic.size = Vector2.ONE * h / Balls.ART_FILL
 		pic.position = Vector2(BALL_MID.x + o * BALL_STEP, BALL_MID.y - h * 0.5 + bob) - pic.size * 0.5
 		var fade := clampf(1.9 - absf(o), 0.0, 1.0)
 		var dim := lerpf(0.8, 1.0, near)
 		pic.modulate = Color(dim, dim * 0.95, dim * 1.02, fade)
 		pic.z_index = 1 if absf(o) < 0.5 else 0
-	var g: Color = BALL_GLOW.get(Hud.Sling.BALLS[_ball_i], Color(1.0, 0.6, 0.3))
+	var g: Color = BALL_GLOW.get(Balls.BALLS[_ball_i], Color(1.0, 0.6, 0.3))
 	_ball_glow.self_modulate = Color(g, 0.7 + 0.2 * sin(_t * 2.6))
 
 
 func _name_ball() -> void:
-	_ball_name.text = "<   %s   >" % Hud.Sling.NAMES.get(Hud.Sling.BALLS[_ball_i], "")
+	_ball_name.text = "<   %s   >" % Balls.NAMES.get(Balls.BALLS[_ball_i], "")
 
 
 ## A swipe turns it by one; a tap on a ball to either side brings that one round.
@@ -301,12 +301,12 @@ func _bar_input(e: InputEvent, touch: Control) -> void:
 
 
 func _pick_ball(i: int) -> void:
-	var n := Hud.Sling.BALLS.size()
+	var n := Balls.BALLS.size()
 	var k := posmod(i, n)
 	if k == _ball_i:
 		return
 	_ball_i = k
-	Hud.Sling.choose(Hud.Sling.BALLS[k])
+	Balls.choose(Balls.BALLS[k])
 	Sfx.play("click", -4.0)
 	_name_ball()
 
