@@ -275,17 +275,20 @@
   ],
   "theme": {
     "trees_near": [
-      "dead_tree",
-      "haunted_tree",
-      "birch",
-      "dead_tree",
-      "lantern_tree"
+      "tree_silver_snag",
+      "tree_ghost_birch",
+      "tree_lightning_oak",
+      "tree_hollow_sentinel",
+      "tree_ancient_yew",
+      "tree_raven_perch",
+      "dead_tree"
     ],
     "trees_far": [
-      "pine_blue",
-      "dead_tree",
-      "birch",
-      "pine_blue"
+      "tree_moonlit_pine",
+      "tree_windbent_fir",
+      "tree_ghost_birch",
+      "tree_silver_snag",
+      "tree_moonlit_pine"
     ],
     "backdrop": {
       "hole": "03-forgotten-cemetery",

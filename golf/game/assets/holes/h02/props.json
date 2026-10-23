@@ -363,16 +363,16 @@
     12.23
    ],
    "r": 0.45,
-   "h": 2.997965364785539
+   "h": 3.3883722918284316
   },
   {
    "type": "sphere",
    "pos": [
     -3.746,
     -34.949,
-    16.361
+    16.898
    ],
-   "r": 1.8654006714221134,
+   "r": 2.1083205371376907,
    "soft": true
   },
   {
@@ -383,16 +383,16 @@
     12.266
    ],
    "r": 0.45,
-   "h": 3.4071619265897546
+   "h": 3.7157295412718034
   },
   {
    "type": "sphere",
    "pos": [
     2.858,
     -33.799,
-    16.96
+    17.386
    ],
-   "r": 2.120011865433625,
+   "r": 2.3120094923469,
    "soft": true
   },
   {
@@ -403,16 +403,16 @@
     12.184
    ],
    "r": 0.45,
-   "h": 2.6614128754806257
+   "h": 2.164809656610469
   },
   {
    "type": "sphere",
    "pos": [
     -18.137,
     -29.92,
-    15.851
+    15.167
    ],
-   "r": 1.6559902336323893,
+   "r": 2.164809656610469,
    "soft": true
   },
   {
@@ -423,16 +423,16 @@
     12.335
    ],
    "r": 0.45,
-   "h": 3.6608331765221074
+   "h": 3.9186665412176858
   },
   {
    "type": "sphere",
    "pos": [
     -1.274,
     -27.642,
-    17.379
+    17.735
    ],
-   "r": 2.2778517542804226,
+   "r": 2.438281403424338,
    "soft": true
   },
   {
@@ -463,16 +463,16 @@
     12.817
    ],
    "r": 0.45,
-   "h": 2.790200858639184
+   "h": 2.3041205151835102
   },
   {
    "type": "sphere",
    "pos": [
     -29.345,
     -21.454,
-    16.661
+    15.991
    ],
-   "r": 1.7361249787088258,
+   "r": 2.560133905759456,
    "soft": true
   },
   {
@@ -503,16 +503,16 @@
     13.521
    ],
    "r": 0.45,
-   "h": 2.681052016395488
+   "h": 2.404539012296616
   },
   {
    "type": "sphere",
    "pos": [
     29.833,
     -18.301,
-    17.215
+    16.834
    ],
-   "r": 1.6682101435349703,
+   "r": 2.6717100136629064,
    "soft": true
   },
   {
@@ -523,16 +523,16 @@
     12.964
    ],
    "r": 0.45,
-   "h": 3.33443647277452
+   "h": 2.630661883664712
   },
   {
    "type": "sphere",
    "pos": [
     -29.057,
     -13.138,
-    17.558
+    16.589
    ],
-   "r": 2.0747604719485904,
+   "r": 2.9229576485163467,
    "soft": true
   },
   {
@@ -543,16 +543,16 @@
     13.605
    ],
    "r": 0.45,
-   "h": 3.238997465404507
+   "h": 2.573398479242704
   },
   {
    "type": "sphere",
    "pos": [
     -34.768,
     -4.896,
-    18.067
+    17.15
    ],
-   "r": 2.0153762006961378,
+   "r": 2.8593316436030043,
    "soft": true
   },
   {
@@ -583,16 +583,16 @@
     13.538
    ],
    "r": 0.45,
-   "h": 2.8880006206413107
+   "h": 3.3004004965130487
   },
   {
    "type": "sphere",
    "pos": [
     -35.905,
     1.892,
-    17.517
+    18.086
    ],
-   "r": 1.7969781639545934,
+   "r": 2.053582531163675,
    "soft": true
   },
   {
@@ -603,16 +603,16 @@
     12.507
    ],
    "r": 0.45,
-   "h": 3.37788046270592
+   "h": 2.656728277623552
   },
   {
    "type": "sphere",
    "pos": [
     -28.974,
     5.671,
-    17.161
+    16.167
    ],
-   "r": 2.101792287905906,
+   "r": 2.9519203084706134,
    "soft": true
   },
   {
@@ -623,16 +623,16 @@
     12.313
    ],
    "r": 0.45,
-   "h": 2.944997603898793
+   "h": 3.3459980831190346
   },
   {
    "type": "sphere",
    "pos": [
     -34.153,
     10.999,
-    16.37
+    16.923
    ],
-   "r": 1.8324429535370268,
+   "r": 2.0819543628296215,
    "soft": true
   },
   {
@@ -643,16 +643,16 @@
     11.708
    ],
    "r": 0.45,
-   "h": 2.943693262834742
+   "h": 2.6015199471260564
   },
   {
    "type": "sphere",
    "pos": [
     -28.095,
     10.915,
-    15.764
+    15.292
    ],
-   "r": 1.8316313635416175,
+   "r": 2.8905777190289514,
    "soft": true
   },
   {
@@ -663,16 +663,16 @@
     11.866
    ],
    "r": 0.45,
-   "h": 3.1734768328894156
+   "h": 3.5287814663115324
   },
   {
    "type": "sphere",
    "pos": [
     26.166,
     12.94,
-    16.238
+    16.727
    ],
-   "r": 1.9746078071311919,
+   "r": 2.1956862457049535,
    "soft": true
   },
   {
@@ -683,16 +683,16 @@
     12.935
    ],
    "r": 0.45,
-   "h": 3.034116601094465
+   "h": 2.6693374508208487
   },
   {
    "type": "sphere",
    "pos": [
     33.706,
     11.539,
-    17.116
+    16.613
    ],
-   "r": 1.887894774014334,
+   "r": 2.9659305009120542,
    "soft": true
   },
   {
@@ -703,16 +703,16 @@
     10.797
    ],
    "r": 0.45,
-   "h": 3.3497286403824145
+   "h": 4.249728640382414
   },
   {
    "type": "sphere",
    "pos": [
     -29.558,
     17.94,
-    15.412
+    16.652
    ],
-   "r": 2.084275598460169,
+   "r": 2.644275598460169,
    "soft": true
   },
   {
@@ -723,16 +723,16 @@
     9.432
    ],
    "r": 0.45,
-   "h": 2.849745163363199
+   "h": 2.531058872522399
   },
   {
    "type": "sphere",
    "pos": [
     -21.119,
     21.099,
-    13.359
+    12.92
    ],
-   "r": 1.7731747683148793,
+   "r": 2.812287636135999,
    "soft": true
   },
   {
@@ -743,16 +743,16 @@
     10.617
    ],
    "r": 0.45,
-   "h": 2.5648247639799604
+   "h": 3.23982476397996
   },
   {
    "type": "sphere",
    "pos": [
     26.032,
     19.009,
-    14.151
+    15.081
    ],
-   "r": 1.5958909642541976,
+   "r": 2.519863705317747,
    "soft": true
   },
   {
@@ -763,16 +763,16 @@
     11.566
    ],
    "r": 0.45,
-   "h": 3.6318812339152573
+   "h": 3.8955049871322065
   },
   {
    "type": "sphere",
    "pos": [
     35.778,
     20.729,
-    16.57
+    16.933
    ],
-   "r": 2.259837212213938,
+   "r": 2.4238697697711507,
    "soft": true
   },
   {
@@ -783,16 +783,16 @@
     8.909
    ],
    "r": 0.45,
-   "h": 3.334351314277866
+   "h": 2.6306107885667194
   },
   {
    "type": "sphere",
    "pos": [
     -28.811,
     30.363,
-    13.503
+    12.534
    ],
-   "r": 2.074707484439561,
+   "r": 2.9229008761852437,
    "soft": true
   },
   {
@@ -803,16 +803,16 @@
     8.908
    ],
    "r": 0.45,
-   "h": 2.6914120948686815
+   "h": 2.412309071151511
   },
   {
    "type": "sphere",
    "pos": [
     26.442,
     27.651,
-    12.616
+    12.231
    ],
-   "r": 1.6746564145849574,
+   "r": 2.6803434123905676,
    "soft": true
   },
   {
@@ -823,16 +823,16 @@
     10.228
    ],
    "r": 0.45,
-   "h": 3.2301258991793413
+   "h": 4.130125899179341
   },
   {
    "type": "sphere",
    "pos": [
     36.695,
     30.18,
-    14.678
+    15.918
    ],
-   "r": 2.0098561150449235,
+   "r": 2.569856115044924,
    "soft": true
   },
   {
@@ -843,16 +843,16 @@
     8.615
    ],
    "r": 0.45,
-   "h": 3.8120177842774967
+   "h": 2.9172106705664986
   },
   {
    "type": "sphere",
    "pos": [
     -34.344,
     36.289,
-    13.867
+    12.635
    ],
-   "r": 2.3719221768837757,
+   "r": 3.2413451895183316,
    "soft": true
   },
   {
@@ -863,16 +863,16 @@
     6.896
    ],
    "r": 0.45,
-   "h": 3.137740532388311
+   "h": 3.8127405323883106
   },
   {
    "type": "sphere",
    "pos": [
     -26.073,
     38.969,
-    11.219
+    12.149
    ],
-   "r": 1.9523718868193938,
+   "r": 2.3723718868193937,
    "soft": true
   },
   {
@@ -883,16 +883,16 @@
     7.387
    ],
    "r": 0.45,
-   "h": 3.5917199537706526
+   "h": 4.4917199537706525
   },
   {
    "type": "sphere",
    "pos": [
     27.145,
     36.639,
-    12.336
+    13.576
    ],
-   "r": 2.234847971235073,
+   "r": 2.794847971235073,
    "soft": true
   },
   {
@@ -903,16 +903,16 @@
     9.183
    ],
    "r": 0.45,
-   "h": 3.609937037392236
+   "h": 2.795962222435342
   },
   {
    "type": "sphere",
    "pos": [
     36.651,
     36.894,
-    14.156
+    13.035
    ],
-   "r": 2.2461830454885026,
+   "r": 3.106624691594824,
    "soft": true
   },
   {
@@ -943,16 +943,16 @@
     5.907
    ],
    "r": 0.45,
-   "h": 3.387569210178585
+   "h": 4.287569210178584
   },
   {
    "type": "sphere",
    "pos": [
     -21.412,
     41.028,
-    10.574
+    11.814
    ],
-   "r": 2.107820841888897,
+   "r": 2.667820841888897,
    "soft": true
   },
   {
@@ -963,16 +963,16 @@
     7.311
    ],
    "r": 0.45,
-   "h": 3.8095755024742135
+   "h": 4.709575502474213
   },
   {
    "type": "sphere",
    "pos": [
     30.948,
     42.209,
-    12.559
+    13.799
    ],
-   "r": 2.370402534872844,
+   "r": 2.930402534872844,
    "soft": true
   },
   {
@@ -983,16 +983,16 @@
     5.891
    ],
    "r": 0.45,
-   "h": 3.07792175984012
+   "h": 2.4767530559040716
   },
   {
    "type": "sphere",
    "pos": [
     -34.405,
     53.517,
-    10.132
+    9.304
    ],
-   "r": 1.9151513172338526,
+   "r": 2.751947839893413,
    "soft": true
   },
   {
@@ -1003,16 +1003,16 @@
     4.879
    ],
    "r": 0.45,
-   "h": 3.4817002095203
+   "h": 3.7753601676162405
   },
   {
    "type": "sphere",
    "pos": [
     -26.224,
     54.185,
-    9.676
+    10.081
    ],
-   "r": 2.166391241479298,
+   "r": 2.936391241479298,
    "soft": true
   },
   {
@@ -1063,16 +1063,16 @@
     4.168
    ],
    "r": 0.45,
-   "h": 2.776512488266932
+   "h": 2.2511343662001995
   },
   {
    "type": "sphere",
    "pos": [
     -21.707,
     59.778,
-    7.993
+    7.269
    ],
-   "r": 1.7276077704772024,
+   "r": 2.2511343662001995,
    "soft": true
   },
   {
@@ -1083,16 +1083,16 @@
     6.344
    ],
    "r": 0.45,
-   "h": 3.5583234998696835
+   "h": 4.458323499869684
   },
   {
    "type": "sphere",
    "pos": [
     35.775,
     60.792,
-    11.246
+    12.486
    ],
-   "r": 2.21406795547447,
+   "r": 2.7740679554744703,
    "soft": true
   },
   {
@@ -1103,16 +1103,16 @@
     3.764
    ],
    "r": 0.45,
-   "h": 2.798785515236425
+   "h": 3.4737855152364254
   },
   {
    "type": "sphere",
    "pos": [
     -19.557,
     66.885,
-    7.62
+    8.55
    ],
-   "r": 1.7414665428137759,
+   "r": 2.7018331785172194,
    "soft": true
   },
   {
@@ -1123,16 +1123,16 @@
     6.325
    ],
    "r": 0.45,
-   "h": 2.6090346939858726
+   "h": 2.1255260204894046
   },
   {
    "type": "sphere",
    "pos": [
     37.612,
     66.127,
-    9.919
+    9.253
    ],
-   "r": 1.6233993651467655,
+   "r": 2.1255260204894046,
    "soft": true
   },
   {
@@ -1143,16 +1143,16 @@
     3.971
    ],
    "r": 0.45,
-   "h": 2.899214210837255
+   "h": 2.5681606581279413
   },
   {
    "type": "sphere",
    "pos": [
     -28.835,
     76.373,
-    7.966
+    7.51
    ],
-   "r": 1.8039555089654034,
+   "r": 2.8535118423643793,
    "soft": true
   },
   {
@@ -1163,16 +1163,16 @@
     3.318
    ],
    "r": 0.45,
-   "h": 2.7090720748593955
+   "h": 2.2554432449156376
   },
   {
    "type": "sphere",
    "pos": [
     -19.485,
     78.303,
-    7.05
+    6.425
    ],
-   "r": 1.6856448465791796,
+   "r": 2.506048049906264,
    "soft": true
   },
   {
@@ -1183,16 +1183,16 @@
     5.064
    ],
    "r": 0.45,
-   "h": 3.6581481331917662
+   "h": 3.916518506553413
   },
   {
    "type": "sphere",
    "pos": [
     30.45,
     73.072,
-    10.104
+    10.46
    ],
-   "r": 2.2761810606526547,
+   "r": 2.4369448485221237,
    "soft": true
   },
   {
@@ -1203,16 +1203,16 @@
     4.139
    ],
    "r": 0.45,
-   "h": 3.310974657448823
+   "h": 4.644968321811028
   },
   {
    "type": "sphere",
    "pos": [
     -33.269,
     86.286,
-    8.701
+    10.539
    ],
-   "r": 2.0601620090792676,
+   "r": 2.8902025113490843,
    "soft": true
   },
   {
@@ -1223,16 +1223,16 @@
     3.494
    ],
    "r": 0.45,
-   "h": 2.930715349156452
+   "h": 2.366786511867339
   },
   {
    "type": "sphere",
    "pos": [
     -27.392,
     85.694,
-    7.532
+    6.755
    ],
-   "r": 1.8235562172529036,
+   "r": 2.366786511867339,
    "soft": true
   },
   {
@@ -1243,16 +1243,16 @@
     4.126
    ],
    "r": 0.45,
-   "h": 3.2910873622832915
+   "h": 3.966087362283292
   },
   {
    "type": "sphere",
    "pos": [
     25.986,
     83.146,
-    8.66
+    9.59
    ],
-   "r": 2.0477876920873817,
+   "r": 3.0847346151092268,
    "soft": true
   },
   {
@@ -1263,16 +1263,16 @@
     4.731
    ],
    "r": 0.45,
-   "h": 2.7415356748193123
+   "h": 3.18322853985545
   },
   {
    "type": "sphere",
    "pos": [
     33.045,
     84.913,
-    8.508
+    9.117
    ],
-   "r": 1.7058444198875722,
+   "r": 2.4758444198875718,
    "soft": true
   },
   {
@@ -1323,16 +1323,16 @@
     4.615
    ],
    "r": 0.45,
-   "h": 3.7410299492705743
+   "h": 4.641029949270575
   },
   {
    "type": "sphere",
    "pos": [
     37.18,
     93.287,
-    9.769
+    11.009
    ],
-   "r": 2.3277519684350243,
+   "r": 2.8877519684350244,
    "soft": true
   },
   {
@@ -1343,16 +1343,16 @@
     5.658
    ],
    "r": 0.45,
-   "h": 2.9451798329899495
+   "h": 2.3971078997939697
   },
   {
    "type": "sphere",
    "pos": [
     43.237,
     92.233,
-    9.715
+    8.96
    ],
-   "r": 1.8325563405270797,
+   "r": 2.6634532219932994,
    "soft": true
   },
   {
@@ -1363,16 +1363,16 @@
     2.89
    ],
    "r": 0.45,
-   "h": 2.838245202967101
+   "h": 3.5132452029671013
   },
   {
    "type": "sphere",
    "pos": [
     -29.033,
     102.532,
-    6.8
+    7.73
    ],
-   "r": 1.766019237401752,
+   "r": 2.186019237401752,
    "soft": true
   },
   {
@@ -1383,16 +1383,16 @@
     4.006
    ],
    "r": 0.45,
-   "h": 2.9880206067400437
+   "h": 3.8880206067400445
   },
   {
    "type": "sphere",
    "pos": [
     36.478,
     98.243,
-    8.122
+    9.362
    ],
-   "r": 1.8592128219715829,
+   "r": 2.419212821971583,
    "soft": true
   },
   {
@@ -1403,16 +1403,16 @@
     3.4
    ],
    "r": 0.45,
-   "h": 2.980403718216574
+   "h": 3.655403718216574
   },
   {
    "type": "sphere",
    "pos": [
     -33.807,
     105.421,
-    7.507
+    8.437
    ],
-   "r": 1.8544734246680905,
+   "r": 2.843091780835113,
    "soft": true
   },
   {
@@ -1443,16 +1443,16 @@
     1.681
    ],
    "r": 0.45,
-   "h": 3.217740632580526
+   "h": 2.5606443795483154
   },
   {
    "type": "sphere",
    "pos": [
     -17.832,
     105.642,
-    6.114
+    5.209
    ],
-   "r": 2.002149726938994,
+   "r": 2.8451604217203506,
    "soft": true
   },
   {
@@ -1463,16 +1463,16 @@
     1.529
    ],
    "r": 0.45,
-   "h": 3.352688537656745
+   "h": 2.9082664032425587
   },
   {
    "type": "sphere",
    "pos": [
     27.416,
     109.762,
-    6.148
+    5.536
    ],
-   "r": 2.0861173123197525,
+   "r": 3.2314071147139543,
    "soft": true
   },
   {
@@ -1483,16 +1483,16 @@
     3.104
    ],
    "r": 0.45,
-   "h": 3.749203827414334
+   "h": 3.9893630619314675
   },
   {
    "type": "sphere",
    "pos": [
     35.136,
     104.8,
-    8.27
+    8.601
    ],
-   "r": 2.3328379370578083,
+   "r": 3.102837937057808,
    "soft": true
   },
   {
@@ -1503,16 +1503,16 @@
     3.409
    ],
    "r": 0.45,
-   "h": 2.7739861103804118
+   "h": 3.2091888883043294
   },
   {
    "type": "sphere",
    "pos": [
     41.519,
     110.067,
-    7.231
+    7.831
    ],
-   "r": 1.7260358020144784,
+   "r": 2.4960358020144784,
    "soft": true
   },
   {
@@ -1523,16 +1523,16 @@
     1.386
    ],
    "r": 0.45,
-   "h": 2.5228180027385085
+   "h": 2.0608635020538815
   },
   {
    "type": "sphere",
    "pos": [
     -27.22,
     117.092,
-    4.862
+    4.225
    ],
-   "r": 1.5697534239261832,
+   "r": 2.0608635020538815,
    "soft": true
   },
   {
@@ -1543,16 +1543,16 @@
     2.533
    ],
    "r": 0.45,
-   "h": 3.500188796027266
+   "h": 3.790151036821813
   },
   {
    "type": "sphere",
    "pos": [
     42.889,
     116.894,
-    7.356
+    7.755
    ],
-   "r": 2.17789525086141,
+   "r": 2.94789525086141,
    "soft": true
   },
   {
@@ -1563,16 +1563,16 @@
     1.117
    ],
    "r": 0.45,
-   "h": 3.1808656626464096
+   "h": 4.080865662646409
   },
   {
    "type": "sphere",
    "pos": [
     -28.529,
     122.612,
-    5.5
+    6.74
    ],
-   "r": 1.9792053012022104,
+   "r": 2.5392053012022107,
    "soft": true
   },
   {
@@ -1583,168 +1583,168 @@
     1.025
    ],
    "r": 0.45,
-   "h": 2.569847109433964
+   "h": 3.2448471094339637
   },
   {
    "type": "sphere",
    "pos": [
     40.97,
     124.921,
-    4.566
+    5.496
    ],
-   "r": 1.5990159792033554,
+   "r": 2.523769974004194,
    "soft": true
   }
  ],
  "cards": [
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -27.59,
     -41.84,
     12.36
    ],
-   "height": 6.13,
+   "height": 11.26,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -18.22,
     -43.84,
     12.0
    ],
-   "height": 6.61,
+   "height": 12.23,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     -1.26,
     -42.99,
     12.07
    ],
-   "height": 7.75,
+   "height": 6.05,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     10.61,
     -43.73,
     12.01
    ],
-   "height": 10.61,
+   "height": 9.01,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     22.8,
     -41.16,
     12.08
    ],
-   "height": 8.46,
+   "height": 6.48,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_windbent_fir",
    "pos": [
     33.58,
     -43.66,
     12.86
    ],
-   "height": 9.0,
+   "height": 8.0,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     40.93,
     -43.98,
     13.7
    ],
-   "height": 9.39,
+   "height": 8.24,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     52.15,
     -43.15,
     15.14
    ],
-   "height": 12.66,
+   "height": 13.66,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     -35.21,
     -37.89,
     13.09
    ],
-   "height": 11.27,
+   "height": 5.85,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -3.75,
     -34.95,
     12.08
    ],
-   "height": 6.66,
+   "height": 7.53,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     2.86,
     -33.8,
     12.12
    ],
-   "height": 7.57,
+   "height": 8.26,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     27.99,
     -34.81,
     12.49
    ],
-   "height": 11.92,
+   "height": 9.83,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     46.44,
     -38.06,
     14.45
    ],
-   "height": 5.51,
+   "height": 10.01,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_raven_perch",
    "pos": [
     -18.14,
     -29.92,
     12.03
    ],
-   "height": 5.91,
+   "height": 4.81,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -1.27,
     -27.64,
     12.19
    ],
-   "height": 8.14,
+   "height": 8.71,
    "shadow": true
   },
   {
@@ -1758,37 +1758,37 @@
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_windbent_fir",
    "pos": [
     43.27,
     -28.92,
     14.33
    ],
-   "height": 7.14,
+   "height": 8.91,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     -37.87,
     -16.91,
     13.63
    ],
-   "height": 8.5,
+   "height": 6.5,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -29.35,
     -21.45,
     12.67
    ],
-   "height": 6.2,
+   "height": 5.12,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "haunted_tree",
    "pos": [
     -21.76,
     -18.97,
@@ -1798,93 +1798,93 @@
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     29.83,
     -18.3,
     13.37
    ],
-   "height": 5.96,
+   "height": 5.34,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     35.69,
     -20.62,
     13.84
    ],
-   "height": 11.26,
+   "height": 12.26,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     44.4,
     -22.46,
     14.78
    ],
-   "height": 9.84,
+   "height": 8.53,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     53.05,
     -18.14,
     16.07
    ],
-   "height": 5.63,
+   "height": 10.25,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -41.65,
     -9.82,
     14.22
    ],
-   "height": 7.14,
+   "height": 13.27,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -29.06,
     -13.14,
     12.81
    ],
-   "height": 7.41,
+   "height": 5.85,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     38.92,
     -14.62,
     14.54
    ],
-   "height": 6.17,
+   "height": 5.1,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     -46.7,
     -5.99,
     14.93
    ],
-   "height": 10.16,
+   "height": 5.44,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -34.77,
     -4.9,
     13.45
    ],
-   "height": 7.2,
+   "height": 5.72,
    "shadow": true
   },
   {
@@ -1898,263 +1898,263 @@
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     38.14,
     -5.21,
     14.83
    ],
-   "height": 6.98,
+   "height": 9.86,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -42.51,
     3.89,
     14.05
    ],
-   "height": 6.39,
+   "height": 11.78,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -35.91,
     1.89,
     13.39
    ],
-   "height": 6.42,
+   "height": 7.33,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -28.97,
     5.67,
     12.36
    ],
-   "height": 7.51,
+   "height": 5.9,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     44.35,
     5.75,
     14.98
    ],
-   "height": 6.74,
+   "height": 12.48,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -43.87,
     14.18,
     12.85
    ],
-   "height": 6.75,
+   "height": 12.51,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -34.15,
     11.0,
     12.16
    ],
-   "height": 6.54,
+   "height": 7.44,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -28.1,
     10.91,
     11.56
    ],
-   "height": 6.54,
+   "height": 5.78,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     26.17,
     12.94,
     11.72
    ],
-   "height": 7.05,
+   "height": 7.84,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     33.71,
     11.54,
     12.79
    ],
-   "height": 6.74,
+   "height": 5.93,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     52.33,
     11.86,
     14.96
    ],
-   "height": 10.97,
+   "height": 5.74,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     -29.56,
     17.94,
     10.65
    ],
-   "height": 7.44,
+   "height": 9.44,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -21.12,
     21.1,
     9.28
    ],
-   "height": 6.33,
+   "height": 5.62,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     26.03,
     19.01,
     10.47
    ],
-   "height": 5.7,
+   "height": 7.2,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     35.78,
     20.73,
     11.42
    ],
-   "height": 8.07,
+   "height": 8.66,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     -44.11,
     30.92,
     10.29
    ],
-   "height": 11.7,
+   "height": 9.69,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     -37.26,
     26.53,
     10.42
    ],
-   "height": 5.59,
+   "height": 8.11,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -28.81,
     30.36,
     8.76
    ],
-   "height": 7.41,
+   "height": 5.85,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     26.44,
     27.65,
     8.76
    ],
-   "height": 5.98,
+   "height": 5.36,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     36.7,
     30.18,
     10.08
    ],
-   "height": 7.18,
+   "height": 9.18,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -34.34,
     36.29,
     8.47
    ],
-   "height": 8.47,
+   "height": 6.48,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -26.07,
     38.97,
     6.75
    ],
-   "height": 6.97,
+   "height": 8.47,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     27.14,
     36.64,
     7.24
    ],
-   "height": 7.98,
+   "height": 9.98,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     36.65,
     36.89,
     9.03
    ],
-   "height": 8.02,
+   "height": 6.21,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_windbent_fir",
    "pos": [
     45.62,
     35.58,
     10.55
    ],
-   "height": 12.71,
+   "height": 9.85,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     -47.05,
     44.76,
     8.25
    ],
-   "height": 8.35,
+   "height": 6.41,
    "shadow": true
   },
   {
@@ -2168,43 +2168,43 @@
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     -21.41,
     41.03,
     5.76
    ],
-   "height": 7.53,
+   "height": 9.53,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     30.95,
     42.21,
     7.16
    ],
-   "height": 8.47,
+   "height": 10.47,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -34.41,
     53.52,
     5.74
    ],
-   "height": 6.84,
+   "height": 5.5,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     -26.22,
     54.19,
     4.73
    ],
-   "height": 7.74,
+   "height": 8.39,
    "shadow": true
   },
   {
@@ -2218,7 +2218,7 @@
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "haunted_tree",
    "pos": [
     34.13,
     50.82,
@@ -2228,173 +2228,173 @@
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     43.66,
     49.19,
     8.43
    ],
-   "height": 12.5,
+   "height": 13.5,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     52.63,
     51.34,
     9.32
    ],
-   "height": 6.67,
+   "height": 12.33,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_raven_perch",
    "pos": [
     -21.71,
     59.78,
     4.02
    ],
-   "height": 6.17,
+   "height": 5.0,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     35.77,
     60.79,
     6.19
    ],
-   "height": 7.91,
+   "height": 9.91,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     -19.56,
     66.88,
     3.61
    ],
-   "height": 6.22,
+   "height": 7.72,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_raven_perch",
    "pos": [
     37.61,
     66.13,
     6.17
    ],
-   "height": 5.8,
+   "height": 4.72,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     42.3,
     69.84,
     6.71
    ],
-   "height": 11.47,
+   "height": 12.47,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     -45.74,
     76.28,
     6.14
    ],
-   "height": 11.73,
+   "height": 6.02,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -28.83,
     76.37,
     3.82
    ],
-   "height": 6.44,
+   "height": 5.71,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -19.48,
     78.3,
     3.17
    ],
-   "height": 6.02,
+   "height": 5.01,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     30.45,
     73.07,
     4.91
    ],
-   "height": 8.13,
+   "height": 8.7,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     54.49,
     76.73,
     8.38
    ],
-   "height": 6.87,
+   "height": 5.52,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     -33.27,
     86.29,
     3.99
    ],
-   "height": 7.36,
+   "height": 10.32,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_raven_perch",
    "pos": [
     -27.39,
     85.69,
     3.34
    ],
-   "height": 6.51,
+   "height": 5.26,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     25.99,
     83.15,
     3.98
    ],
-   "height": 7.31,
+   "height": 8.81,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     33.05,
     84.91,
     4.58
    ],
-   "height": 6.09,
+   "height": 7.07,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     44.15,
     82.76,
     6.36
    ],
-   "height": 10.12,
+   "height": 8.7,
    "shadow": true
   },
   {
@@ -2418,73 +2418,73 @@
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     37.18,
     93.29,
     4.46
    ],
-   "height": 8.31,
+   "height": 10.31,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     43.24,
     92.23,
     5.51
    ],
-   "height": 6.54,
+   "height": 5.33,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_windbent_fir",
    "pos": [
     -43.09,
     99.9,
     5.02
    ],
-   "height": 7.57,
+   "height": 9.25,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_hollow_sentinel",
    "pos": [
     -29.03,
     102.53,
     2.74
    ],
-   "height": 6.31,
+   "height": 7.81,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     36.48,
     98.24,
     3.86
    ],
-   "height": 6.64,
+   "height": 8.64,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     45.7,
     102.02,
     4.9
    ],
-   "height": 11.67,
+   "height": 9.67,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     -33.81,
     105.42,
     3.25
    ],
-   "height": 6.62,
+   "height": 8.12,
    "shadow": true
   },
   {
@@ -2498,253 +2498,253 @@
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_bent_willow",
    "pos": [
     -17.83,
     105.64,
     1.53
    ],
-   "height": 7.15,
+   "height": 5.69,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_bent_willow",
    "pos": [
     27.42,
     109.76,
     1.38
    ],
-   "height": 7.45,
+   "height": 6.46,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     35.14,
     104.8,
     2.95
    ],
-   "height": 8.33,
+   "height": 8.87,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     41.52,
     110.07,
     3.26
    ],
-   "height": 6.16,
+   "height": 7.13,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     52.19,
     109.21,
     5.34
    ],
-   "height": 10.19,
+   "height": 8.74,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     -37.6,
     118.41,
     3.06
    ],
-   "height": 12.11,
+   "height": 6.17,
    "shadow": true
   },
   {
-   "image": "lantern_tree",
+   "image": "tree_raven_perch",
    "pos": [
     -27.22,
     117.09,
     1.24
    ],
-   "height": 5.61,
+   "height": 4.58,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     42.89,
     116.89,
     2.38
    ],
-   "height": 7.78,
+   "height": 8.42,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     49.34,
     113.45,
     4.43
    ],
-   "height": 10.87,
+   "height": 5.7,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     -28.53,
     122.61,
     0.97
    ],
-   "height": 7.07,
+   "height": 9.07,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_lightning_oak",
    "pos": [
     40.97,
     124.92,
     0.88
    ],
-   "height": 5.71,
+   "height": 7.21,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     -35.73,
     131.64,
     1.52
    ],
-   "height": 6.97,
+   "height": 5.58,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_windbent_fir",
    "pos": [
     46.84,
     130.51,
     1.14
    ],
-   "height": 7.37,
+   "height": 9.1,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     -38.73,
     147.62,
     1.81
    ],
-   "height": 11.71,
+   "height": 12.71,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_windbent_fir",
    "pos": [
     -47.04,
     154.75,
     5.05
    ],
-   "height": 6.31,
+   "height": 8.25,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_windbent_fir",
    "pos": [
     -30.01,
     165.3,
     1.33
    ],
-   "height": 12.2,
+   "height": 9.6,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     52.5,
     163.91,
     1.72
    ],
-   "height": 10.15,
+   "height": 8.72,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_twisted_cypress",
    "pos": [
     52.2,
     174.88,
     3.35
    ],
-   "height": 7.39,
+   "height": 10.36,
    "shadow": true
   },
   {
-   "image": "haunted_tree",
+   "image": "tree_moonlit_pine",
    "pos": [
     -17.34,
     181.56,
     2.2
    ],
-   "height": 7.09,
+   "height": 13.18,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     53.28,
     181.28,
     4.66
    ],
-   "height": 10.82,
+   "height": 11.82,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     -11.26,
     189.02,
     3.13
    ],
-   "height": 11.43,
+   "height": 12.43,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_moonlit_pine",
    "pos": [
     -1.69,
     186.97,
     2.31
    ],
-   "height": 11.99,
+   "height": 12.99,
    "shadow": true
   },
   {
-   "image": "dead_tree",
+   "image": "tree_ancient_yew",
    "pos": [
     14.58,
     188.0,
     2.29
    ],
-   "height": 6.47,
+   "height": 5.28,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_ancient_yew",
    "pos": [
     29.94,
     186.16,
     1.86
    ],
-   "height": 11.76,
+   "height": 6.03,
    "shadow": true
   },
   {
-   "image": "pine_blue",
+   "image": "tree_twisted_cypress",
    "pos": [
     42.0,
     190.51,
     3.35
    ],
-   "height": 11.64,
+   "height": 9.65,
    "shadow": true
   },
   {
@@ -6867,825 +6867,69 @@
  "instances": {
   "haunted_tree_1": [
    [
-    -27.59,
-    -41.84,
-    12.36,
-    1.013,
-    0.998
-   ],
-   [
     15.11,
     -28.34,
     12.21,
-    3.223,
+    1.013,
     0.987
-   ],
-   [
-    29.83,
-    -18.3,
-    13.37,
-    3.227,
-    0.97
    ],
    [
     28.93,
     -2.06,
     13.84,
-    1.823,
+    0.56,
     1.05
-   ],
-   [
-    -42.51,
-    3.89,
-    14.05,
-    0.599,
-    1.04
-   ],
-   [
-    -43.87,
-    14.18,
-    12.85,
-    2.714,
-    1.099
-   ],
-   [
-    33.71,
-    11.54,
-    12.79,
-    1.218,
-    1.097
-   ],
-   [
-    26.03,
-    19.01,
-    10.47,
-    4.584,
-    0.928
-   ],
-   [
-    -37.26,
-    26.53,
-    10.42,
-    4.85,
-    0.91
-   ],
-   [
-    26.0,
-    53.8,
-    5.38,
-    4.152,
-    1.182
-   ],
-   [
-    -22.41,
-    93.1,
-    2.64,
-    3.706,
-    0.954
-   ],
-   [
-    -33.81,
-    105.42,
-    3.25,
-    4.569,
-    1.078
-   ],
-   [
-    40.97,
-    124.92,
-    0.88,
-    5.802,
-    0.93
-   ],
-   [
-    -17.34,
-    181.56,
-    2.2,
-    3.892,
-    1.154
-   ]
-  ],
-  "haunted_tree_0": [
-   [
-    -18.22,
-    -43.84,
-    12.0,
-    0.441,
-    1.127
-   ],
-   [
-    46.44,
-    -38.06,
-    14.45,
-    5.411,
-    0.939
-   ],
-   [
-    53.05,
-    -18.14,
-    16.07,
-    4.58,
-    0.96
-   ],
-   [
-    -41.65,
-    -9.82,
-    14.22,
-    2.515,
-    1.217
-   ],
-   [
-    38.14,
-    -5.21,
-    14.83,
-    2.74,
-    1.19
-   ],
-   [
-    44.35,
-    5.75,
-    14.98,
-    2.712,
-    1.149
-   ],
-   [
-    -28.1,
-    10.91,
-    11.56,
-    5.76,
-    1.115
-   ],
-   [
-    -21.12,
-    21.1,
-    9.28,
-    0.769,
-    1.079
-   ],
-   [
-    26.44,
-    27.65,
-    8.76,
-    5.911,
-    1.019
-   ],
-   [
-    -26.07,
-    38.97,
-    6.75,
-    4.981,
-    1.188
    ],
    [
     -34.94,
     46.17,
     6.75,
-    3.331,
-    1.037
-   ],
-   [
-    52.63,
-    51.34,
-    9.32,
-    1.842,
-    1.137
-   ],
-   [
-    -19.56,
-    66.88,
-    3.61,
-    1.655,
-    1.06
-   ],
-   [
-    -28.83,
-    76.37,
-    3.82,
-    6.217,
-    1.098
-   ],
-   [
-    25.99,
-    83.15,
-    3.98,
-    2.195,
-    1.246
+    2.459,
+    0.99
    ],
    [
     30.83,
     92.91,
     3.71,
-    2.45,
-    1.176
-   ],
-   [
-    -29.03,
-    102.53,
-    2.74,
-    4.293,
-    1.076
+    4.467,
+    1.123
    ],
    [
     -25.15,
     107.88,
     1.9,
-    1.856,
-    0.997
-   ],
-   [
-    27.42,
-    109.76,
-    1.38,
-    2.926,
-    1.27
-   ],
-   [
-    52.2,
-    174.88,
-    3.35,
-    1.669,
-    1.26
-   ]
-  ],
-  "dead_tree_1": [
-   [
-    -1.26,
-    -42.99,
-    12.07,
-    0.56,
-    1.297
-   ],
-   [
-    43.27,
-    -28.92,
-    14.33,
-    3.198,
-    1.195
-   ],
-   [
-    -37.87,
-    -16.91,
-    13.63,
-    4.072,
-    1.423
-   ],
-   [
-    -29.35,
-    -21.45,
-    12.67,
-    1.722,
-    1.038
-   ],
-   [
-    38.92,
-    -14.62,
-    14.54,
-    2.099,
-    1.033
-   ],
-   [
-    -34.77,
-    -4.9,
-    13.45,
-    0.636,
-    1.205
-   ],
-   [
-    -35.91,
-    1.89,
-    13.39,
-    6.249,
-    1.075
-   ],
-   [
-    -28.97,
-    5.67,
-    12.36,
-    4.331,
-    1.257
-   ],
-   [
-    -34.15,
-    11.0,
-    12.16,
-    1.412,
-    1.095
-   ],
-   [
-    26.17,
-    12.94,
-    11.72,
-    0.406,
-    1.18
-   ],
-   [
-    35.78,
-    20.73,
-    11.42,
-    2.684,
-    1.351
-   ],
-   [
-    -28.81,
-    30.36,
-    8.76,
-    6.053,
-    1.24
-   ],
-   [
-    30.45,
-    73.07,
-    4.91,
-    1.82,
-    1.361
-   ],
-   [
-    54.49,
-    76.73,
-    8.38,
-    2.075,
-    1.15
-   ],
-   [
-    -43.09,
-    99.9,
-    5.02,
-    3.424,
-    1.267
-   ],
-   [
-    36.48,
-    98.24,
-    3.86,
-    1.849,
-    1.111
-   ],
-   [
-    -17.83,
-    105.64,
-    1.53,
-    5.136,
-    1.197
-   ],
-   [
-    41.52,
-    110.07,
-    3.26,
-    6.082,
-    1.031
-   ],
-   [
-    42.89,
-    116.89,
-    2.38,
-    2.308,
-    1.302
-   ],
-   [
-    -35.73,
-    131.64,
-    1.52,
-    2.396,
-    1.167
-   ],
-   [
-    46.84,
-    130.51,
-    1.14,
-    5.878,
-    1.234
-   ],
-   [
-    -47.04,
-    154.75,
-    5.05,
-    3.526,
-    1.056
-   ],
-   [
-    14.58,
-    188.0,
-    2.29,
-    4.579,
-    1.083
-   ]
-  ],
-  "pine_blue_2": [
-   [
-    10.61,
-    -43.73,
-    12.01,
-    2.459,
-    1.364
-   ],
-   [
-    52.15,
-    -43.15,
-    15.14,
-    4.467,
-    1.628
-   ],
-   [
-    -35.21,
-    -37.89,
-    13.09,
     4.709,
-    1.449
-   ],
-   [
-    52.33,
-    11.86,
-    14.96,
-    4.371,
-    1.411
-   ],
-   [
-    43.66,
-    49.19,
-    8.43,
-    5.083,
-    1.607
-   ],
-   [
-    -37.6,
-    118.41,
-    3.06,
-    4.658,
-    1.557
-   ],
-   [
-    49.34,
-    113.45,
-    4.43,
-    5.166,
-    1.398
-   ],
-   [
-    -30.01,
-    165.3,
-    1.33,
-    3.109,
-    1.569
-   ],
-   [
-    53.28,
-    181.28,
-    4.66,
-    3.489,
-    1.391
-   ],
-   [
-    -1.69,
-    186.97,
-    2.31,
-    5.068,
-    1.542
-   ],
-   [
-    42.0,
-    190.51,
-    3.35,
-    3.987,
-    1.497
+    0.952
    ]
   ],
-  "dead_tree_0": [
-   [
-    22.8,
-    -41.16,
-    12.08,
-    1.27,
-    1.389
-   ],
-   [
-    -3.75,
-    -34.95,
-    12.08,
-    4.714,
-    1.094
-   ],
-   [
-    2.86,
-    -33.8,
-    12.12,
-    3.607,
-    1.243
-   ],
-   [
-    -1.27,
-    -27.64,
-    12.19,
-    4.291,
-    1.337
-   ],
-   [
-    -29.06,
-    -13.14,
-    12.81,
-    0.494,
-    1.217
-   ],
-   [
-    -29.56,
-    17.94,
-    10.65,
-    1.804,
-    1.222
-   ],
-   [
-    36.7,
-    30.18,
-    10.08,
-    5.825,
-    1.179
-   ],
-   [
-    -34.34,
-    36.29,
-    8.47,
-    0.209,
-    1.391
-   ],
-   [
-    27.14,
-    36.64,
-    7.24,
-    5.744,
-    1.31
-   ],
-   [
-    36.65,
-    36.89,
-    9.03,
-    4.971,
-    1.317
-   ],
-   [
-    -47.05,
-    44.76,
-    8.25,
-    4.395,
-    1.371
-   ],
-   [
-    -21.41,
-    41.03,
-    5.76,
-    1.043,
-    1.237
-   ],
-   [
-    30.95,
-    42.21,
-    7.16,
-    4.275,
-    1.391
-   ],
-   [
-    -34.41,
-    53.52,
-    5.74,
-    2.856,
-    1.123
-   ],
-   [
-    -26.22,
-    54.19,
-    4.73,
-    5.645,
-    1.271
-   ],
-   [
-    35.77,
-    60.79,
-    6.19,
-    2.783,
-    1.299
-   ],
-   [
-    -19.48,
-    78.3,
-    3.17,
-    0.531,
-    0.989
-   ],
-   [
-    33.05,
-    84.91,
-    4.58,
-    2.369,
-    1.0
-   ],
-   [
-    37.18,
-    93.29,
-    4.46,
-    1.143,
-    1.365
-   ],
-   [
-    43.24,
-    92.23,
-    5.51,
-    0.618,
-    1.074
-   ],
-   [
-    35.14,
-    104.8,
-    2.95,
-    2.197,
-    1.368
-   ],
-   [
-    -28.53,
-    122.61,
-    0.97,
-    3.444,
-    1.161
-   ]
-  ],
-  "pine_blue_0": [
-   [
-    33.58,
-    -43.66,
-    12.86,
-    5.805,
-    1.132
-   ],
-   [
-    27.99,
-    -34.81,
-    12.49,
-    5.473,
-    1.499
-   ],
-   [
-    35.69,
-    -20.62,
-    13.84,
-    5.385,
-    1.416
-   ],
-   [
-    44.4,
-    -22.46,
-    14.78,
-    4.267,
-    1.237
-   ],
-   [
-    45.62,
-    35.58,
-    10.55,
-    4.205,
-    1.598
-   ],
-   [
-    -45.74,
-    76.28,
-    6.14,
-    4.922,
-    1.475
-   ],
-   [
-    44.15,
-    82.76,
-    6.36,
-    3.854,
-    1.273
-   ],
-   [
-    45.7,
-    102.02,
-    4.9,
-    1.131,
-    1.467
-   ],
-   [
-    52.19,
-    109.21,
-    5.34,
-    3.697,
-    1.281
-   ],
-   [
-    -38.73,
-    147.62,
-    1.81,
-    0.146,
-    1.473
-   ],
-   [
-    52.5,
-    163.91,
-    1.72,
-    4.361,
-    1.276
-   ],
-   [
-    29.94,
-    186.16,
-    1.86,
-    5.388,
-    1.479
-   ]
-  ],
-  "pine_blue_1": [
-   [
-    40.93,
-    -43.98,
-    13.7,
-    3.206,
-    1.303
-   ],
-   [
-    -46.7,
-    -5.99,
-    14.93,
-    4.247,
-    1.409
-   ],
-   [
-    -44.11,
-    30.92,
-    10.29,
-    3.551,
-    1.623
-   ],
-   [
-    42.3,
-    69.84,
-    6.71,
-    4.98,
-    1.591
-   ],
-   [
-    -11.26,
-    189.02,
-    3.13,
-    5.638,
-    1.586
-   ]
-  ],
-  "lantern_tree_1": [
-   [
-    -18.14,
-    -29.92,
-    12.03,
-    5.076,
-    0.983
-   ],
+  "haunted_tree_0": [
    [
     -21.76,
     -18.97,
     12.29,
-    4.191,
-    1.106
+    0.441,
+    1.134
+   ],
+   [
+    26.0,
+    53.8,
+    5.38,
+    1.27,
+    1.238
    ],
    [
     34.13,
     50.82,
     6.74,
-    6.016,
-    1.035
+    5.805,
+    1.06
    ],
    [
-    -21.71,
-    59.78,
-    4.02,
-    2.323,
-    1.026
-   ],
-   [
-    -27.39,
-    85.69,
-    3.34,
-    0.136,
-    1.083
-   ],
-   [
-    -27.22,
-    117.09,
-    1.24,
-    1.163,
-    0.933
-   ]
-  ],
-  "lantern_tree_0": [
-   [
-    37.61,
-    66.13,
-    6.17,
-    0.29,
-    1.077
-   ],
-   [
-    -33.27,
-    86.29,
-    3.99,
-    1.292,
-    1.367
+    -22.41,
+    93.1,
+    2.64,
+    3.206,
+    0.999
    ]
   ],
   "scarecrow_0": [
@@ -7694,7 +6938,7 @@
     65.78,
     4.44,
     -0.288,
-    1.121
+    0.989
    ]
   ],
   "pumpkin_pile_1": [
@@ -7702,23 +6946,23 @@
     16.41,
     29.23,
     7.47,
-    3.997,
-    0.894
+    1.41,
+    1.022
    ],
    [
     22.17,
     102.15,
     2.35,
-    4.247,
-    0.96
+    5.411,
+    1.111
    ]
   ],
-  "bush_heather_0": [
+  "bush_heather_1": [
    [
     21.02,
     80.3,
     3.92,
-    2.564,
+    5.076,
     1.6
    ]
   ],
@@ -7727,522 +6971,522 @@
     3.79,
     -19.38,
     12.49,
-    0.901,
+    4.291,
     0.68
    ],
-   [
-    5.19,
-    -8.62,
-    12.73,
-    1.68,
-    0.68
-   ],
-   [
-    -7.44,
-    -4.09,
-    12.54,
-    4.135,
-    0.72
-   ],
-   [
-    -15.41,
-    2.81,
-    12.15,
-    2.912,
-    0.88
-   ],
-   [
-    -11.48,
-    0.53,
-    12.32,
-    3.286,
-    0.68
-   ],
-   [
-    11.34,
-    5.39,
-    12.2,
-    0.454,
-    0.68
-   ],
-   [
-    5.7,
-    9.03,
-    11.46,
-    5.795,
-    0.72
-   ],
-   [
-    -9.16,
-    11.25,
-    10.85,
-    4.881,
-    0.68
-   ],
-   [
-    9.75,
-    16.08,
-    10.12,
-    1.722,
-    0.74
-   ],
-   [
-    -12.06,
-    26.12,
-    7.8,
-    4.457,
-    0.82
-   ],
-   [
-    -6.02,
-    35.62,
-    5.76,
-    4.075,
-    0.94
-   ],
-   [
-    -7.74,
-    54.93,
-    4.19,
-    2.928,
-    0.7
-   ],
-   [
-    24.44,
-    66.44,
-    4.73,
-    1.918,
-    0.8
-   ],
-   [
-    21.82,
-    70.29,
-    4.39,
-    1.317,
-    0.78
-   ],
-   [
-    22.05,
-    73.14,
-    4.29,
-    0.058,
-    0.98
-   ],
-   [
-    -12.82,
-    76.92,
-    3.3,
-    3.319,
-    0.8
-   ],
-   [
-    14.08,
-    75.13,
-    3.87,
-    2.321,
-    0.96
-   ],
-   [
-    22.78,
-    78.81,
-    4.08,
-    0.635,
-    0.64
-   ],
-   [
-    -14.73,
-    97.63,
-    2.25,
-    3.774,
-    0.74
-   ],
-   [
-    14.33,
-    100.63,
-    2.36,
-    2.278,
-    0.9
-   ],
-   [
-    11.1,
-    103.92,
-    1.88,
-    4.249,
-    0.96
-   ],
-   [
-    -4.37,
-    140.42,
-    1.48,
-    1.656,
-    0.88
-   ]
-  ],
-  "grass_tuft_2": [
    [
     -9.34,
     -14.52,
     12.44,
-    3.784,
+    3.223,
     0.76
    ],
    [
     -5.69,
     -14.97,
     12.47,
-    0.761,
+    3.198,
     0.84
    ],
    [
-    2.56,
-    -8.77,
-    12.69,
-    0.217,
-    0.98
-   ],
-   [
-    19.38,
-    -5.55,
-    13.23,
-    6.27,
-    0.96
+    -9.16,
+    11.25,
+    10.85,
+    4.247,
+    0.68
    ],
    [
     17.59,
     12.26,
     11.27,
-    4.343,
+    1.823,
     0.64
    ],
    [
     -3.93,
     21.2,
     8.75,
-    2.169,
+    4.331,
     0.68
    ],
    [
-    -16.06,
-    25.06,
-    8.24,
-    0.052,
-    0.8
+    -12.06,
+    26.12,
+    7.8,
+    2.714,
+    0.82
    ],
    [
     -2.25,
     24.02,
     8.13,
-    4.248,
+    1.412,
+    0.74
+   ],
+   [
+    -6.14,
+    28.64,
+    7.13,
+    1.218,
+    0.72
+   ],
+   [
+    -6.02,
+    35.62,
+    5.76,
+    3.551,
+    0.94
+   ],
+   [
+    -4.08,
+    41.11,
+    5.02,
+    5.911,
+    0.74
+   ],
+   [
+    -7.74,
+    54.93,
+    4.19,
+    5.744,
+    0.7
+   ],
+   [
+    19.81,
+    54.82,
+    4.9,
+    4.971,
+    0.62
+   ],
+   [
+    -14.21,
+    70.35,
+    3.53,
+    3.331,
+    0.66
+   ],
+   [
+    -12.82,
+    76.92,
+    3.3,
+    2.856,
+    0.8
+   ],
+   [
+    14.08,
+    75.13,
+    3.87,
+    5.645,
+    0.96
+   ],
+   [
+    -13.94,
+    86.22,
+    2.9,
+    2.323,
+    0.98
+   ],
+   [
+    15.6,
+    88.9,
+    3.27,
+    1.655,
+    0.86
+   ],
+   [
+    -14.73,
+    97.63,
+    2.25,
+    4.98,
+    0.74
+   ],
+   [
+    14.33,
+    100.63,
+    2.36,
+    1.82,
+    0.9
+   ],
+   [
+    16.47,
+    107.88,
+    1.36,
+    1.292,
+    0.8
+   ],
+   [
+    26.4,
+    105.71,
+    2.05,
+    2.195,
+    0.96
+   ],
+   [
+    22.23,
+    141.25,
+    1.64,
+    1.143,
+    0.78
+   ],
+   [
+    29.73,
+    146.9,
+    1.08,
+    3.424,
+    0.88
+   ],
+   [
+    3.82,
+    160.49,
+    1.84,
+    1.849,
+    0.62
+   ]
+  ],
+  "grass_tuft_2": [
+   [
+    2.56,
+    -8.77,
+    12.69,
+    4.072,
+    0.98
+   ],
+   [
+    5.19,
+    -8.62,
+    12.73,
+    1.722,
+    0.68
+   ],
+   [
+    -7.44,
+    -4.09,
+    12.54,
+    4.191,
+    0.72
+   ],
+   [
+    19.38,
+    -5.55,
+    13.23,
+    3.227,
+    0.96
+   ],
+   [
+    5.7,
+    9.03,
+    11.46,
+    2.099,
+    0.72
+   ],
+   [
+    2.21,
+    12.89,
+    10.64,
+    0.636,
+    0.72
+   ],
+   [
+    -0.79,
+    16.59,
+    9.8,
+    0.599,
+    0.9
+   ],
+   [
+    9.75,
+    16.08,
+    10.12,
+    6.249,
     0.74
    ],
    [
     -15.43,
     30.19,
     7.16,
-    5.376,
+    0.406,
     0.64
    ],
    [
     2.04,
     28.11,
     7.27,
-    2.591,
+    4.371,
     0.84
    ],
    [
-    2.91,
-    33.04,
-    6.26,
-    4.082,
-    1.0
+    17.66,
+    31.24,
+    7.14,
+    4.584,
+    0.86
    ],
    [
     20.63,
     31.37,
     7.38,
-    3.289,
+    2.684,
     0.68
    ],
    [
     14.37,
     38.54,
     5.7,
-    3.005,
+    4.85,
     0.6
    ],
    [
     -10.64,
     41.67,
     5.03,
-    1.85,
+    6.053,
     0.7
    ],
    [
-    -14.21,
-    45.47,
-    4.78,
-    1.461,
-    0.84
-   ],
-   [
-    19.81,
-    54.82,
-    4.9,
-    1.677,
-    0.62
-   ],
-   [
-    -11.05,
-    67.2,
-    3.68,
-    5.323,
-    0.66
+    22.55,
+    76.67,
+    4.17,
+    4.152,
+    0.94
    ],
    [
     -9.73,
     79.36,
     3.24,
-    3.499,
+    6.016,
     0.7
    ],
    [
     14.83,
     78.44,
     3.76,
-    6.269,
+    5.083,
     0.66
    ],
    [
-    -14.67,
-    90.23,
-    2.7,
-    2.876,
-    0.78
-   ],
-   [
-    15.6,
-    88.9,
-    3.27,
-    1.758,
-    0.86
-   ],
-   [
-    -17.32,
-    97.49,
-    2.28,
-    6.097,
-    0.94
-   ],
-   [
-    21.01,
-    96.27,
-    2.87,
-    3.542,
-    0.84
-   ],
-   [
-    -7.99,
-    100.86,
-    2.07,
-    3.695,
-    0.68
-   ],
-   [
-    11.42,
-    101.33,
-    2.24,
-    3.685,
-    0.88
-   ],
-   [
-    16.47,
-    107.88,
-    1.36,
-    2.578,
-    0.8
+    11.1,
+    103.92,
+    1.88,
+    2.075,
+    0.96
    ],
    [
     21.73,
     106.19,
     1.75,
-    2.498,
+    0.136,
     0.8
    ],
    [
     16.29,
     133.53,
     0.98,
-    4.825,
+    3.706,
     0.64
-   ],
-   [
-    22.23,
-    141.25,
-    1.64,
-    0.741,
-    0.78
-   ],
-   [
-    -7.54,
-    145.92,
-    1.46,
-    1.391,
-    0.96
-   ],
-   [
-    29.73,
-    146.9,
-    1.08,
-    4.123,
-    0.88
-   ],
-   [
-    25.71,
-    159.36,
-    1.38,
-    4.918,
-    0.68
-   ],
-   [
-    3.82,
-    160.49,
-    1.84,
-    4.136,
-    0.62
    ]
   ],
   "grass_tuft_0": [
    [
+    -15.41,
+    2.81,
+    12.15,
+    5.385,
+    0.88
+   ],
+   [
+    -11.48,
+    0.53,
+    12.32,
+    4.267,
+    0.68
+   ],
+   [
     19.56,
     0.45,
     13.09,
-    0.606,
+    4.58,
     0.8
+   ],
+   [
+    11.34,
+    5.39,
+    12.2,
+    2.515,
+    0.68
    ],
    [
     -7.49,
     7.81,
     11.48,
-    0.519,
+    0.494,
     0.82
-   ],
-   [
-    2.21,
-    12.89,
-    10.64,
-    4.905,
-    0.72
    ],
    [
     -19.21,
     15.98,
     10.17,
-    3.771,
+    2.74,
     0.86
    ],
    [
-    -0.79,
-    16.59,
-    9.8,
-    5.524,
-    0.9
+    -16.06,
+    25.06,
+    8.24,
+    2.712,
+    0.8
    ],
    [
     5.61,
     25.21,
     7.97,
-    3.003,
+    5.76,
     0.68
-   ],
-   [
-    -6.14,
-    28.64,
-    7.13,
-    3.065,
-    0.72
    ],
    [
     -8.67,
     32.9,
     6.3,
-    5.233,
+    1.804,
     0.86
    ],
    [
-    17.66,
-    31.24,
-    7.14,
-    2.808,
-    0.86
+    2.91,
+    33.04,
+    6.26,
+    0.769,
+    1.0
    ],
    [
-    -4.08,
-    41.11,
-    5.02,
-    2.078,
-    0.74
+    -14.21,
+    45.47,
+    4.78,
+    5.825,
+    0.84
    ],
    [
     11.72,
     50.35,
     4.72,
-    5.199,
+    0.209,
     0.76
    ],
    [
     -18.27,
     51.55,
     4.48,
-    2.844,
+    4.981,
     0.68
    ],
    [
-    -14.21,
-    70.35,
-    3.53,
-    5.651,
+    -11.05,
+    67.2,
+    3.68,
+    4.205,
     0.66
    ],
    [
-    22.55,
-    76.67,
-    4.17,
-    6.165,
-    0.94
+    24.44,
+    66.44,
+    4.73,
+    4.395,
+    0.8
    ],
    [
-    -13.94,
-    86.22,
-    2.9,
-    0.196,
+    21.82,
+    70.29,
+    4.39,
+    1.043,
+    0.78
+   ],
+   [
+    22.05,
+    73.14,
+    4.29,
+    4.275,
     0.98
    ],
    [
-    26.4,
-    105.71,
-    2.05,
-    6.204,
-    0.96
+    22.78,
+    78.81,
+    4.08,
+    1.842,
+    0.64
+   ],
+   [
+    -14.67,
+    90.23,
+    2.7,
+    2.783,
+    0.78
+   ],
+   [
+    -17.32,
+    97.49,
+    2.28,
+    0.29,
+    0.94
+   ],
+   [
+    21.01,
+    96.27,
+    2.87,
+    4.922,
+    0.84
+   ],
+   [
+    -7.99,
+    100.86,
+    2.07,
+    6.217,
+    0.68
+   ],
+   [
+    11.42,
+    101.33,
+    2.24,
+    0.531,
+    0.88
    ],
    [
     5.17,
     109.61,
     1.0,
-    1.685,
+    2.369,
     0.72
    ],
    [
     -0.87,
     134.18,
     0.95,
-    4.714,
+    3.854,
     0.6
+   ],
+   [
+    -4.37,
+    140.42,
+    1.48,
+    2.45,
+    0.88
+   ],
+   [
+    -7.54,
+    145.92,
+    1.46,
+    0.618,
+    0.96
+   ],
+   [
+    25.71,
+    159.36,
+    1.38,
+    4.293,
+    0.68
    ],
    [
     10.92,
     165.23,
     1.6,
-    2.75,
+    1.131,
     0.64
    ]
   ],
@@ -8251,406 +7495,504 @@
     -12.19,
     -32.77,
     12.12,
-    4.899,
+    4.569,
     0.8
    ],
    [
-    -10.63,
-    -30.9,
-    12.15,
-    4.134,
-    1.075
+    7.48,
+    -32.99,
+    12.22,
+    5.136,
+    0.975
    ],
    [
     -6.77,
     -29.28,
     12.21,
-    5.412,
+    6.082,
     1.117
-   ],
-   [
-    -0.98,
-    -31.04,
-    12.24,
-    2.739,
-    0.992
    ],
    [
     9.48,
     -29.41,
     12.28,
-    2.42,
+    4.658,
     0.908
    ],
    [
-    -18.34,
-    -26.6,
-    12.18,
-    4.963,
-    0.942
+    -12.98,
+    -26.49,
+    12.19,
+    5.166,
+    1.017
    ],
    [
     9.53,
     -26.88,
     12.34,
-    2.641,
+    5.802,
     1.092
+   ],
+   [
+    11.53,
+    -26.9,
+    12.34,
+    2.396,
+    0.825
+   ],
+   [
+    20.02,
+    -27.03,
+    12.44,
+    5.878,
+    0.908
    ],
    [
     -7.05,
     -23.33,
     12.3,
-    6.173,
+    3.526,
     1.042
    ],
    [
     -3.31,
     -22.81,
     12.35,
-    0.657,
+    3.109,
     0.792
    ],
    [
-    -2.26,
-    -23.89,
-    12.34,
-    1.574,
-    0.775
+    -13.78,
+    -19.47,
+    12.3,
+    3.892,
+    0.983
    ],
    [
-    20.77,
-    -20.52,
-    12.75,
-    1.354,
-    1.158
+    -12.23,
+    -20.76,
+    12.29,
+    3.489,
+    0.767
    ],
    [
-    -29.56,
-    -16.83,
-    12.88,
-    5.692,
-    1.0
+    24.01,
+    -19.02,
+    12.99,
+    5.068,
+    0.958
    ],
    [
-    -25.02,
-    -13.0,
-    12.66,
-    0.211,
-    0.808
-   ],
-   [
-    -21.57,
-    -14.25,
-    12.49,
-    3.364,
+    -13.83,
+    -16.05,
+    12.37,
+    3.987,
     1.125
+   ],
+   [
+    24.98,
+    -17.08,
+    13.15,
+    0.923,
+    1.133
+   ],
+   [
+    20.97,
+    -13.03,
+    13.09,
+    3.784,
+    0.883
+   ],
+   [
+    36.06,
+    -15.36,
+    14.27,
+    0.761,
+    0.817
    ],
    [
     -32.17,
     -10.73,
     13.23,
-    5.324,
+    0.217,
     0.783
    ],
    [
-    25.29,
-    -9.9,
-    13.51,
-    5.109,
-    0.908
+    35.15,
+    -10.08,
+    14.44,
+    6.27,
+    1.092
    ],
    [
-    -26.97,
-    -7.94,
-    12.86,
-    3.998,
-    0.8
-   ],
-   [
-    -23.81,
-    -7.59,
-    12.69,
-    1.278,
-    0.817
-   ],
-   [
-    -29.85,
-    -5.59,
-    13.09,
-    3.374,
-    1.158
-   ],
-   [
-    30.41,
-    -4.86,
-    14.09,
-    1.85,
-    1.058
-   ],
-   [
-    32.64,
-    -2.11,
-    14.31,
-    4.526,
-    0.9
-   ],
-   [
-    36.23,
-    -0.02,
-    14.63,
-    2.578,
-    0.875
+    -31.35,
+    -0.62,
+    13.14,
+    4.343,
+    0.783
    ],
    [
     -28.01,
     2.76,
     12.66,
-    4.255,
+    2.169,
     0.758
    ],
    [
     25.36,
     3.2,
     13.29,
-    5.662,
+    0.052,
     1.067
+   ],
+   [
+    31.72,
+    2.9,
+    13.92,
+    4.248,
+    0.858
    ],
    [
     30.44,
     3.77,
     13.71,
-    4.047,
+    5.376,
     0.983
    ],
    [
     27.17,
     8.66,
     12.7,
-    0.81,
+    2.591,
     1.033
    ],
    [
-    28.88,
-    11.02,
-    12.45,
-    5.033,
-    0.975
+    37.9,
+    9.28,
+    13.77,
+    4.082,
+    0.958
    ],
    [
     38.52,
     12.03,
     13.37,
-    0.357,
+    3.289,
     0.758
    ],
    [
-    40.01,
-    13.56,
-    13.3,
-    4.881,
-    0.808
+    -26.15,
+    16.84,
+    10.55,
+    3.005,
+    1.1
    ],
    [
     36.6,
     16.99,
     12.26,
-    1.173,
+    1.85,
     0.908
    ],
    [
     31.23,
     22.54,
     10.54,
-    6.202,
+    1.461,
     1.1
-   ],
-   [
-    27.2,
-    24.2,
-    9.66,
-    5.922,
-    1.108
-   ],
-   [
-    -32.58,
-    27.68,
-    9.82,
-    4.387,
-    0.775
    ],
    [
     -25.49,
     26.5,
     8.99,
-    0.311,
+    1.677,
     0.817
    ],
    [
-    -32.31,
-    32.62,
-    8.99,
-    5.549,
-    0.933
+    34.07,
+    27.14,
+    10.2,
+    5.323,
+    1.1
    ],
    [
-    -31.37,
-    38.52,
-    7.73,
-    3.225,
-    1.108
-   ],
-   [
-    -32.72,
-    41.7,
-    7.32,
-    4.079,
-    0.95
+    34.74,
+    39.52,
+    8.37,
+    3.499,
+    1.083
    ],
    [
     -31.21,
     43.07,
     6.87,
-    4.557,
+    6.269,
     0.75
+   ],
+   [
+    -29.18,
+    46.31,
+    6.08,
+    2.876,
+    0.933
+   ],
+   [
+    -25.7,
+    45.55,
+    5.74,
+    1.758,
+    0.967
    ],
    [
     29.88,
     47.44,
     6.49,
-    2.645,
+    6.097,
     1.017
+   ],
+   [
+    -28.68,
+    49.18,
+    5.63,
+    3.542,
+    0.917
+   ],
+   [
+    37.29,
+    49.57,
+    7.49,
+    3.695,
+    1.092
+   ],
+   [
+    -23.61,
+    52.45,
+    4.75,
+    3.685,
+    0.892
+   ],
+   [
+    -36.68,
+    56.98,
+    5.83,
+    2.578,
+    0.908
    ],
    [
     -33.02,
     56.47,
     5.39,
-    2.607,
+    2.498,
     0.783
    ],
    [
-    35.12,
-    57.46,
-    6.42,
-    2.967,
-    0.783
-   ],
-   [
-    -37.25,
-    60.11,
-    5.68,
-    4.274,
-    0.783
+    -30.77,
+    58.39,
+    4.97,
+    4.825,
+    0.925
    ],
    [
     30.2,
     58.97,
     5.66,
-    3.936,
+    0.741,
     0.908
    ],
    [
-    28.45,
-    67.31,
-    5.06,
-    2.4,
-    1.083
+    39.58,
+    60.92,
+    6.85,
+    1.391,
+    0.942
+   ],
+   [
+    -22.49,
+    63.26,
+    3.98,
+    4.123,
+    0.817
+   ],
+   [
+    43.5,
+    64.1,
+    7.28,
+    4.918,
+    0.783
+   ],
+   [
+    -33.89,
+    65.25,
+    4.95,
+    4.136,
+    0.792
+   ],
+   [
+    30.79,
+    66.49,
+    5.35,
+    4.899,
+    1.025
    ],
    [
     -28.93,
     72.13,
     4.09,
-    2.386,
+    4.134,
     0.95
+   ],
+   [
+    -21.0,
+    73.45,
+    3.5,
+    5.412,
+    0.9
    ],
    [
     37.26,
     72.09,
     5.94,
-    4.32,
+    2.739,
     1.058
    ],
    [
     41.28,
     72.69,
     6.52,
-    2.301,
+    2.42,
     1.133
    ],
    [
-    36.64,
-    77.74,
-    5.57,
-    3.694,
-    1.05
+    31.74,
+    76.36,
+    5.0,
+    4.963,
+    0.933
    ],
    [
-    -28.82,
-    80.84,
-    3.76,
-    0.749,
-    1.108
+    -36.34,
+    80.87,
+    4.67,
+    2.641,
+    1.117
+   ],
+   [
+    40.59,
+    86.11,
+    5.67,
+    6.173,
+    1.117
    ],
    [
     42.72,
     86.26,
     6.0,
-    5.052,
+    0.657,
     0.975
    ],
    [
-    42.48,
-    88.18,
-    5.82,
-    5.967,
-    1.15
+    -26.82,
+    89.46,
+    3.25,
+    1.574,
+    0.983
    ],
    [
     -36.54,
     92.82,
     4.34,
-    4.897,
+    1.354,
     1.008
    ],
    [
-    -33.72,
-    91.16,
-    3.99,
-    3.76,
-    0.908
+    -36.74,
+    95.34,
+    4.28,
+    5.692,
+    0.933
    ],
    [
-    -33.69,
-    99.3,
-    3.65,
-    2.364,
-    1.033
+    -37.09,
+    100.13,
+    4.13,
+    0.211,
+    1.117
    ],
    [
     -23.66,
     102.44,
     2.27,
-    5.845,
+    3.364,
     0.842
+   ],
+   [
+    43.08,
+    107.24,
+    3.99,
+    5.324,
+    0.867
    ],
    [
     -34.39,
     111.91,
     3.08,
-    1.287,
+    5.109,
     0.9
    ],
    [
-    37.81,
-    119.4,
+    35.38,
+    115.19,
+    1.47,
+    3.998,
+    0.85
+   ],
+   [
+    -31.87,
+    116.88,
+    2.11,
+    1.278,
+    1.158
+   ],
+   [
+    44.56,
+    127.38,
     1.22,
-    4.646,
-    1.167
+    3.374,
+    0.933
+   ],
+   [
+    44.25,
+    128.82,
+    1.0,
+    1.85,
+    1.1
+   ],
+   [
+    28.98,
+    182.51,
+    1.28,
+    4.526,
+    0.8
    ],
    [
     29.38,
     181.81,
     1.18,
-    3.09,
+    2.578,
+    0.792
+   ],
+   [
+    -2.22,
+    184.04,
+    1.66,
+    4.255,
+    1.05
+   ],
+   [
+    1.8,
+    183.26,
+    1.33,
+    5.662,
     0.792
    ]
   ],
@@ -8659,1537 +8001,1460 @@
     5.8,
     -32.28,
     12.24,
-    4.393,
+    1.856,
     1.008
-   ],
-   [
-    -12.98,
-    -26.49,
-    12.19,
-    5.765,
-    1.017
-   ],
-   [
-    11.53,
-    -26.9,
-    12.34,
-    4.145,
-    0.825
-   ],
-   [
-    20.02,
-    -27.03,
-    12.44,
-    3.926,
-    0.908
-   ],
-   [
-    17.62,
-    -24.97,
-    12.46,
-    6.02,
-    0.942
-   ],
-   [
-    24.01,
-    -19.02,
-    12.99,
-    3.781,
-    0.958
-   ],
-   [
-    -26.37,
-    -18.08,
-    12.62,
-    1.163,
-    1.083
-   ],
-   [
-    -13.83,
-    -16.05,
-    12.37,
-    0.968,
-    1.125
-   ],
-   [
-    24.98,
-    -17.08,
-    13.15,
-    2.776,
-    1.133
-   ],
-   [
-    20.97,
-    -13.03,
-    13.09,
-    1.46,
-    0.883
-   ],
-   [
-    36.06,
-    -15.36,
-    14.27,
-    1.844,
-    0.817
-   ],
-   [
-    35.15,
-    -10.08,
-    14.44,
-    4.539,
-    1.092
-   ],
-   [
-    -34.35,
-    -7.9,
-    13.49,
-    3.037,
-    1.033
-   ],
-   [
-    -29.0,
-    -8.87,
-    12.99,
-    0.639,
-    0.9
-   ],
-   [
-    24.52,
-    -6.71,
-    13.54,
-    0.044,
-    0.858
-   ],
-   [
-    -31.93,
-    0.15,
-    13.17,
-    5.398,
-    0.958
-   ],
-   [
-    -27.84,
-    -0.26,
-    12.84,
-    4.395,
-    1.117
-   ],
-   [
-    23.43,
-    4.9,
-    12.94,
-    5.5,
-    0.858
-   ],
-   [
-    37.01,
-    6.21,
-    14.13,
-    6.04,
-    1.142
-   ],
-   [
-    34.9,
-    7.89,
-    13.64,
-    2.456,
-    1.008
-   ],
-   [
-    37.9,
-    9.28,
-    13.77,
-    1.395,
-    0.958
-   ],
-   [
-    -26.15,
-    16.84,
-    10.55,
-    5.419,
-    1.1
-   ],
-   [
-    -25.54,
-    33.35,
-    7.81,
-    4.038,
-    0.983
-   ],
-   [
-    30.74,
-    34.89,
-    8.28,
-    1.537,
-    0.833
-   ],
-   [
-    32.84,
-    38.13,
-    8.19,
-    0.813,
-    1.083
-   ],
-   [
-    -29.77,
-    40.34,
-    7.16,
-    3.961,
-    0.775
-   ],
-   [
-    -24.98,
-    44.51,
-    5.79,
-    5.575,
-    0.9
-   ],
-   [
-    -29.18,
-    46.31,
-    6.08,
-    0.259,
-    0.933
-   ],
-   [
-    -25.7,
-    45.55,
-    5.74,
-    3.458,
-    0.967
-   ],
-   [
-    -32.46,
-    50.54,
-    5.93,
-    0.606,
-    0.858
-   ],
-   [
-    37.29,
-    49.57,
-    7.49,
-    5.721,
-    1.092
-   ],
-   [
-    -23.61,
-    52.45,
-    4.75,
-    0.599,
-    0.892
-   ],
-   [
-    38.09,
-    52.22,
-    7.33,
-    2.77,
-    1.067
-   ],
-   [
-    -34.39,
-    60.49,
-    5.27,
-    3.677,
-    0.817
-   ],
-   [
-    -30.77,
-    58.39,
-    4.97,
-    4.921,
-    0.925
-   ],
-   [
-    39.58,
-    60.92,
-    6.85,
-    5.688,
-    0.942
-   ],
-   [
-    30.79,
-    66.49,
-    5.35,
-    5.927,
-    1.025
-   ],
-   [
-    31.74,
-    76.36,
-    5.0,
-    2.833,
-    0.933
-   ],
-   [
-    30.86,
-    78.1,
-    4.81,
-    0.667,
-    1.1
-   ],
-   [
-    -36.34,
-    80.87,
-    4.67,
-    5.998,
-    1.117
-   ],
-   [
-    -34.2,
-    81.19,
-    4.37,
-    2.655,
-    0.992
-   ],
-   [
-    -23.73,
-    89.09,
-    3.02,
-    0.58,
-    0.917
-   ],
-   [
-    37.48,
-    87.22,
-    5.12,
-    4.287,
-    0.967
-   ],
-   [
-    -29.81,
-    96.23,
-    3.28,
-    3.954,
-    1.133
-   ],
-   [
-    34.31,
-    94.47,
-    4.06,
-    3.358,
-    0.975
-   ],
-   [
-    -22.52,
-    98.49,
-    2.44,
-    3.933,
-    1.15
-   ],
-   [
-    -37.09,
-    100.13,
-    4.13,
-    4.331,
-    1.117
-   ],
-   [
-    36.68,
-    109.02,
-    2.67,
-    1.237,
-    1.133
-   ],
-   [
-    35.99,
-    109.78,
-    2.43,
-    1.616,
-    0.842
-   ],
-   [
-    -34.4,
-    114.2,
-    2.88,
-    2.283,
-    1.142
-   ],
-   [
-    -29.43,
-    112.95,
-    2.09,
-    0.043,
-    0.775
-   ],
-   [
-    35.38,
-    115.19,
-    1.47,
-    5.315,
-    0.85
-   ],
-   [
-    -31.87,
-    116.88,
-    2.11,
-    2.772,
-    1.158
-   ],
-   [
-    44.56,
-    127.38,
-    1.22,
-    2.302,
-    0.933
-   ],
-   [
-    44.25,
-    128.82,
-    1.0,
-    1.935,
-    1.1
-   ],
-   [
-    30.85,
-    150.2,
-    0.95,
-    3.849,
-    0.95
-   ],
-   [
-    39.54,
-    175.05,
-    1.0,
-    0.369,
-    0.933
-   ],
-   [
-    -14.64,
-    178.92,
-    1.42,
-    1.844,
-    1.058
-   ],
-   [
-    -2.22,
-    184.04,
-    1.66,
-    2.098,
-    1.05
-   ],
-   [
-    1.8,
-    183.26,
-    1.33,
-    4.707,
-    0.792
-   ]
-  ],
-  "tall_grass_1": [
-   [
-    7.48,
-    -32.99,
-    12.22,
-    0.092,
-    0.975
    ],
    [
     -24.01,
     -29.48,
     12.29,
-    2.888,
+    2.926,
     0.9
    ],
    [
-    -23.76,
-    -26.58,
-    12.32,
-    3.052,
+    -10.63,
+    -30.9,
+    12.15,
+    2.197,
+    1.075
+   ],
+   [
+    -0.98,
+    -31.04,
+    12.24,
+    3.697,
     0.992
    ],
    [
     -5.44,
     -26.76,
     12.26,
-    2.291,
+    3.444,
     0.858
    ],
    [
     -13.99,
     -22.21,
     12.25,
-    0.799,
+    0.146,
     1.017
    ],
    [
-    -13.78,
-    -19.47,
-    12.3,
-    1.254,
-    0.983
+    -2.26,
+    -23.89,
+    12.34,
+    4.361,
+    0.775
    ],
    [
-    -12.23,
-    -20.76,
-    12.29,
-    5.618,
-    0.767
+    -26.37,
+    -18.08,
+    12.62,
+    5.388,
+    1.083
    ],
    [
     17.72,
     -15.85,
     12.83,
-    4.549,
+    3.474,
     0.975
    ],
    [
     26.24,
     -16.93,
     13.25,
-    1.761,
+    2.305,
+    1.0
+   ],
+   [
+    -26.97,
+    -7.94,
+    12.86,
+    0.606,
+    0.8
+   ],
+   [
+    24.52,
+    -6.71,
+    13.54,
+    0.519,
+    0.858
+   ],
+   [
+    -31.93,
+    0.15,
+    13.17,
+    4.905,
+    0.958
+   ],
+   [
+    -27.84,
+    -0.26,
+    12.84,
+    3.771,
+    1.117
+   ],
+   [
+    32.64,
+    -2.11,
+    14.31,
+    5.524,
+    0.9
+   ],
+   [
+    23.43,
+    4.9,
+    12.94,
+    3.003,
+    0.858
+   ],
+   [
+    37.01,
+    6.21,
+    14.13,
+    3.065,
+    1.142
+   ],
+   [
+    34.9,
+    7.89,
+    13.64,
+    5.233,
+    1.008
+   ],
+   [
+    28.88,
+    11.02,
+    12.45,
+    2.808,
+    0.975
+   ],
+   [
+    -34.97,
+    21.72,
+    10.89,
+    2.078,
+    1.008
+   ],
+   [
+    27.2,
+    24.2,
+    9.66,
+    5.199,
+    1.108
+   ],
+   [
+    33.57,
+    24.02,
+    10.63,
+    2.844,
+    1.158
+   ],
+   [
+    -25.54,
+    33.35,
+    7.81,
+    5.651,
+    0.983
+   ],
+   [
+    -29.77,
+    40.34,
+    7.16,
+    6.165,
+    0.775
+   ],
+   [
+    37.01,
+    42.85,
+    8.33,
+    0.196,
+    1.042
+   ],
+   [
+    35.12,
+    57.46,
+    6.42,
+    6.204,
+    0.783
+   ],
+   [
+    -37.25,
+    60.11,
+    5.68,
+    1.685,
+    0.783
+   ],
+   [
+    -34.39,
+    60.49,
+    5.27,
+    4.714,
+    0.817
+   ],
+   [
+    28.45,
+    67.31,
+    5.06,
+    2.75,
+    1.083
+   ],
+   [
+    -33.14,
+    69.87,
+    4.65,
+    4.393,
+    0.875
+   ],
+   [
+    30.86,
+    78.1,
+    4.81,
+    5.765,
+    1.1
+   ],
+   [
+    -34.2,
+    81.19,
+    4.37,
+    4.145,
+    0.992
+   ],
+   [
+    -28.82,
+    80.84,
+    3.76,
+    3.926,
+    1.108
+   ],
+   [
+    -23.73,
+    89.09,
+    3.02,
+    6.02,
+    0.917
+   ],
+   [
+    -33.72,
+    91.16,
+    3.99,
+    3.781,
+    0.908
+   ],
+   [
+    -29.81,
+    96.23,
+    3.28,
+    1.163,
+    1.133
+   ],
+   [
+    34.31,
+    94.47,
+    4.06,
+    0.968,
+    0.975
+   ],
+   [
+    -33.69,
+    99.3,
+    3.65,
+    2.776,
+    1.033
+   ],
+   [
+    -21.13,
+    108.27,
+    1.55,
+    1.46,
+    0.983
+   ],
+   [
+    36.68,
+    109.02,
+    2.67,
+    1.844,
+    1.133
+   ],
+   [
+    35.99,
+    109.78,
+    2.43,
+    4.539,
+    0.842
+   ],
+   [
+    -34.4,
+    114.2,
+    2.88,
+    3.037,
+    1.142
+   ],
+   [
+    -29.43,
+    112.95,
+    2.09,
+    0.639,
+    0.775
+   ],
+   [
+    37.81,
+    119.4,
+    1.22,
+    0.044,
+    1.167
+   ],
+   [
+    30.85,
+    150.2,
+    0.95,
+    5.398,
+    0.95
+   ],
+   [
+    -14.64,
+    178.92,
+    1.42,
+    4.395,
+    1.058
+   ]
+  ],
+  "tall_grass_1": [
+   [
+    -23.76,
+    -26.58,
+    12.32,
+    1.163,
+    0.992
+   ],
+   [
+    -18.34,
+    -26.6,
+    12.18,
+    2.308,
+    0.942
+   ],
+   [
+    17.62,
+    -24.97,
+    12.46,
+    1.669,
+    0.942
+   ],
+   [
+    20.77,
+    -20.52,
+    12.75,
+    5.638,
+    1.158
+   ],
+   [
+    -29.56,
+    -16.83,
+    12.88,
+    4.579,
     1.0
    ],
    [
     -26.06,
     -14.05,
     12.69,
-    3.129,
+    4.247,
     0.8
+   ],
+   [
+    -25.02,
+    -13.0,
+    12.66,
+    2.564,
+    0.808
+   ],
+   [
+    -21.57,
+    -14.25,
+    12.49,
+    0.901,
+    1.125
+   ],
+   [
+    25.29,
+    -9.9,
+    13.51,
+    1.68,
+    0.908
    ],
    [
     29.97,
     -11.29,
     13.84,
-    5.032,
+    4.135,
     0.958
    ],
    [
-    -31.35,
-    -0.62,
-    13.14,
-    3.527,
-    0.783
+    -34.35,
+    -7.9,
+    13.49,
+    2.912,
+    1.033
+   ],
+   [
+    -29.0,
+    -8.87,
+    12.99,
+    3.286,
+    0.9
+   ],
+   [
+    -23.81,
+    -7.59,
+    12.69,
+    0.454,
+    0.817
+   ],
+   [
+    -29.85,
+    -5.59,
+    13.09,
+    5.795,
+    1.158
+   ],
+   [
+    30.41,
+    -4.86,
+    14.09,
+    4.881,
+    1.058
+   ],
+   [
+    36.23,
+    -0.02,
+    14.63,
+    1.722,
+    0.875
    ],
    [
     27.0,
     1.69,
     13.58,
-    5.589,
+    4.457,
     1.133
    ],
    [
-    31.72,
-    2.9,
-    13.92,
-    1.327,
-    0.858
+    40.01,
+    13.56,
+    13.3,
+    4.075,
+    0.808
    ],
    [
-    -34.97,
-    21.72,
-    10.89,
-    2.656,
-    1.008
+    -32.58,
+    27.68,
+    9.82,
+    2.928,
+    0.775
    ],
    [
-    33.57,
-    24.02,
-    10.63,
-    5.748,
-    1.158
+    -32.31,
+    32.62,
+    8.99,
+    1.918,
+    0.933
    ],
    [
-    34.07,
-    27.14,
-    10.2,
-    5.566,
-    1.1
+    30.74,
+    34.89,
+    8.28,
+    1.317,
+    0.833
    ],
    [
-    34.74,
-    39.52,
-    8.37,
-    3.828,
+    -31.37,
+    38.52,
+    7.73,
+    0.058,
+    1.108
+   ],
+   [
+    32.84,
+    38.13,
+    8.19,
+    3.319,
     1.083
    ],
    [
-    37.01,
-    42.85,
-    8.33,
-    1.992,
-    1.042
+    -32.72,
+    41.7,
+    7.32,
+    2.321,
+    0.95
    ],
    [
-    -28.68,
-    49.18,
-    5.63,
-    4.259,
-    0.917
+    -24.98,
+    44.51,
+    5.79,
+    0.635,
+    0.9
+   ],
+   [
+    -32.46,
+    50.54,
+    5.93,
+    3.774,
+    0.858
    ],
    [
     30.99,
     53.8,
     6.1,
-    2.921,
+    2.278,
     0.85
    ],
    [
-    -36.68,
-    56.98,
-    5.83,
-    3.185,
-    0.908
+    38.09,
+    52.22,
+    7.33,
+    4.249,
+    1.067
    ],
    [
     26.17,
     58.4,
     5.24,
-    5.421,
+    1.656,
     1.05
-   ],
-   [
-    -22.49,
-    63.26,
-    3.98,
-    5.734,
-    0.817
-   ],
-   [
-    43.5,
-    64.1,
-    7.28,
-    2.95,
-    0.783
-   ],
-   [
-    -33.89,
-    65.25,
-    4.95,
-    2.812,
-    0.792
-   ],
-   [
-    -33.14,
-    69.87,
-    4.65,
-    3.727,
-    0.875
    ],
    [
     36.93,
     70.01,
     5.99,
-    3.773,
+    0.092,
     0.775
    ],
    [
     -31.94,
     71.75,
     4.43,
-    6.231,
+    2.888,
     0.825
-   ],
-   [
-    -21.0,
-    73.45,
-    3.5,
-    6.215,
-    0.9
    ],
    [
     -32.44,
     74.69,
     4.38,
-    1.323,
+    3.052,
     0.8
+   ],
+   [
+    36.64,
+    77.74,
+    5.57,
+    2.291,
+    1.05
    ],
    [
     -30.89,
     84.49,
     3.85,
-    0.027,
+    0.799,
     0.792
    ],
    [
-    40.59,
-    86.11,
-    5.67,
-    1.124,
-    1.117
+    37.48,
+    87.22,
+    5.12,
+    1.254,
+    0.967
    ],
    [
-    -26.82,
-    89.46,
-    3.25,
-    0.017,
-    0.983
-   ],
-   [
-    -36.74,
-    95.34,
-    4.28,
-    5.21,
-    0.933
+    42.48,
+    88.18,
+    5.82,
+    5.618,
+    1.15
    ],
    [
     -35.08,
     98.4,
     3.9,
-    2.528,
+    4.549,
     0.925
+   ],
+   [
+    -22.52,
+    98.49,
+    2.44,
+    1.761,
+    1.15
    ],
    [
     33.15,
     96.83,
     3.68,
-    3.393,
+    3.129,
     1.167
-   ],
-   [
-    -21.13,
-    108.27,
-    1.55,
-    3.744,
-    0.983
-   ],
-   [
-    43.08,
-    107.24,
-    3.99,
-    4.507,
-    0.867
    ],
    [
     -26.99,
     110.91,
     1.93,
-    0.113,
+    5.032,
     0.8
    ],
    [
-    28.98,
-    182.51,
-    1.28,
-    4.274,
-    0.8
+    39.54,
+    175.05,
+    1.0,
+    3.527,
+    0.933
    ]
   ],
-  "leaf_pile_1": [
+  "leaf_pile_0": [
    [
     -10.42,
     -31.68,
     12.15,
-    1.793,
-    0.861
+    1.327,
+    1.117
    ],
    [
     -13.75,
     -29.47,
     12.14,
-    4.065,
-    1.103
+    5.5,
+    1.069
    ],
    [
     -9.35,
     -25.76,
     12.24,
-    1.622,
-    0.944
-   ],
-   [
-    -3.97,
-    -30.48,
-    12.22,
-    6.102,
-    0.934
+    6.04,
+    1.055
    ],
    [
     17.76,
     -26.37,
     12.41,
-    1.387,
-    0.984
-   ],
-   [
-    5.49,
-    -23.16,
-    12.42,
-    1.437,
-    0.883
-   ],
-   [
-    15.15,
-    -16.19,
-    12.74,
-    4.091,
-    0.978
-   ],
-   [
-    -25.72,
-    -11.51,
-    12.72,
-    0.973,
-    1.072
-   ],
-   [
-    -20.62,
-    -2.57,
-    12.55,
-    1.693,
-    1.066
-   ],
-   [
-    -26.91,
-    3.02,
-    12.56,
-    5.97,
-    1.004
-   ],
-   [
-    -14.58,
-    0.1,
-    12.35,
-    3.323,
-    0.948
-   ],
-   [
-    -10.63,
-    1.12,
-    12.28,
-    1.606,
-    0.97
-   ],
-   [
-    10.61,
-    9.56,
-    11.49,
-    3.615,
-    1.061
-   ],
-   [
-    39.19,
-    8.42,
-    14.06,
-    5.071,
-    1.101
-   ],
-   [
-    -14.62,
-    13.9,
-    10.4,
-    5.458,
-    0.955
-   ],
-   [
-    14.47,
-    13.4,
-    10.87,
-    4.546,
-    1.014
-   ],
-   [
-    -7.65,
-    18.65,
-    9.31,
-    1.251,
-    1.01
-   ],
-   [
-    -32.49,
-    26.19,
-    10.02,
-    2.972,
-    1.029
-   ],
-   [
-    -23.96,
-    27.47,
-    8.62,
-    1.302,
-    0.868
-   ],
-   [
-    -12.17,
-    23.56,
-    8.35,
-    2.178,
-    1.115
-   ],
-   [
-    18.39,
-    27.33,
-    8.03,
-    3.514,
-    0.887
-   ],
-   [
-    -35.36,
-    29.38,
-    9.9,
-    1.841,
-    0.894
-   ],
-   [
-    21.0,
-    34.06,
-    6.91,
-    1.944,
-    0.895
-   ],
-   [
-    -9.13,
-    46.28,
-    4.61,
-    4.948,
-    1.116
-   ],
-   [
-    4.51,
-    41.32,
-    5.09,
-    5.586,
-    0.905
-   ],
-   [
-    8.35,
-    42.92,
-    5.04,
-    0.728,
-    0.991
-   ],
-   [
-    -29.58,
-    51.02,
-    5.52,
-    3.632,
-    1.144
-   ],
-   [
-    17.77,
-    57.6,
-    4.67,
-    4.737,
-    1.029
-   ],
-   [
-    31.52,
-    53.97,
-    6.16,
-    2.272,
-    1.0
-   ],
-   [
-    -14.63,
-    59.48,
-    3.96,
-    0.709,
-    1.111
-   ],
-   [
-    30.07,
-    67.78,
-    5.21,
-    0.595,
-    1.015
-   ],
-   [
-    -31.6,
-    75.14,
-    4.26,
-    0.745,
-    0.945
-   ],
-   [
-    14.15,
-    73.57,
-    3.94,
-    4.881,
+    6.091,
     0.917
    ],
-   [
-    30.0,
-    81.09,
-    4.56,
-    2.388,
-    0.999
-   ],
-   [
-    -26.33,
-    89.89,
-    3.19,
-    5.633,
-    1.145
-   ],
-   [
-    -13.41,
-    90.8,
-    2.67,
-    0.534,
-    0.907
-   ],
-   [
-    17.73,
-    94.59,
-    2.93,
-    2.138,
-    1.056
-   ],
-   [
-    27.62,
-    92.18,
-    3.58,
-    2.158,
-    0.911
-   ],
-   [
-    14.73,
-    101.84,
-    2.22,
-    4.665,
-    1.111
-   ],
-   [
-    26.15,
-    104.28,
-    2.24,
-    2.644,
-    0.917
-   ],
-   [
-    39.03,
-    118.24,
-    1.55,
-    1.686,
-    1.01
-   ],
-   [
-    -6.04,
-    148.1,
-    1.59,
-    5.557,
-    1.083
-   ]
-  ],
-  "leaf_pile_0": [
    [
     -15.98,
     -20.68,
     12.27,
-    1.639,
-    0.949
+    0.357,
+    1.09
    ],
    [
     -15.11,
     -16.83,
     12.35,
-    2.14,
-    0.939
+    1.173,
+    1.048
    ],
    [
     25.79,
     -16.31,
     13.24,
-    4.218,
-    0.926
+    6.053,
+    1.133
    ],
    [
-    -6.57,
-    -9.33,
-    12.55,
-    3.811,
-    0.895
+    -25.72,
+    -11.51,
+    12.72,
+    3.487,
+    1.059
    ],
    [
     -14.86,
     -1.66,
     12.43,
-    5.703,
-    1.072
+    1.537,
+    1.129
    ],
    [
     -5.24,
     -4.23,
     12.73,
-    2.083,
-    0.891
+    0.813,
+    1.122
    ],
    [
-    14.07,
-    -3.97,
-    12.98,
-    4.053,
-    0.92
+    -26.91,
+    3.02,
+    12.56,
+    0.833,
+    1.033
    ],
    [
-    -20.28,
-    2.25,
-    12.3,
-    3.225,
-    0.933
+    -10.63,
+    1.12,
+    12.28,
+    3.458,
+    1.079
    ],
    [
-    15.11,
-    1.83,
-    12.75,
-    5.759,
-    1.14
+    10.61,
+    9.56,
+    11.49,
+    1.724,
+    1.053
    ],
    [
-    30.88,
-    12.51,
-    12.39,
-    1.57,
-    0.941
+    39.19,
+    8.42,
+    14.06,
+    1.815,
+    0.879
    ],
    [
-    2.58,
-    20.69,
-    8.94,
-    3.434,
-    1.015
+    14.47,
+    13.4,
+    10.87,
+    2.607,
+    1.002
    ],
    [
     9.76,
     21.34,
     8.95,
-    1.599,
-    1.006
+    3.304,
+    1.038
    ],
    [
     3.15,
     27.9,
     7.33,
-    5.802,
-    0.921
+    3.727,
+    1.022
    ],
    [
-    -4.27,
-    31.39,
-    6.54,
-    2.876,
-    1.041
+    -35.36,
+    29.38,
+    9.9,
+    5.075,
+    0.964
    ],
    [
     -10.06,
     37.17,
     5.59,
-    4.561,
-    0.887
+    2.833,
+    0.915
    ],
    [
     3.18,
     38.72,
     5.36,
-    3.184,
-    1.005
+    3.694,
+    0.86
    ],
    [
     9.4,
     35.44,
     5.96,
-    6.19,
-    0.959
+    4.428,
+    1.136
    ],
    [
-    16.68,
-    42.42,
-    5.42,
-    2.841,
-    1.124
+    4.51,
+    41.32,
+    5.09,
+    1.124,
+    0.851
    ],
    [
-    18.17,
-    45.21,
-    5.3,
-    2.722,
-    0.896
-   ],
-   [
-    -24.68,
-    47.31,
-    5.39,
-    4.395,
-    1.116
-   ],
-   [
-    -20.39,
-    55.6,
-    4.3,
-    4.474,
-    0.932
-   ],
-   [
-    -9.31,
-    55.69,
-    4.14,
-    1.932,
-    0.925
+    31.52,
+    53.97,
+    6.16,
+    4.331,
+    1.053
    ],
    [
     -15.29,
     69.99,
     3.54,
-    5.717,
-    0.95
+    4.82,
+    0.909
    ],
    [
-    28.55,
-    66.77,
-    5.09,
-    2.503,
-    1.067
+    30.07,
+    67.78,
+    5.21,
+    1.616,
+    0.855
    ],
    [
     39.4,
     68.68,
     6.42,
-    6.07,
-    1.136
+    2.283,
+    0.943
+   ],
+   [
+    14.15,
+    73.57,
+    3.94,
+    1.14,
+    0.982
    ],
    [
     18.88,
     75.94,
     4.01,
-    1.812,
-    0.91
+    0.408,
+    0.96
    ],
    [
-    26.12,
-    78.5,
-    4.33,
-    5.815,
-    1.127
+    30.0,
+    81.09,
+    4.56,
+    1.844,
+    0.868
    ],
    [
     43.51,
     79.19,
     6.55,
-    6.196,
-    1.011
+    4.274,
+    1.125
    ],
    [
     -21.79,
     87.91,
     2.96,
-    6.077,
-    1.077
+    2.098,
+    0.937
    ],
    [
     22.5,
     87.03,
     3.63,
-    5.221,
-    1.072
+    3.68,
+    1.075
+   ],
+   [
+    -13.41,
+    90.8,
+    2.67,
+    5.487,
+    1.044
+   ],
+   [
+    17.73,
+    94.59,
+    2.93,
+    1.769,
+    0.927
+   ],
+   [
+    27.62,
+    92.18,
+    3.58,
+    2.062,
+    1.141
    ],
    [
     -19.8,
     99.66,
     2.21,
-    5.341,
-    1.025
+    2.079,
+    0.916
    ],
    [
     18.74,
     97.89,
     2.67,
-    5.433,
-    1.127
+    1.151,
+    0.928
    ],
    [
-    -33.22,
-    101.92,
-    3.45,
-    0.316,
-    1.096
+    14.73,
+    101.84,
+    2.22,
+    2.323,
+    0.952
+   ],
+   [
+    26.15,
+    104.28,
+    2.24,
+    1.598,
+    1.045
    ],
    [
     30.91,
     106.32,
     2.33,
-    1.414,
-    1.005
-   ],
-   [
-    38.72,
-    104.59,
-    3.57,
-    2.238,
-    0.901
-   ],
-   [
-    33.72,
-    110.54,
-    1.98,
-    0.837,
-    0.939
-   ],
-   [
-    38.37,
-    112.11,
-    2.43,
-    6.134,
-    1.035
+    2.347,
+    1.051
    ],
    [
     25.58,
     144.95,
     1.56,
-    3.689,
-    1.0
+    1.97,
+    1.044
    ],
    [
     27.58,
     182.85,
     1.27,
-    4.439,
-    0.994
+    1.731,
+    1.135
    ]
   ],
-  "fern_0": [
+  "leaf_pile_1": [
+   [
+    -3.97,
+    -30.48,
+    12.22,
+    1.223,
+    0.889
+   ],
+   [
+    5.49,
+    -23.16,
+    12.42,
+    5.419,
+    1.083
+   ],
+   [
+    15.15,
+    -16.19,
+    12.74,
+    6.202,
+    1.096
+   ],
+   [
+    -6.57,
+    -9.33,
+    12.55,
+    5.566,
+    0.865
+   ],
+   [
+    -20.62,
+    -2.57,
+    12.55,
+    4.038,
+    1.115
+   ],
+   [
+    14.07,
+    -3.97,
+    12.98,
+    2.141,
+    1.045
+   ],
+   [
+    -20.28,
+    2.25,
+    12.3,
+    5.575,
+    1.068
+   ],
+   [
+    -14.58,
+    0.1,
+    12.35,
+    0.259,
+    0.945
+   ],
+   [
+    15.11,
+    1.83,
+    12.75,
+    0.606,
+    1.04
+   ],
+   [
+    -14.62,
+    13.9,
+    10.4,
+    2.77,
+    0.989
+   ],
+   [
+    30.88,
+    12.51,
+    12.39,
+    2.967,
+    1.068
+   ],
+   [
+    -7.65,
+    18.65,
+    9.31,
+    3.677,
+    0.881
+   ],
+   [
+    2.58,
+    20.69,
+    8.94,
+    4.393,
+    1.085
+   ],
+   [
+    -32.49,
+    26.19,
+    10.02,
+    5.734,
+    1.122
+   ],
+   [
+    -23.96,
+    27.47,
+    8.62,
+    2.812,
+    0.991
+   ],
+   [
+    -12.17,
+    23.56,
+    8.35,
+    2.4,
+    0.913
+   ],
+   [
+    18.39,
+    27.33,
+    8.03,
+    5.641,
+    1.03
+   ],
+   [
+    -4.27,
+    31.39,
+    6.54,
+    4.32,
+    1.147
+   ],
+   [
+    21.0,
+    34.06,
+    6.91,
+    1.323,
+    0.96
+   ],
+   [
+    -9.13,
+    46.28,
+    4.61,
+    2.588,
+    0.886
+   ],
+   [
+    8.35,
+    42.92,
+    5.04,
+    0.017,
+    1.091
+   ],
+   [
+    16.68,
+    42.42,
+    5.42,
+    0.58,
+    0.887
+   ],
+   [
+    18.17,
+    45.21,
+    5.3,
+    5.967,
+    1.096
+   ],
+   [
+    -29.58,
+    51.02,
+    5.52,
+    2.445,
+    1.084
+   ],
+   [
+    -24.68,
+    47.31,
+    5.39,
+    1.146,
+    1.099
+   ],
+   [
+    -20.39,
+    55.6,
+    4.3,
+    3.358,
+    1.039
+   ],
+   [
+    -9.31,
+    55.69,
+    4.14,
+    2.364,
+    0.971
+   ],
+   [
+    17.77,
+    57.6,
+    4.67,
+    3.933,
+    0.96
+   ],
+   [
+    -14.63,
+    59.48,
+    3.96,
+    0.637,
+    1.129
+   ],
+   [
+    28.55,
+    66.77,
+    5.09,
+    1.287,
+    1.065
+   ],
+   [
+    -31.6,
+    75.14,
+    4.26,
+    5.315,
+    0.885
+   ],
+   [
+    26.12,
+    78.5,
+    4.33,
+    3.849,
+    0.942
+   ],
+   [
+    -26.33,
+    89.89,
+    3.19,
+    5.289,
+    0.936
+   ],
+   [
+    -33.22,
+    101.92,
+    3.45,
+    1.874,
+    0.919
+   ],
+   [
+    38.72,
+    104.59,
+    3.57,
+    0.945,
+    0.896
+   ],
+   [
+    33.72,
+    110.54,
+    1.98,
+    0.161,
+    1.032
+   ],
+   [
+    38.37,
+    112.11,
+    2.43,
+    4.641,
+    0.931
+   ],
+   [
+    39.03,
+    118.24,
+    1.55,
+    0.235,
+    1.122
+   ],
+   [
+    -6.04,
+    148.1,
+    1.59,
+    1.47,
+    0.949
+   ]
+  ],
+  "fern_1": [
    [
     -4.83,
     -45.63,
     12.17,
-    1.432,
+    3.225,
     0.64
    ],
    [
     -8.04,
     -38.12,
     12.13,
-    3.382,
+    2.05,
     0.67
    ],
-   [
-    4.92,
-    -27.95,
-    12.31,
-    4.711,
-    0.84
-   ],
-   [
-    29.17,
-    -25.88,
-    13.03,
-    2.299,
-    0.92
-   ],
-   [
-    -25.23,
-    -19.79,
-    12.52,
-    2.212,
-    0.87
-   ],
-   [
-    20.15,
-    -20.89,
-    12.7,
-    2.541,
-    0.73
-   ],
-   [
-    39.9,
-    -8.26,
-    15.06,
-    5.08,
-    0.67
-   ],
-   [
-    33.28,
-    4.91,
-    13.87,
-    2.594,
-    0.87
-   ],
-   [
-    31.53,
-    16.88,
-    11.64,
-    4.713,
-    0.7
-   ],
-   [
-    -39.49,
-    21.39,
-    11.42,
-    1.356,
-    0.79
-   ],
-   [
-    -38.35,
-    37.22,
-    8.82,
-    1.278,
-    0.64
-   ],
-   [
-    -33.95,
-    57.49,
-    5.43,
-    0.468,
-    0.9
-   ],
-   [
-    41.87,
-    59.29,
-    7.3,
-    0.133,
-    0.72
-   ],
-   [
-    -24.13,
-    74.57,
-    3.61,
-    3.876,
-    0.88
-   ],
-   [
-    39.24,
-    70.99,
-    6.29,
-    4.337,
-    0.6
-   ],
-   [
-    -43.63,
-    85.03,
-    5.65,
-    2.531,
-    0.74
-   ],
-   [
-    -33.63,
-    98.61,
-    3.68,
-    6.103,
-    0.75
-   ],
-   [
-    -34.89,
-    110.96,
-    3.23,
-    5.26,
-    0.76
-   ],
-   [
-    47.78,
-    109.14,
-    4.64,
-    4.236,
-    0.92
-   ],
-   [
-    -37.83,
-    115.43,
-    3.47,
-    4.703,
-    0.81
-   ],
-   [
-    -37.79,
-    124.9,
-    2.61,
-    5.736,
-    0.64
-   ],
-   [
-    52.79,
-    123.9,
-    3.8,
-    4.038,
-    0.94
-   ],
-   [
-    -34.11,
-    127.45,
-    1.6,
-    3.461,
-    0.68
-   ],
-   [
-    49.47,
-    135.75,
-    1.18,
-    0.923,
-    0.77
-   ],
-   [
-    53.46,
-    141.58,
-    1.6,
-    1.969,
-    0.75
-   ],
-   [
-    37.53,
-    181.01,
-    1.69,
-    1.075,
-    0.88
-   ],
-   [
-    -4.77,
-    182.83,
-    1.48,
-    4.371,
-    0.89
-   ],
-   [
-    0.52,
-    181.97,
-    1.08,
-    4.591,
-    0.73
-   ],
-   [
-    14.21,
-    191.65,
-    3.4,
-    3.532,
-    0.9
-   ]
-  ],
-  "fern_1": [
    [
     5.26,
     -40.09,
     12.16,
-    1.993,
+    3.323,
     0.89
    ],
    [
     -22.82,
     -28.88,
     12.25,
-    1.496,
+    1.606,
     0.86
-   ],
-   [
-    -5.11,
-    -31.87,
-    12.2,
-    1.883,
-    0.93
    ],
    [
     33.64,
     -31.61,
     13.2,
-    0.805,
+    5.759,
     0.71
    ],
    [
     -33.27,
     -27.18,
     13.04,
-    0.486,
+    4.419,
     0.83
+   ],
+   [
+    4.92,
+    -27.95,
+    12.31,
+    4.06,
+    0.84
    ],
    [
     23.29,
     -24.04,
     12.71,
-    0.597,
+    5.265,
     0.86
+   ],
+   [
+    29.17,
+    -25.88,
+    13.03,
+    2.193,
+    0.92
    ],
    [
     -30.68,
     -18.84,
     12.93,
-    1.082,
+    5.458,
     0.89
+   ],
+   [
+    -25.23,
+    -19.79,
+    12.52,
+    3.438,
+    0.87
+   ],
+   [
+    39.24,
+    -1.27,
+    15.03,
+    1.251,
+    0.75
+   ],
+   [
+    33.28,
+    4.91,
+    13.87,
+    3.45,
+    0.87
+   ],
+   [
+    -39.49,
+    21.39,
+    11.42,
+    3.258,
+    0.79
+   ],
+   [
+    -38.35,
+    37.22,
+    8.82,
+    3.757,
+    0.64
+   ],
+   [
+    -27.91,
+    50.66,
+    5.36,
+    0.383,
+    0.82
+   ],
+   [
+    -40.35,
+    61.6,
+    6.03,
+    1.302,
+    0.78
+   ],
+   [
+    -33.95,
+    57.49,
+    5.43,
+    2.178,
+    0.9
+   ],
+   [
+    29.9,
+    61.31,
+    5.5,
+    4.92,
+    0.88
+   ],
+   [
+    41.87,
+    59.29,
+    7.3,
+    5.802,
+    0.72
+   ],
+   [
+    39.24,
+    70.99,
+    6.29,
+    0.929,
+    0.6
+   ],
+   [
+    43.32,
+    75.7,
+    6.7,
+    4.005,
+    0.9
+   ],
+   [
+    -43.63,
+    85.03,
+    5.65,
+    0.95,
+    0.74
+   ],
+   [
+    36.66,
+    102.16,
+    3.55,
+    4.561,
+    0.8
+   ],
+   [
+    47.78,
+    109.14,
+    4.64,
+    3.184,
+    0.92
+   ],
+   [
+    -37.83,
+    115.43,
+    3.47,
+    2.279,
+    0.81
+   ],
+   [
+    -37.79,
+    124.9,
+    2.61,
+    4.765,
+    0.64
+   ],
+   [
+    52.79,
+    123.9,
+    3.8,
+    5.573,
+    0.94
+   ],
+   [
+    -34.11,
+    127.45,
+    1.6,
+    1.158,
+    0.68
+   ],
+   [
+    49.47,
+    135.75,
+    1.18,
+    5.586,
+    0.77
+   ],
+   [
+    53.46,
+    141.58,
+    1.6,
+    2.956,
+    0.75
+   ],
+   [
+    -26.85,
+    175.21,
+    2.61,
+    4.204,
+    0.86
+   ],
+   [
+    -15.59,
+    176.57,
+    1.08,
+    2.722,
+    0.95
+   ],
+   [
+    0.52,
+    181.97,
+    1.08,
+    5.562,
+    0.73
+   ],
+   [
+    10.49,
+    186.27,
+    1.97,
+    1.712,
+    0.61
+   ],
+   [
+    3.01,
+    191.04,
+    3.48,
+    4.474,
+    0.8
+   ],
+   [
+    30.31,
+    190.7,
+    2.68,
+    1.932,
+    0.85
+   ]
+  ],
+  "fern_0": [
+   [
+    -5.11,
+    -31.87,
+    12.2,
+    5.501,
+    0.93
+   ],
+   [
+    20.15,
+    -20.89,
+    12.7,
+    4.546,
+    0.73
    ],
    [
     23.6,
@@ -10199,116 +9464,95 @@
     0.73
    ],
    [
-    39.24,
-    -1.27,
-    15.03,
-    4.902,
-    0.75
+    39.9,
+    -8.26,
+    15.06,
+    2.122,
+    0.67
+   ],
+   [
+    31.53,
+    16.88,
+    11.64,
+    3.502,
+    0.7
    ],
    [
     -34.75,
     50.56,
     6.22,
-    4.215,
+    2.972,
     0.88
    ],
    [
-    -27.91,
-    50.66,
-    5.36,
-    3.251,
-    0.82
-   ],
-   [
-    -40.35,
-    61.6,
-    6.03,
-    2.557,
-    0.78
-   ],
-   [
-    29.9,
-    61.31,
-    5.5,
-    2.471,
+    -24.13,
+    74.57,
+    3.61,
+    0.778,
     0.88
    ],
    [
     33.74,
     70.63,
     5.53,
-    5.286,
+    2.794,
     0.81
-   ],
-   [
-    43.32,
-    75.7,
-    6.7,
-    4.171,
-    0.9
    ],
    [
     46.23,
     80.32,
     6.94,
-    5.543,
+    2.876,
     0.83
    ],
    [
-    36.66,
-    102.16,
-    3.55,
-    3.9,
-    0.8
+    -33.63,
+    98.61,
+    3.68,
+    1.944,
+    0.75
+   ],
+   [
+    -34.89,
+    110.96,
+    3.23,
+    2.84,
+    0.76
    ],
    [
     52.12,
     151.88,
     1.01,
-    1.239,
+    0.728,
     0.87
    ],
    [
     -37.96,
     157.47,
     2.38,
-    3.709,
+    2.841,
     0.78
    ],
    [
-    -26.85,
-    175.21,
-    2.61,
-    4.569,
-    0.86
+    37.53,
+    181.01,
+    1.69,
+    6.152,
+    0.88
    ],
    [
-    -15.59,
-    176.57,
-    1.08,
-    3.92,
-    0.95
+    -4.77,
+    182.83,
+    1.48,
+    1.981,
+    0.89
    ],
    [
-    10.49,
-    186.27,
-    1.97,
-    3.38,
-    0.61
-   ],
-   [
-    3.01,
-    191.04,
-    3.48,
-    4.463,
-    0.8
-   ],
-   [
-    30.31,
-    190.7,
-    2.68,
-    6.25,
-    0.85
+    14.21,
+    191.65,
+    3.4,
+    1.581,
+    0.9
    ]
   ],
   "cattails_1": [
@@ -10316,290 +9560,290 @@
     53.44,
     156.52,
     1.39,
-    0.204,
-    0.986
+    6.123,
+    1.076
    ],
-   [
-    55.28,
-    167.22,
-    3.03,
-    4.438,
-    1.132
-   ],
-   [
-    46.94,
-    170.85,
-    1.45,
-    1.707,
-    0.914
-   ],
-   [
-    41.32,
-    180.17,
-    2.0,
-    4.928,
-    0.892
-   ],
-   [
-    20.92,
-    186.92,
-    1.95,
-    2.385,
-    0.989
-   ],
-   [
-    16.42,
-    187.43,
-    2.14,
-    2.321,
-    1.057
-   ],
-   [
-    11.51,
-    183.09,
-    1.08,
-    3.632,
-    1.034
-   ],
-   [
-    -0.85,
-    182.67,
-    1.23,
-    4.17,
-    0.992
-   ],
-   [
-    -12.07,
-    178.24,
-    1.0,
-    5.549,
-    1.033
-   ],
-   [
-    -33.7,
-    159.48,
-    1.43,
-    0.025,
-    0.93
-   ],
-   [
-    -37.23,
-    140.88,
-    1.48,
-    2.508,
-    1.066
-   ],
-   [
-    -20.6,
-    119.98,
-    0.49,
-    2.275,
-    1.148
-   ],
-   [
-    -14.06,
-    115.99,
-    0.46,
-    0.02,
-    0.893
-   ],
-   [
-    2.3,
-    112.2,
-    0.66,
-    0.181,
-    0.877
-   ],
-   [
-    6.79,
-    113.74,
-    0.53,
-    4.772,
-    0.992
-   ],
-   [
-    15.11,
-    114.78,
-    0.5,
-    6.033,
-    1.129
-   ],
-   [
-    19.89,
-    113.24,
-    0.71,
-    4.335,
-    0.89
-   ],
-   [
-    24.07,
-    114.54,
-    0.68,
-    3.067,
-    1.03
-   ],
-   [
-    26.66,
-    118.55,
-    0.45,
-    3.914,
-    0.934
-   ],
-   [
-    43.24,
-    123.51,
-    1.45,
-    1.246,
-    0.943
-   ],
-   [
-    51.48,
-    135.47,
-    1.61,
-    4.002,
-    0.902
-   ],
-   [
-    56.74,
-    141.21,
-    2.56,
-    1.821,
-    1.106
-   ]
-  ],
-  "cattails_0": [
    [
     57.07,
     164.12,
     3.19,
-    4.684,
-    0.957
+    2.272,
+    1.0
    ],
    [
     52.25,
     169.77,
     2.53,
-    6.021,
-    1.093
+    5.717,
+    0.95
    ],
    [
     43.45,
     176.96,
     1.8,
-    0.272,
-    1.012
+    0.595,
+    1.015
+   ],
+   [
+    41.32,
+    180.17,
+    2.0,
+    4.225,
+    1.14
    ],
    [
     30.65,
     179.4,
     0.83,
-    6.094,
-    1.058
+    0.745,
+    0.945
    ],
    [
     24.09,
     183.31,
     1.2,
-    2.394,
-    0.889
+    1.151,
+    1.083
+   ],
+   [
+    16.42,
+    187.43,
+    2.14,
+    0.854,
+    1.128
+   ],
+   [
+    11.51,
+    183.09,
+    1.08,
+    2.388,
+    0.999
    ],
    [
     3.38,
     182.64,
     1.1,
-    1.532,
-    1.082
+    1.633,
+    1.146
    ],
    [
-    -9.85,
-    182.3,
-    1.62,
-    2.693,
-    0.914
+    -0.85,
+    182.67,
+    1.23,
+    6.077,
+    1.077
+   ],
+   [
+    -12.07,
+    178.24,
+    1.0,
+    5.633,
+    1.145
    ],
    [
     -21.84,
     172.37,
     1.09,
-    3.686,
-    0.933
+    4.574,
+    0.876
    ],
    [
-    -30.58,
-    161.91,
-    1.06,
-    0.904,
-    1.146
+    -33.7,
+    159.48,
+    1.43,
+    2.384,
+    0.953
    ],
    [
-    -37.94,
-    156.98,
-    2.27,
-    1.619,
-    0.87
-   ],
-   [
-    -38.44,
-    143.94,
-    1.74,
-    6.265,
-    1.144
-   ],
-   [
-    -31.1,
-    132.9,
-    0.73,
-    1.507,
-    0.929
+    -37.23,
+    140.88,
+    1.48,
+    0.316,
+    1.096
    ],
    [
     -30.75,
     125.73,
     1.1,
-    3.758,
-    0.862
+    2.644,
+    0.917
+   ],
+   [
+    -20.6,
+    119.98,
+    0.49,
+    2.238,
+    0.901
+   ],
+   [
+    -14.06,
+    115.99,
+    0.46,
+    3.27,
+    0.89
+   ],
+   [
+    2.3,
+    112.2,
+    0.66,
+    2.917,
+    0.93
+   ],
+   [
+    6.79,
+    113.74,
+    0.53,
+    5.557,
+    1.083
+   ],
+   [
+    51.48,
+    135.47,
+    1.61,
+    2.299,
+    1.018
+   ]
+  ],
+  "cattails_0": [
+   [
+    55.28,
+    167.22,
+    3.03,
+    0.677,
+    0.884
+   ],
+   [
+    46.94,
+    170.85,
+    1.45,
+    2.963,
+    0.969
+   ],
+   [
+    20.92,
+    186.92,
+    1.95,
+    1.812,
+    0.91
+   ],
+   [
+    -9.85,
+    182.3,
+    1.62,
+    4.647,
+    1.099
+   ],
+   [
+    -30.58,
+    161.91,
+    1.06,
+    2.138,
+    1.056
+   ],
+   [
+    -37.94,
+    156.98,
+    2.27,
+    5.341,
+    1.025
+   ],
+   [
+    -38.44,
+    143.94,
+    1.74,
+    4.244,
+    1.109
+   ],
+   [
+    -31.1,
+    132.9,
+    0.73,
+    1.913,
+    1.073
    ],
    [
     -22.37,
     123.12,
     0.44,
-    1.608,
-    0.879
+    1.316,
+    0.918
    ],
    [
     -1.12,
     115.6,
     0.4,
-    0.794,
-    1.121
+    6.134,
+    1.035
+   ],
+   [
+    15.11,
+    114.78,
+    0.5,
+    2.169,
+    1.026
+   ],
+   [
+    19.89,
+    113.24,
+    0.71,
+    4.439,
+    0.994
+   ],
+   [
+    24.07,
+    114.54,
+    0.68,
+    3.382,
+    1.092
+   ],
+   [
+    26.66,
+    118.55,
+    0.45,
+    3.52,
+    0.945
    ],
    [
     32.7,
     116.79,
     0.93,
-    5.472,
-    0.967
+    4.364,
+    0.94
+   ],
+   [
+    43.24,
+    123.51,
+    1.45,
+    0.486,
+    0.888
    ],
    [
     45.51,
     130.62,
     0.95,
-    1.253,
-    0.917
+    0.597,
+    1.075
    ],
    [
     55.62,
     137.89,
     2.51,
-    2.728,
-    0.857
+    2.212,
+    0.938
+   ],
+   [
+    56.74,
+    141.21,
+    2.56,
+    2.095,
+    0.971
    ],
    [
     59.85,
     144.33,
     3.46,
-    5.585,
-    0.877
+    0.465,
+    1.093
    ]
   ]
  }

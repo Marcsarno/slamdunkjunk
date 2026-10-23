@@ -213,17 +213,20 @@
   ],
   "theme": {
     "trees_near": [
+      "tree_bent_willow",
+      "tree_hollow_sentinel",
+      "tree_twisted_cypress",
+      "tree_raven_perch",
       "haunted_tree",
-      "dead_tree",
-      "lantern_tree",
-      "haunted_tree",
-      "dead_tree"
+      "tree_lightning_oak",
+      "tree_bent_willow"
     ],
     "trees_far": [
-      "pine_blue",
-      "dead_tree",
-      "pine_blue",
-      "haunted_tree"
+      "tree_moonlit_pine",
+      "tree_windbent_fir",
+      "tree_ancient_yew",
+      "tree_twisted_cypress",
+      "tree_moonlit_pine"
     ],
     "backdrop": {
       "hole": "02-witchs-hollow",

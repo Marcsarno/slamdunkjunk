@@ -42,20 +42,31 @@
    1625
   ]
  },
+ "ground": {
+  "file": "ground.jpg",
+  "size": [
+   846,
+   2031
+  ]
+ },
  "theme": {
   "trees_near": [
-   "apple_tree",
+   "tree_copper_oak",
+   "tree_scarlet_maple",
+   "tree_golden_aspen",
+   "tree_crooked_plum",
+   "tree_harvest_pear",
    "maple_orange",
-   "apple_tree",
-   "maple_red",
-   "haunted_tree",
+   "tree_copper_oak",
    "lantern_tree"
   ],
   "trees_far": [
+   "tree_moonlit_pine",
+   "tree_scarlet_maple",
+   "tree_golden_aspen",
+   "tree_copper_oak",
    "pine_blue",
-   "maple_red",
-   "birch",
-   "dead_tree"
+   "tree_windbent_fir"
   ],
   "cornfield": {
    "side": "right",

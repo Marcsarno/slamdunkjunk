@@ -267,7 +267,16 @@ def in_cornfield(x, y):
 
 
 TREE_HEIGHT = {"pine_blue": (9.0, 13.0), "haunted_tree": (5.5, 7.5), "lantern_tree": (5.5, 7.5),
-               "dead_tree": (6.0, 8.5), "birch": (8.0, 11.0), "apple_tree": (5.5, 7.5)}
+               "dead_tree": (6.0, 8.5), "birch": (8.0, 11.0), "apple_tree": (5.5, 7.5),
+               # the painted tree set (tools/prep_trees.py)
+               "tree_copper_oak": (7.0, 9.5), "tree_scarlet_maple": (7.0, 9.5), "tree_golden_aspen": (8.0, 11.0),
+               "tree_crooked_plum": (5.5, 7.5), "tree_harvest_pear": (6.0, 8.0), "tree_hollow_sentinel": (7.0, 9.0),
+               "tree_bent_willow": (5.0, 6.5), "tree_lightning_oak": (7.0, 9.0), "tree_silver_snag": (7.0, 9.5),
+               "tree_raven_perch": (4.5, 6.0), "tree_moonlit_pine": (10.0, 14.0), "tree_twisted_cypress": (8.0, 10.5),
+               "tree_ancient_yew": (5.0, 6.5), "tree_windbent_fir": (8.0, 10.0), "tree_ghost_birch": (8.0, 11.0)}
+# trees much wider than tall: their canopy (the ball's soft obstacle) spreads wider for their height
+TREE_SPREAD = {"tree_bent_willow": 0.5, "tree_ancient_yew": 0.5, "tree_raven_perch": 0.45, "tree_windbent_fir": 0.35,
+               "tree_lightning_oak": 0.35}
 sp = spec.get("trees_spacing", tree_cfg.get("spacing", 8.5))
 for yy in np.arange(y0 + 4, y1 - 4, sp):
     for xx in np.arange(x0 + 4, x1 - 4, sp):
@@ -294,7 +303,8 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
                       "shadow": True})
         if near_zone:
             obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": 0.45, "h": height * 0.45})
-            obstacles.append({"type": "sphere", "pos": [x, y, z + height * 0.62], "r": height * 0.28, "soft": True})
+            obstacles.append({"type": "sphere", "pos": [x, y, z + height * 0.62], "r": height * TREE_SPREAD.get(img, 0.28),
+                              "soft": True})
         taken.append((x, y, 2.5))
 
 # a few set-dressing cards on the play edges

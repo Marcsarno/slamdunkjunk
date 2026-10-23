@@ -152,7 +152,7 @@ func _wisps() -> void:
 	var count := int(theme.get("wisps", 60))
 	var trees := []
 	for c in props.get("cards", []):
-		if c.image in ["dead_tree", "haunted_tree", "maple_red", "maple_orange", "pine_blue", "birch", "lantern_tree", "apple_tree"]:
+		if c.image.begins_with("tree_") or c.image in ["dead_tree", "haunted_tree", "maple_red", "maple_orange", "pine_blue", "birch", "lantern_tree", "apple_tree"]:
 			trees.append(c)
 	if trees.is_empty() or count <= 0:
 		return
