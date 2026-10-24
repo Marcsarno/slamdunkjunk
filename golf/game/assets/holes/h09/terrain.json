@@ -4,7 +4,7 @@
  "number": 9,
  "par": 4,
  "origin": [
-  -50,
+  -96,
   -50
  ],
  "extent": [
@@ -13,13 +13,13 @@
  ],
  "phys": {
   "cell": 1.0,
-  "nx": 184,
+  "nx": 230,
   "ny": 401,
   "file": "heights.bin"
  },
  "surf": {
   "cell": 0.5,
-  "nx": 367,
+  "nx": 459,
   "ny": 801,
   "file": "surface.bin",
   "names": [
@@ -40,14 +40,14 @@
   "detail": "detail.png",
   "path": "path.png",
   "size": [
-   733,
+   917,
    1601
   ]
  },
  "ground": {
   "file": "ground.jpg",
   "size": [
-   916,
+   1146,
    2001
   ]
  },
@@ -148,7 +148,7 @@
  "pin": [
   2,
   303,
-  6.135510993518019
+  6.137670697934352
  ],
  "green": {
   "center": [
@@ -163,6 +163,12 @@
   "slope": [
    0.01,
    0.022
+  ],
+  "lobes": [
+   0.087,
+   2.051,
+   0.061,
+   1.688
   ]
  },
  "length": 355.0,
@@ -317,6 +323,9 @@
   "min": 1,
   "max": 3
  },
+ "webs": [],
+ "web_art": [],
+ "corn": [],
  "cart_path": [
   [
    7.79,

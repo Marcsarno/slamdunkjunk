@@ -86,6 +86,7 @@ var terrain: Terrain
 var obstacles: ObstacleGrid
 var view := HoleView.new()
 var fx := Fx.new()
+var divots := Node3D.new()            # the turf her irons have taken this hole (cleared with the hole)
 var golfer := Golfer.new()
 var lantern := HeroLantern.new()
 var hud := Hud.new()
@@ -195,6 +196,7 @@ func _ready() -> void:
 	add_child(view)
 	obstacles = ObstacleGrid.new(view.props.obstacles)
 	add_child(fx)
+	add_child(divots)
 	view.ambience.lightning.connect(func(k: float):
 		Sfx.play_after(randf_range(1.0, 2.2), "thunder", lerpf(-18.0, -9.0, k), randf_range(0.8, 1.0)))
 	par = int(terrain.meta.par)
@@ -284,6 +286,8 @@ func _prewarm() -> void:
 	for surf in [Terrain.Surface.FAIRWAY, Terrain.Surface.SAND, Terrain.Surface.WATER, Terrain.Surface.PATH, Terrain.Surface.GREEN]:
 		fx.land(under, surf)
 	fx.holed(under, Color(1.0, 0.6, 0.25))
+	fx.divot(under, Vector3.UP, Vector3.FORWARD, 1.0, under + Vector3.FORWARD * 2.0, Vector3.UP, divots)
+	fx.sand_blast(under, Vector3.FORWARD)
 	for i in 8:
 		trail_pts.append(under + Vector3(i, 0, 0))
 	_streaks.append([0.0, 1.0, 2.0, 0.1])
@@ -398,6 +402,8 @@ func _on_next() -> void:
 
 func _start_hole() -> void:
 	hud.hide_card()
+	for d in divots.get_children():
+		d.queue_free()
 	strokes = 0
 	ball = terrain.tee() + Vector3(0, 0, BallSim.RADIUS)
 	last_ball = ball
@@ -783,6 +789,7 @@ func _on_contact() -> void:
 	var dir := (land - b).normalized()
 	var stretch := land.distance_to(b) / maxf(d, 0.01)
 	sim.launch(ball, _launch(power * stretch, dir), club.lift)
+	_take_turf(dir, power)
 	var hit: String = {"wood": "hit_driver", "putter": "putt"}.get(club.kind, "hit_iron")
 	Sfx.play(hit, lerpf(-14.0, 0.0, clampf(power, 0.0, 1.0)) if club.id == "putter" else -1.0)
 	_landed_fx = false
@@ -791,6 +798,27 @@ func _on_contact() -> void:
 	flight_dir = aim
 	phase = Phase.FLIGHT
 	phase_t = 0.0
+
+
+## What the club takes at the strike: irons, wedges and chips off the turf dig a divot just past the
+## ball (bigger the more lofted and the harder she swings), a bunker shot blasts sand; woods sweep it
+## clean and putts touch nothing.
+func _take_turf(dir: Vector2, power: float) -> void:
+	if not club.kind in ["iron", "wedge", "chip"]:
+		return
+	var surf := terrain.surface_at(ball.x, ball.y)
+	var at := Terrain.to_world(Vector3(ball.x, ball.y, terrain.height(ball.x, ball.y)))
+	var d3 := Terrain.to_world(Vector3(dir.x, dir.y, 0.0)).normalized()
+	if surf == Terrain.Surface.SAND:
+		fx.sand_blast(at, d3)
+		return
+	if not surf in [Terrain.Surface.FAIRWAY, Terrain.Surface.ROUGH, Terrain.Surface.DEEP, Terrain.Surface.TEE, Terrain.Surface.FRINGE]:
+		return
+	var size: float = {"iron": 1.0, "wedge": 1.2, "chip": 0.6}[club.kind] * lerpf(0.6, 1.0, clampf(power, 0.0, 1.0))
+	var n := Terrain.to_world(terrain.normal(ball.x, ball.y))
+	var land := Vector2(ball.x, ball.y) + dir * randf_range(1.6, 3.0) * size
+	var land_n := Terrain.to_world(terrain.normal(land.x, land.y))
+	fx.divot(at, n, d3, size, Terrain.to_world(Vector3(land.x, land.y, terrain.height(land.x, land.y))), land_n, divots)
 
 
 const CELEBRATE_SET := "video_celebrate"
@@ -1104,7 +1132,7 @@ func _aim_cam_dir() -> Vector3:
 func _aim_cam_pos() -> Vector3:
 	var a := _aim_cam_dir()
 	if club.id == "putter":
-		return Terrain.to_world(ball - a * 3.4 + Vector3(0, 0, 2.7))     # up behind the ball, the green laid out
+		return Terrain.to_world(ball - a * 3.6 + Vector3(0, 0, 3.3))     # up behind the ball, the green laid out
 	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))
 
 

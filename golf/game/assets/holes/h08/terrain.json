@@ -4,7 +4,7 @@
  "number": 8,
  "par": 4,
  "origin": [
-  -51,
+  -82,
   -49
  ],
  "extent": [
@@ -13,13 +13,13 @@
  ],
  "phys": {
   "cell": 1.0,
-  "nx": 116,
+  "nx": 147,
   "ny": 417,
   "file": "heights.bin"
  },
  "surf": {
   "cell": 0.5,
-  "nx": 231,
+  "nx": 293,
   "ny": 833,
   "file": "surface.bin",
   "names": [
@@ -40,14 +40,14 @@
   "detail": "detail.png",
   "path": "path.png",
   "size": [
-   461,
+   585,
    1665
   ]
  },
  "ground": {
   "file": "ground.jpg",
   "size": [
-   566,
+   719,
    2048
   ]
  },
@@ -140,12 +140,12 @@
  "tee": [
   0.0,
   0.0,
-  4.075694525228435
+  4.075236615045456
  ],
  "pin": [
   0,
   322,
-  6.452681848237064
+  6.451441076541797
  ],
  "green": {
   "center": [
@@ -160,6 +160,12 @@
   "slope": [
    0.01,
    0.02
+  ],
+  "lobes": [
+   0.115,
+   1.449,
+   0.065,
+   0.096
   ]
  },
  "length": 319.6,
@@ -305,7 +311,7 @@
    ],
    "rotation": -0.4145,
    "level_offset": -4.2,
-   "level": 3.007
+   "level": 3.038
   },
   {
    "center": [
@@ -331,7 +337,7 @@
    ],
    "rotation": -0.3805,
    "level_offset": -4.2,
-   "level": -0.002
+   "level": -0.001
   },
   {
    "center": [
@@ -344,7 +350,7 @@
    ],
    "rotation": -0.3456,
    "level_offset": -4.2,
-   "level": 3.457
+   "level": 3.454
   },
   {
    "center": [
@@ -357,7 +363,7 @@
    ],
    "rotation": -0.1974,
    "level_offset": -4.2,
-   "level": 3.097
+   "level": 3.064
   }
  ],
  "wind": {

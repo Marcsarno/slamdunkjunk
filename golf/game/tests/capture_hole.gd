@@ -18,6 +18,7 @@ var burst := false     # --burst: a screenshot every frame through each swing, n
 var pull_steps := false   # --pull-steps: on the first shot, screenshots at a quarter, half, ... of the pull
 var drag_test := false    # --drag-test: first shot, drag the target aside with a finger, land at the margin's edge
 var side_test := false    # --side-test: first shot, slide the pulling finger a fifth of the screen right (aims left)
+var short_putts := false  # --short-putts: putts are pulled to 60% of the mark (shows the stop ring, and a miss)
 var first_target := Vector2.INF   # --target=x,y: the first shot aims there (course metres), e.g. the safe lay-up
 
 
@@ -33,6 +34,8 @@ func _ready() -> void:
 			pull_steps = true
 		if a == "--drag-test":
 			drag_test = true
+		if a == "--short-putts":
+			short_putts = true
 		if a == "--side-test":
 			side_test = true
 		if a.begins_with("--target="):
@@ -100,7 +103,8 @@ func _process(delta: float) -> void:
 				await snap("aim")
 				var vp := main.get_viewport().get_visible_rect().size
 				main._press(Vector2(360, vp.y * 0.8))
-				main._drag(Vector2(360, vp.y * 0.8 + main._pull_len * main.mark_pull()), Vector2.ZERO)
+				var k := 0.6 if short_putts and main.club.id == "putter" else 1.0
+				main._drag(Vector2(360, vp.y * 0.8 + main._pull_len * main.mark_pull() * k), Vector2.ZERO)
 				main.spread_test = Vector2.ZERO      # dead centre of its margin
 				t = 0.0
 				stage = "pull"
@@ -175,6 +179,11 @@ func _process(delta: float) -> void:
 				landed = false
 				stage = "fly"
 		"fly":
+			if t > 20.0 and not get_meta("stuck_told", false):
+				set_meta("stuck_told", true)      # a shot that never ends: say where it is and what it's doing
+				print("   STUCK s%d: phase %d state %s pos %s vel %s surface %d" % [shot + 1, main.phase,
+					main.sim.state if main.sim else -1, main.sim.pos if main.sim else Vector3.ZERO,
+					main.sim.vel if main.sim else Vector3.ZERO, main.terrain.surface_at(main.sim.pos.x, main.sim.pos.y) if main.sim else -1])
 			if main.phase == main.Phase.FLIGHT and main.sim:
 				if main.sim.state == BallSim.State.FLYING and t > 1.6 and not landed and stage == "fly":
 					await snap("flight")

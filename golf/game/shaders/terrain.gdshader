@@ -114,7 +114,8 @@ void fragment() {
 		band = clamp(band * 4.0, -1.0, 1.0);
 		vec3 vd = normalize(wpos - CAMERA_POSITION_WORLD);
 		float facing = dot(normalize(vec2(vd.x, -vd.z) + vec2(0.0001)), gd);
-		c *= 1.0 + 0.07 * band * sign(facing + 0.0001) * on_green;
+		// side-on the stripes fade out rather than flipping light/dark in a hard line down the view
+		c *= 1.0 + 0.07 * band * clamp(facing * 2.5, -1.0, 1.0) * on_green;
 		// a worn, slightly paler ring of turf round the cup
 		float dc = distance(cxy, pin_xy);
 		c *= mix(vec3(1.0), vec3(1.07, 1.05, 0.9), (1.0 - smoothstep(0.12, 0.6, dc)) * on_green);
