@@ -1,17 +1,17 @@
 {
-  "triangles": 3868,
+  "triangles": 6000,
   "mesh_objects": 10,
-  "materials": 8,
+  "materials": 9,
   "dimensions_m": [
     0.6319999694824219,
-    0.7488571554422379,
-    1.19871985912323
+    0.7470670193433762,
+    1.172422170639038
   ],
-  "palette": "Exact Night v3 material nodes and embedded images preserved",
-  "stand": "Unchanged stable deployed stand; feet and base contact z=0",
-  "changes": [
-    "Rounded, sloped iron blade with tapered back and two-piece hosel",
-    "Driver flattened striking plate and three subtle score lines"
+  "ground_min_z": 0.0,
+  "root_location": [
+    0.0,
+    0.0,
+    0.0
   ],
   "blender": "4.3.2"
 }

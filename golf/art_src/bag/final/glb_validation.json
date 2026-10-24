@@ -1,9 +1,9 @@
 {
   "import_success": true,
   "mesh_objects": 10,
-  "triangles": 3868,
+  "triangles": 6000,
   "embedded_images": [
-    "plum_cloth_deep",
+    "plum_woven_final",
     "pumpkin_badge_deep"
   ],
   "separate_clubs": true,

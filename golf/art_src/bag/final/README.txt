@@ -1,34 +1,48 @@
-PUMPKIN GOLF STAND BAG - FINAL POLISH
+PUMPKIN GOLF STAND BAG - THREE-PASS CRAFTSMANSHIP EDITION
 Graveyard Shift: Midnight Golf
 
-This is the approved dark Night v3 palette with a final club-shape polish.
-All 8 material definitions and both embedded texture byte streams were
-verified identical to v3. Lighting, camera and exposure are unchanged.
+An actual Blender-built game prop. The approved dark plum / burnt-orange
+palette is retained. This is not an AI-generated image pretending to be a model.
+The hero and angle images are renders of the enclosed Blender asset.
 
-Changes:
-- Iron has a rounded, sloped blade, tapered back, score lines and shaped hosel.
-- Driver has a flattened striking plate and subtle score lines.
-- Existing handle attachments, piping, stand legs, feet and bag shape preserved.
+THREE CHECKPOINTS
+1. Construction: smoother padded carry handle, broader contoured rubber base
+   with protective ribs, slightly fuller front pocket, more compact club display.
+2. Materials/detail: subtly varied woven plum texture, zipper track and pull,
+   restrained pocket stitches and handle wrap seams. No baked lighting or glow.
+3. Critical QA: front/back/side inspection identified floating collar fasteners,
+   pocket piping and a side seam. Rivets were seated against the collar; pocket
+   piping was rebuilt by projecting onto its curved surface; the side seam was
+   aligned with the pocket. Added protective stand-entry sleeves and a tiny
+   reference-style driver crown accent. Static detail consolidated for export.
 
-Files:
-Pumpkin_Golf_Stand_Bag_Final.blend: editable Blender 4.3.2 scene, packed textures.
-Pumpkin_Golf_Stand_Bag_Final.glb: game asset, textures embedded, no studio objects.
-Pumpkin_Golf_Bag_Final_Preview.png: neutral studio render of the actual model.
-textures/: source PNG files, unchanged from Night v3.
-asset_stats.json / glb_validation.json / palette_validation.json: validation.
+CONTENTS
+- Pumpkin_Bag_Overnight_Final.blend: editable Blender 4.3.2 scene, packed textures.
+- Pumpkin_Bag_Overnight_Final.glb: game asset with embedded textures, no studio.
+- Pumpkin_Bag_Overnight_Hero.png: neutral studio hero render.
+- Pumpkin_Bag_Multiangle.png: front, handle side and rear inspection views.
+- Pumpkin_Bag_Before_After.png: approved earlier final vs new version, identical
+  hero camera, lighting and exposure.
+- textures/: new woven plum fabric and unchanged pumpkin graphic.
+- asset_stats.json and glb_validation.json: actual export statistics/checks.
 
-3,868 triangles, 10 mesh objects, 8 materials, 2 embedded textures.
-Dimensions: 0.632 x 0.749 x 1.199 metres, including clubs and deployed stand.
-Bag body height approximately 0.87 metres. Root is at ground level.
-Club_DRIVER, Club_IRON and Club_PUTTER remain separate objects.
-Both stand legs, rubber feet and hinge assemblies remain separate.
-The base and both feet contact z=0; preview floor is at z=-0.003.
+SPECIFICATIONS
+6,000 triangles; 10 mesh objects; 9 materials; 2 embedded textures.
+Bounds approximately 0.632 x 0.747 x 1.172 metres including stand and clubs.
+Bag body height approximately 0.87 m. Root and base ground contact at z=0.
+Club_DRIVER, Club_IRON and Club_PUTTER remain separate removable objects.
+Both stand legs, feet and hinge assemblies remain separate.
 
-GLB was reimported successfully into a fresh Blender scene and checked.
-Specular properties use KHR_materials_specular. If an engine ignores that
-extension, reduce specular manually to preserve the dark matte appearance.
-The approved dark base colors are independently embedded in the GLB.
+A fresh Blender scene successfully reimported the GLB; clubs, both legs,
+embedded images and triangle count were verified. All three ground contacts
+are retained. Earlier versions/checkpoints were preserved outside this package.
 
-Static deployed prop, no armature, folding animation, collision or game setup.
-The .blend includes named STUDIO preview objects; those are excluded from GLB.
-Earlier versions remain unchanged and are not included in this final package.
+IMPLEMENTATION
+Static deployed prop only. No folding animation, armature, collision, LOD,
+or game integration is included. The editable .blend has STUDIO camera,
+floor and lights for preview; GLB excludes them. Use the GLB in the game.
+
+The dark materials use KHR_materials_specular. If your engine ignores this
+extension, lower specular manually to avoid pale reflection washout. The dark
+base colors and fabric textures are independently embedded. Render appearance
+will vary with the game's lighting and tone mapping.
