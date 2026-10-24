@@ -20,6 +20,7 @@ func _process(dt: float) -> void:
 		return
 	done = true
 	var ball: Vector3 = main.ball
+	main.sim = BallSim.new(main.terrain, main.obstacles, main.terrain.pin(), Vector2.ZERO)
 	for want in [["cylinder", false], ["box", false], ["sphere", false], ["sphere", true]]:
 		var best := {}
 		var bd := INF
