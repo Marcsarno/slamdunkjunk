@@ -163,6 +163,14 @@ def free(x, y, r):
     return all((x - a) ** 2 + (y - b) ** 2 > (r + c) ** 2 for a, b, c in taken)
 
 
+def off_green(x, y, m):
+    """At least m metres outside the green's edge (its real, lobed shape), so nothing stands on it or
+    spreads over it."""
+    g = hole.spec["green"]
+    gr = float(hole_gen.green_r(np.array([x], float), np.array([y], float), g)[0])
+    return (gr - 1.0) * min(g["radius"]) >= m
+
+
 # ---------- the cart path: kept clear of everything, with a plank bridge wherever it crosses water ----------
 bridges = 0
 if hole.cart is not None:
@@ -375,7 +383,7 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
         if d < edge - 4 or not free(x, y, 2.5) or in_cornfield(x, y):
             continue
         su = surf_at(x, y)
-        if su == hole_gen.WATER or in_open(x, y):
+        if su == hole_gen.WATER or in_open(x, y) or not off_green(x, y, 7.0):
             continue
         near_zone = d < edge + spec["deep_rough_width"] or in_open(x, y, 1.6)
         if rng.random() > (0.75 if near_zone else 0.4):
@@ -405,6 +413,8 @@ for name, at, ht in (("scarecrow", 0.45, 2.3), ("pumpkin_pile", 0.2, 1.4), ("pum
 
 # ---------- ground cover and set dressing (no collision: the surface type decides the lie) -----
 def card(img, x, y, height, shadow=False, sink=0.05):
+    if not off_green(x, y, 1.0):
+        return
     cards.append({"image": img, "pos": [round(float(x), 2), round(float(y), 2), round(h_at(x, y) - sink, 2)],
                   "height": round(float(height), 2), "shadow": shadow})
 
@@ -461,7 +471,7 @@ for w in spec.get("water", []):
         u, v = math.cos(a) * rx * k, math.sin(a) * ry * k
         x = cx + u * math.cos(rot) - v * math.sin(rot)
         y = cy + u * math.sin(rot) + v * math.cos(rot)
-        if surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.TEE):
+        if surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.TEE, hole_gen.GREEN, hole_gen.FRINGE):
             card("cattails", x, y, rng.uniform(1.2, 1.8), sink=0.1)
 # a cornfield along one side of the hole (theme), with hay bales at its edge
 cf = theme.get("cornfield")

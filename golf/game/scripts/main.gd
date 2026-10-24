@@ -50,9 +50,9 @@ const HINT := "Drag up top to move the target"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 ## The opening: two framed shots (the hole's own centrepiece, then its green and flag) and a swoop back
 ## to her on the tee.
-const SHOT_TIME := 2.7
-const FLY_BACK := 2.4
-const INTRO_TIME := SHOT_TIME * 2.0 + FLY_BACK
+const HIGH_TIME := 3.6        # the opening's first shot, high over the hole, with lightning and spirits
+const SHOT_TIME := 2.7         # then the hole's own low shot
+const FLY_BACK := 2.4          # and the swoop back down to her
 ## Each hole's establishing shot (course metres): the camera glides from `from` to `to` (x, y, height
 ## above the ground there) looking at `look` (x, y, height above the ground there).
 const CINEMA := {
@@ -86,7 +86,9 @@ var terrain: Terrain
 var obstacles: ObstacleGrid
 var view := HoleView.new()
 var fx := Fx.new()
-var divots := Node3D.new()            # the turf her irons have taken this hole (cleared with the hole)
+var divots := Node3D.new()
+var intro_fx := IntroFx.new()
+var bag: Node3D                       # her golf bag (3D), stood beside her for every shot            # the turf her irons have taken this hole (cleared with the hole)
 var golfer := Golfer.new()
 var lantern := HeroLantern.new()
 var hud := Hud.new()
@@ -202,6 +204,8 @@ func _ready() -> void:
 	par = int(terrain.meta.par)
 	add_child(golfer)
 	add_child(lantern)
+	_make_bag()
+	add_child(intro_fx)
 	cam.keep_aspect = Camera3D.KEEP_WIDTH
 	cam.near = 0.05
 	cam.far = 2500.0
@@ -266,11 +270,14 @@ func _prewarm() -> void:
 	await _drawn(2)
 	cam.projection = Camera3D.PROJECTION_PERSPECTIVE
 	# the opening's framed shots
-	for k in _intro_shots().size():
-		phase_t = k * SHOT_TIME + 0.1
+	var start := 0.0
+	for sh in _intro_shots():
+		phase_t = start + 0.1
+		start += float(sh.time)
 		_intro_cam()
 		_apply_cam(0.0)
 		await _drawn(1)
+	intro_fx.stop()
 	phase_t = 0.0
 	# the aiming view with its markers, a ball trail, and every landing effect (out of sight underground)
 	view.moon_light.shadow_enabled = true
@@ -423,7 +430,7 @@ func _start_hole() -> void:
 	var this_intro := _intro_id
 	get_tree().create_timer(0.5).timeout.connect(func():
 		if phase == Phase.INTRO and _intro_id == this_intro:
-			hud.flash(title, SHOT_TIME - 0.7))
+			hud.flash(title, HIGH_TIME - 0.9))
 
 
 func _to_pin() -> float:
@@ -449,6 +456,7 @@ func _setup_shot() -> void:
 	pull_goal = 0.0
 	target_dragging = false
 	_set_target(_default_target())
+	_place_bag()
 	hud.set_stroke(strokes + 1, par)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	hud.set_club(club.label, club.carry_m * YD)
@@ -593,8 +601,9 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 		var f := Vector2(r.end.x, r.end.y).distance_to(b)
 		if absf(f - d) < 0.5:
 			break
-		# down to a third of the way: onto a green running away it's landed short and run up on
-		land = clampf(land - (f - d), d * 0.35, d)
+		# down to a third of the way (onto a green running away it's landed short and run up on), or a
+		# little past for one that spins back
+		land = clampf(land - (f - d), d * 0.35, d * 1.25)
 	return b + dir * land
 
 
@@ -773,7 +782,7 @@ var _lantern_face := Vector2.ZERO
 
 
 func _place_lantern() -> void:
-	var l2 := Vector2(ball.x, ball.y) - _right() * 3.2 + aim * 1.2
+	var l2 := Vector2(ball.x, ball.y) - _right() * 4.4 + aim * 0.2     # back a little from the tee markers
 	_lantern_face = (_right() + aim * 0.4).normalized()
 	var w := Terrain.to_world(Vector3(l2.x, l2.y, terrain.height(l2.x, l2.y) - 0.04))
 	lantern.position = w
@@ -852,6 +861,40 @@ func _on_contact() -> void:
 	flight_dir = aim
 	phase = Phase.FLIGHT
 	phase_t = 0.0
+
+
+const BAG_MODEL := "res://assets/props/bag/bag.glb"
+
+
+func _make_bag() -> void:
+	if not ResourceLoader.exists(BAG_MODEL):
+		return
+	bag = (load(BAG_MODEL) as PackedScene).instantiate()
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.roughness = 0.75
+	for node in bag.find_children("*", "MeshInstance3D", true, false):
+		(node as MeshInstance3D).material_override = m
+	add_child(bag)
+
+
+## The bag set down just off her left side, pocket turned toward the camera behind her;
+## never on the green (it's carried off to the nearest grass beside her).
+func _place_bag() -> void:
+	if bag == null:
+		return
+	var b := Vector2(ball.x, ball.y)
+	var side := -_right()
+	var at := b + side * 1.6 + aim * 1.9      # ahead on her left, in the frame behind her
+	for k in 20:
+		var su := terrain.surface_at(at.x, at.y)
+		if su != Terrain.Surface.GREEN and su != Terrain.Surface.WATER and su != Terrain.Surface.SAND:
+			break
+		at += side * 1.2
+	var w := Terrain.to_world(Vector3(at.x, at.y, terrain.height(at.x, at.y) - 0.02))
+	var face := (-aim + side * 0.6).normalized()          # the pocket (local +z) back toward the camera
+	var f := Terrain.to_world(Vector3(face.x, face.y, 0)) - Terrain.to_world(Vector3.ZERO)
+	bag.global_transform = Transform3D(Basis.looking_at(-f, Vector3.UP), w)
 
 
 ## What the club takes at the strike: irons, wedges and chips off the turf dig a divot just past the
@@ -1041,14 +1084,13 @@ func _ease_toward_finger(delta: float) -> void:
 		_pull_feel()
 
 
-## As the pull grows there's a creak (and a tap of the phone) each quarter of the way, higher as it goes.
+## As the pull grows the phone taps each quarter of the way.
 var _pull_quarter := 0
 
 
 func _pull_feel() -> void:
 	var q := int(pull * 4.0 + 0.001)
 	if q > _pull_quarter:
-		Sfx.play("stretch", -14.0 + 2.0 * q, 0.85 + 0.12 * q)
 		Sfx.buzz(6)
 	_pull_quarter = q
 
@@ -1085,7 +1127,7 @@ func _process(delta: float) -> void:
 	match phase:
 		Phase.INTRO:
 			_intro_cam()
-			if phase_t >= INTRO_TIME:
+			if phase_t >= _intro_length():
 				_end_intro()
 		Phase.AIM, Phase.PULL:
 			_ease_toward_finger(delta)
@@ -1160,6 +1202,7 @@ func _process(delta: float) -> void:
 
 
 func _end_intro() -> void:
+	intro_fx.stop()
 	phase = Phase.AIM
 	_flyover(false)
 	Quality.watching = true          # the scene's sharpness adapts from here on, never mid-flyover
@@ -1334,25 +1377,35 @@ var _shot := -1                  # which of the opening's shots is showing (a di
 
 func _intro_cam() -> void:
 	var shots := _intro_shots()
-	var i := mini(int(phase_t / SHOT_TIME), shots.size())
+	var i := 0
+	var start := 0.0
+	while i < shots.size() and phase_t >= start + float(shots[i].time):
+		start += float(shots[i].time)
+		i += 1
 	if i != _shot:
 		_shot = i
 		if i > 0 and i < shots.size():
 			hud.fade_in(0.3)                  # a quick dip to black between the framed shots
+		if i == 0 and shots[0].get("high", false):
+			var s0: Dictionary = shots[0]
+			intro_fx.ambience = view.ambience
+			intro_fx.begin(Terrain.to_world(s0.from), Terrain.to_world(s0.to), Terrain.to_world(s0.look), float(s0.time))
+		elif i > 0:
+			intro_fx.stop()
 	if i < shots.size():
 		var sh: Dictionary = shots[i]
-		var u := clampf((phase_t - i * SHOT_TIME) / SHOT_TIME, 0.0, 1.0)
+		var u := clampf((phase_t - start) / float(sh.time), 0.0, 1.0)
 		u = u * (2.0 - u) * 0.65 + u * 0.35     # a slow glide that eases off
 		cam_pos = Terrain.to_world((sh.from as Vector3).lerp(sh.to, u))
-		cam_target = Terrain.to_world(sh.look)
+		cam_target = Terrain.to_world((sh.look as Vector3).lerp(sh.get("look_to", sh.look), u))
 		cam_fov = sh.fov
 	else:
 		# then a swoop back to her: from the green shot's end, up over the hole and down to the aim view
 		var last: Dictionary = shots[-1]
 		_aim_cam()
 		var p0 := Terrain.to_world(last.to)
-		var t0 := Terrain.to_world(last.look)
-		var u := smoothstep(0.0, 1.0, clampf((phase_t - shots.size() * SHOT_TIME) / FLY_BACK, 0.0, 1.0))
+		var t0 := Terrain.to_world(last.get("look_to", last.look))
+		var u := smoothstep(0.0, 1.0, clampf((phase_t - start) / FLY_BACK, 0.0, 1.0))
 		# a curve up over the hole, round behind her, and down into the aim view (not over her head)
 		var behind := _want_pos - (_want_target - _want_pos).normalized() * 14.0 + Vector3(0, 7.0, 0)
 		var mid := (p0 + _want_pos) * 0.5 + Vector3(0, 24.0, 0)
@@ -1370,11 +1423,12 @@ func _intro_cam() -> void:
 ## The opening's shots: the hole's own (CINEMA), then a push in on the green from behind it, looking
 ## back at the flag with the hole running away beyond. Positions are absolute course coordinates.
 func _intro_shots() -> Array:
-	var out: Array = []
+	var out: Array = [_high_shot()]
 	var id := str(Round.current().get("id", ""))
 	var c: Dictionary = CINEMA.get(id, {})
 	if not c.is_empty():
-		out.append({"from": _above(c.from), "to": _above(c.to), "look": _above(c.look), "fov": 52.0})
+		out.append({"from": _above(c.from), "to": _above(c.to), "look": _above(c.look), "fov": 52.0, "time": SHOT_TIME})
+		return out
 	var pin := terrain.pin()
 	var path: Array = terrain.meta.path
 	var p2 := Vector2(pin.x, pin.y)
@@ -1385,8 +1439,49 @@ func _intro_shots() -> Array:
 	# the greens stand up off the approach: heights over the green's level as well as the ground, so
 	# its front edge never fills the shot
 	out.append({"from": _over_green([a.x, a.y, 2.4], pin.z), "to": _over_green([b.x, b.y, 1.8], pin.z),
-		"look": Vector3(pin.x, pin.y, pin.z + 1.1), "fov": 44.0})
+		"look": Vector3(pin.x, pin.y, pin.z + 1.1), "fov": 44.0, "time": SHOT_TIME})
 	return out
+
+
+## The opening's first look: high up behind the tee with the whole hole laid out ahead, gliding on and
+## down over the tee while the lightning cracks and the spirits drift past (IntroFx).
+func _high_shot() -> Dictionary:
+	var t := terrain.tee()
+	var mid := _along_hole(0.55)
+	var far := _along_hole(0.85)
+	var d := Vector2(mid.x - t.x, mid.y - t.y).normalized()
+	var sd := Vector2(d.y, -d.x)
+	var a := Vector2(t.x, t.y) - d * 34.0 + sd * 12.0
+	var b := Vector2(t.x, t.y) + d * 22.0 - sd * 5.0
+	return {"from": Vector3(a.x, a.y, t.z + 58.0), "to": Vector3(b.x, b.y, t.z + 30.0),
+		"look": mid, "look_to": far, "fov": 56.0, "time": HIGH_TIME, "high": true}
+
+
+## The point `share` of the way along the line of play, on the ground.
+func _along_hole(share: float) -> Vector3:
+	var path: Array = terrain.meta.path
+	var total := 0.0
+	for i in path.size() - 1:
+		total += Vector2(path[i][0], path[i][1]).distance_to(Vector2(path[i + 1][0], path[i + 1][1]))
+	var want := total * share
+	for i in path.size() - 1:
+		var p0 := Vector2(path[i][0], path[i][1])
+		var p1 := Vector2(path[i + 1][0], path[i + 1][1])
+		var l := p0.distance_to(p1)
+		if want <= l:
+			var p := p0.lerp(p1, want / maxf(l, 0.001))
+			return Vector3(p.x, p.y, terrain.height(p.x, p.y))
+		want -= l
+	var e := Vector2(path[-1][0], path[-1][1])
+	return Vector3(e.x, e.y, terrain.height(e.x, e.y))
+
+
+## How long the opening runs: its shots, then the swoop back to her.
+func _intro_length() -> float:
+	var total := FLY_BACK
+	for sh in _intro_shots():
+		total += float(sh.time)
+	return total
 
 
 ## A point [x, y, height] that height above the ground there or the green's level `gz`, whichever is higher.

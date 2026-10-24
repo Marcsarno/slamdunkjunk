@@ -49,6 +49,7 @@ func build(hole_dir: String, t: Terrain) -> void:
 	_horizon_rings()
 	_pin()
 	_green_lanterns()
+	_tee_markers()
 	_webs()
 	_make_bats()
 	add_child(ambience)
@@ -535,21 +536,42 @@ func _green_lanterns() -> void:
 			if su != Terrain.Surface.WATER and su != Terrain.Surface.SAND and su != Terrain.Surface.GREEN:
 				break
 			q += dir * 3.0
-		var post: Node3D = scene.instantiate()
-		add_child(post)
-		var w := Terrain.to_world(Vector3(q.x, q.y, terrain.height(q.x, q.y) - 0.03))
-		post.position = w
-		var f := Terrain.to_world(Vector3(-dir.x, -dir.y, 0)) - Terrain.to_world(Vector3.ZERO)
-		post.basis = Basis.looking_at(-f, Vector3.UP)    # its face (local +z) back down the hole (built before
-		                                                 # the view is in the tree, so no look_at)
-		for node in post.find_children("*", "MeshInstance3D", true, false):
-			var mi := node as MeshInstance3D
-			for i in mi.mesh.get_surface_count():
-				var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
-				if m and m.emission_enabled:
-					m = m.duplicate()
-					m.emission_energy_multiplier = 3.0
-					mi.set_surface_override_material(i, m)
+		_lantern_post(scene, q, -dir, 1.0)
+
+
+## Your pumpkin post lanterns, shrunk, as the tee's markers: one either side a couple of metres ahead
+## of the ball, facing her, so the first look down each hole is framed by them.
+const TEE_MARKER_SCALE := 0.45
+
+
+func _tee_markers() -> void:
+	if not ResourceLoader.exists(GREEN_LANTERN):
+		return
+	var path: Array = terrain.meta.path
+	var t := Vector2(terrain.tee().x, terrain.tee().y)
+	var dir := (Vector2(path[1][0], path[1][1]) - Vector2(path[0][0], path[0][1])).normalized()
+	var across := Vector2(dir.y, -dir.x)
+	var scene: PackedScene = load(GREEN_LANTERN)
+	for side: float in [-1.0, 1.0]:
+		_lantern_post(scene, t + dir * 2.6 + across * side * 2.7, -dir, TEE_MARKER_SCALE)
+
+
+## One post lantern standing at `at` (course coords), its face (local +z) toward `face`, lit up.
+func _lantern_post(scene: PackedScene, at: Vector2, face: Vector2, size: float) -> void:
+	var post: Node3D = scene.instantiate()
+	add_child(post)
+	post.position = Terrain.to_world(Vector3(at.x, at.y, terrain.height(at.x, at.y) - 0.03))
+	var f := Terrain.to_world(Vector3(face.x, face.y, 0)) - Terrain.to_world(Vector3.ZERO)
+	# built before the view is in the tree, so no look_at
+	post.basis = Basis.looking_at(-f, Vector3.UP).scaled(Vector3.ONE * size)
+	for node in post.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if m and m.emission_enabled:
+				m = m.duplicate()
+				m.emission_energy_multiplier = 3.0
+				mi.set_surface_override_material(i, m)
 
 
 const FLAG_SIZE := Vector2(0.8, 0.5)

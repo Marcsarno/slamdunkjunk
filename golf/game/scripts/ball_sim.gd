@@ -43,6 +43,11 @@ const CHECK_TIME := 0.35
 const CHECK_BRAKE := 2.5         # extra m/s^2 at full spin
 # the turf's drag eases off as the ball slows (to ROLL_TAIL of it at a crawl, from ROLL_TAIL_SPEED
 # down), so a roll dies away over its last metre instead of stopping dead
+# On a green, a spinning iron or wedge doesn't die where it lands: it hops on, the spin grabs, and it
+# draws back (up to SPIN_BACK_MAX m/s for a full wedge coming in steep, a chip barely checks), braked
+# by BITE m/s^2 until it's running back at that speed; then it rolls out as usual.
+const SPIN_BACK_MAX := 1.5
+const BITE := 9.0
 const ROLL_TAIL := 0.3
 const ROLL_TAIL_SPEED := 1.0     # m/s
 const STOP_SPEED := 0.025        # m/s: slower than this, where the slope can't move it, it's still
@@ -64,6 +69,8 @@ var hit_obstacle := false
 var caught := false               # came down in a spider web
 var skid := 0.0
 var spin := 0.0                  # 0 (a driver's low spin) .. 1 (a wedge's); bites at the first landing
+var spin_back := 0.0             # m/s it's still to draw back on the green (0: no spin left to bite)
+var _bite_dir := Vector3.ZERO    # the way it was going when it landed
 
 
 func _init(t: Terrain, obs: ObstacleGrid, pin_pos: Vector3, wind_v: Vector2 = Vector2.ZERO) -> void:
@@ -82,6 +89,7 @@ func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	# the club's spin, from its lift: driver ~0.1, iron ~0.55, wedge 1, putter 0
 	spin = clampf((lift_coef - 0.0015) / 0.0009, 0.0, 1.0)
 	skid = 0.0
+	spin_back = 0.0
 	time = 0.0
 	bounces = 0
 	first_land = Vector3.INF
@@ -185,12 +193,16 @@ func _land() -> void:
 	var plug := clampf(vn / PLUG_SPEED, 0.0, 1.0)
 	var keep := 1.0 - (1.0 - float(p[1]) * (1.0 - 0.6 * sin_d)) * plug
 	var along := vt * keep - spin * float(p[3]) * plug
-	# a wedge can spin back a touch on a green; anything else just stops dead
-	var least := -0.8 if surf == Terrain.Surface.GREEN and spin > 0.8 else 0.0
-	along = maxf(along, least)
 	var dir := vt_vec / vt if vt > 0.0001 else Vector3.ZERO
+	var green := surf == Terrain.Surface.GREEN or surf == Terrain.Surface.FRINGE
+	if bounces == 1 and spin > 0.4 and green:
+		# the green takes it: a hop on, then the spin bites (in _roll) and draws it back
+		along = vt * keep
+		spin_back = SPIN_BACK_MAX * (spin - 0.4) / 0.6 * pow(clampf(vn / 14.0, 0.0, 1.0), 2.0)
+		_bite_dir = Vector3(dir.x, dir.y, 0.0).normalized()
+	along = maxf(along, 0.0)
 	var out_n: float = vn * float(p[0]) * (1.0 - sin_d * sin_d)
-	if bounces == 1 and spin > 0.3:
+	if bounces == 1 and spin > 0.3 and spin_back <= 0.0:
 		skid = CHECK_TIME
 	spin *= 0.2                              # the turf takes most of the spin at the first landing
 	vel = dir * along + n * out_n
@@ -219,6 +231,20 @@ func _roll(dt: float) -> void:
 	var n := terrain.normal(pos.x, pos.y)
 	var slope := Vector3(0, 0, -G) - n * (-G * n.z)       # gravity along the ground
 	var speed := vel.length()
+	if spin_back > 0.0:
+		# the spin grabbing: braked hard along the way it came in, through a stop, until it's running
+		# back at spin_back; the slope still pulls
+		var back := vel.dot(_bite_dir)
+		vel += (slope - _bite_dir * BITE) * dt
+		if vel.dot(_bite_dir) <= -spin_back or terrain.surface_at(pos.x, pos.y) != Terrain.Surface.GREEN and back < 0.0:
+			spin_back = 0.0
+		vel -= n * vel.dot(n)
+		var prev0 := pos
+		pos += vel * dt
+		pos.z = ground_z(pos.x, pos.y)
+		_collide_obstacles(prev0)
+		_check_cup()
+		return
 	var holds := slope.length() < resist * 0.9               # the slope can't start it rolling again
 	if speed < STOP_SPEED and holds:
 		vel = Vector3.ZERO

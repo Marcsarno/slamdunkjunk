@@ -315,6 +315,14 @@ func _make_ghosts() -> void:
 
 
 # ---------------------------------------------------------------- lightning
+## A flash of lightning now (the opening's bolts call it), at `strength` 0..1.
+func strike(strength: float) -> void:
+	_flash_t = 0.0
+	_flash_strength = strength
+	_next_flash = maxf(_next_flash, 4.0)
+	lightning.emit(strength)
+
+
 func _gap() -> float:
 	var every := float(theme.get("lightning", 0.0))
 	return INF if every <= 0.0 else _rng.randf_range(every * 0.5, every * 1.5)
