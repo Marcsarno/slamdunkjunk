@@ -1,0 +1,11 @@
+{
+  "import_success": true,
+  "mesh_objects": 10,
+  "triangles": 3868,
+  "embedded_images": [
+    "plum_cloth_deep",
+    "pumpkin_badge_deep"
+  ],
+  "separate_clubs": true,
+  "both_stand_legs": true
+}

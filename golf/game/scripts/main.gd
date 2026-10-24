@@ -863,18 +863,22 @@ func _on_contact() -> void:
 	phase_t = 0.0
 
 
-const BAG_MODEL := "res://assets/props/bag/bag.glb"
+const BAG_MODEL := "res://assets/props/bag/bag.glb"     # Marc's Pumpkin Golf Stand Bag (art_src/bag/final)
 
 
 func _make_bag() -> void:
 	if not ResourceLoader.exists(BAG_MODEL):
 		return
 	bag = (load(BAG_MODEL) as PackedScene).instantiate()
-	var m := StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.75
+	# Marc's materials as they come, kept matte: the engine skips the file's specular setting
 	for node in bag.find_children("*", "MeshInstance3D", true, false):
-		(node as MeshInstance3D).material_override = m
+		var mi := node as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if m and m.metallic < 0.5:
+				m = m.duplicate()
+				m.metallic_specular = 0.15
+				mi.set_surface_override_material(i, m)
 	add_child(bag)
 
 
