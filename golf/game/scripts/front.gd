@@ -52,7 +52,7 @@ var _press_x := 0.0
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out="):
+		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out=") or a.begins_with("--light-set="):
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -226,7 +226,7 @@ func _build_clubhouse() -> void:
 	_write(op, "Options", head_font, 60, CHALK, Rect2(x0, top + 6, w, 80))
 	_rule(op, top + 92, 0.16, 0.84)
 	y = top + 150.0
-	for opt: String in ["music", "sounds", "vibration", "graphics"]:
+	for opt: String in ["music", "sounds", "vibration", "graphics", "brightness"]:
 		var l := _write(op, _option_text(opt), hand_font, 48, CHALK, Rect2(x0, y, w, 70))
 		_tap(op, Rect2(x0, y - 4, w, 78), _toggle_option.bind(opt, l))
 		y += 100.0
@@ -513,6 +513,7 @@ func _option_text(opt: String) -> String:
 		"sounds": return "Sounds: " + ("on" if Sfx.on else "off")
 		"vibration": return "Vibration: " + ("on" if Sfx.buzz_on else "off")
 		"graphics": return "Graphics: " + Quality.mode
+		"brightness": return "Brightness: " + Quality.brightness
 	return opt
 
 
@@ -526,6 +527,8 @@ func _toggle_option(opt: String, l: Label) -> void:
 		"graphics":
 			var order := ["auto", "sharp", "smooth"]
 			Quality.set_mode(order[(order.find(Quality.mode) + 1) % order.size()])
+		"brightness":
+			Quality.next_brightness()
 	Sfx.play("click", -6.0)
 	_rewrite(l, _option_text(opt))
 

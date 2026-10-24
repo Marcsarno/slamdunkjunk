@@ -25,6 +25,11 @@ var adaptive := false
 ## The clubhouse's Graphics option: "auto" (adapts on the web), "sharp" or "smooth" (fixed steps).
 var mode := "auto"
 const MODES := {"sharp": 1, "smooth": 4}
+## The clubhouse's Brightness option: phones' screens differ a lot at night, so the player can lift
+## (or dim) the whole picture. Applied by the hole's view as its Environment's brightness adjustment.
+const BRIGHTNESS := {"dim": 0.88, "normal": 1.0, "bright": 1.14, "brighter": 1.28}
+const BRIGHTNESS_ORDER := ["dim", "normal", "bright", "brighter"]
+var brightness := "normal"
 var watching := false          # main turns this on while a hole is being played (not on the menu or loading)
 var _avg_ms := 16.7
 var _slow_t := 0.0
@@ -38,6 +43,9 @@ func _ready() -> void:
 	var saved := cfg.load(SETTINGS) == OK
 	if saved:
 		mode = str(cfg.get_value("video", "mode", "auto"))
+		brightness = str(cfg.get_value("video", "brightness", "normal"))
+		if not BRIGHTNESS.has(brightness):
+			brightness = "normal"
 	if not adaptive:
 		step = 0
 	elif saved:
@@ -69,6 +77,19 @@ func set_mode(m: String) -> void:
 		adaptive = OS.has_feature("web")
 		step = START if adaptive else 0
 	_apply()
+
+
+## Step the Brightness option round (and remember it).
+func next_brightness() -> void:
+	brightness = BRIGHTNESS_ORDER[(BRIGHTNESS_ORDER.find(brightness) + 1) % BRIGHTNESS_ORDER.size()]
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS)
+	cfg.set_value("video", "brightness", brightness)
+	cfg.save(SETTINGS)
+
+
+func brightness_factor() -> float:
+	return float(BRIGHTNESS.get(brightness, 1.0))
 
 
 func scale() -> float:

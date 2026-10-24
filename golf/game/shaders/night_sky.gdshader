@@ -123,5 +123,8 @@ void sky() {
 		c = mix(c, p, a);
 	}
 
+	// a speck of noise, under one shade of 8-bit colour, so the dark gradient doesn't band on phones
+	vec2 q = SCREEN_UV * 1000.0;
+	c += (fract(sin(dot(floor(q), vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
 	COLOR = c * energy;
 }

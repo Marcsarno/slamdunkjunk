@@ -80,6 +80,21 @@ func _sky_style() -> String:
 	return theme.get("sky_style", "night")
 
 
+## The night's lighting pass (on top of each hole's theme): how much brighter the fill, moon, rim
+## and exposure run than the themes' first numbers, the haze the distance fades into, and the sky's
+## horizon band. All cheap: no extra lights, passes or shadows.
+const AMBIENT_COLOR := Color(0.5, 0.53, 0.82)
+const AMBIENT_LIFT := 2.0
+const MOON_LIFT := 1.12
+const MOON_COOL := Color(0.75, 0.82, 1.0)
+const RIM_LIFT := 1.3
+const EXPOSURE_LIFT := 1.0
+const HAZE := Color(0.36, 0.38, 0.58)     # moonlit mist: the colour far things fade toward
+const HAZE_MIX := 0.7
+const FOG_THIN := 0.85
+const HORIZON_LIFT := 1.5
+
+
 func _environment() -> void:
 	var bd: Dictionary = theme.get("backdrop", {})
 	var style := _sky_style()
@@ -126,7 +141,8 @@ func _environment() -> void:
 	mat.set_shader_parameter("moon_glow", Color(1.0, 0.62, 0.22) if moon_kind == "harvest" else Color(0.85, 0.88, 1.0))
 	mat.set_shader_parameter("moon_radius", float(theme.get("moon_size", 0.034)))
 	mat.set_shader_parameter("top_color", top_col)
-	mat.set_shader_parameter("horizon_color", horizon_col)
+	# a brighter band of night sky at the horizon, so the tree lines stand out against it
+	mat.set_shader_parameter("horizon_color", horizon_col * HORIZON_LIFT)
 	mat.set_shader_parameter("ground_color", fog_col)
 	_sky_mat = mat
 	_moon_dir = moon_dir
@@ -135,14 +151,15 @@ func _environment() -> void:
 	sky.sky_material = mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
-	# night lighting (matched by eye to the Blender style render): low cool ambient, moonlight
-	# with long shadows, a warm rim from the other side, and lantern glow carrying the scene
+	# night lighting, made to read: a cool moonlit fill so nothing the moon misses goes black, the
+	# moon as key with long shadows, a warm rim from the other side, lantern glow, and the distance
+	# fading into a pale moonlit haze (not into black), so the far trees and fairways show as layers
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.46, 0.40, 0.66)
-	env.ambient_light_energy = float(theme.get("ambient", 0.22))
+	env.ambient_light_color = AMBIENT_COLOR
+	env.ambient_light_energy = float(theme.get("ambient", 0.22)) * AMBIENT_LIFT
 	env.fog_enabled = true
-	env.fog_light_color = fog_col
-	env.fog_density = float(theme.get("fog_density", 0.0045))
+	env.fog_light_color = fog_col.lerp(HAZE, HAZE_MIX)
+	env.fog_density = float(theme.get("fog_density", 0.0045)) * FOG_THIN
 	_fog_base = env.fog_density
 	env.fog_sky_affect = 0.0
 	env.glow_enabled = true
@@ -151,13 +168,18 @@ func _environment() -> void:
 	env.glow_bloom = 0.0
 	env.glow_hdr_threshold = 1.0
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = float(theme.get("exposure", 0.9))
+	env.tonemap_exposure = float(theme.get("exposure", 0.9)) * EXPOSURE_LIFT
+	# a touch more contrast and colour, so the oranges and purples carry at night
+	env.adjustment_enabled = true
+	env.adjustment_brightness = Quality.brightness_factor()     # the clubhouse's Brightness option
+	env.adjustment_contrast = 1.03
+	env.adjustment_saturation = 1.04
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 
-	moon_light.light_color = moon_col
-	moon_light.light_energy = float(theme.get("moon_energy", 0.75))
+	moon_light.light_color = moon_col.lerp(MOON_COOL, 0.3)
+	moon_light.light_energy = float(theme.get("moon_energy", 0.75)) * MOON_LIFT
 	moon_light.shadow_enabled = true
 	moon_light.directional_shadow_max_distance = 40.0     # shadows round her and the tee; at night farther ones barely show
 	moon_light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
@@ -175,7 +197,7 @@ func _environment() -> void:
 	_key_dir = key
 	var rim := DirectionalLight3D.new()
 	rim.light_color = Color(1.0, 0.56, 0.36)
-	rim.light_energy = float(theme.get("rim_energy", 0.32))
+	rim.light_energy = float(theme.get("rim_energy", 0.32)) * RIM_LIFT
 	rim.shadow_enabled = false
 	add_child(rim)
 	var back := Vector3(-moon_dir.x, 0.35, -moon_dir.z).normalized()

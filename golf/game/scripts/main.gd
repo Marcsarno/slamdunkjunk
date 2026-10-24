@@ -237,6 +237,8 @@ func _ready() -> void:
 			add_child(load("res://tests/capture_hole.gd").new())
 		elif a.begins_with("--look-out="):
 			add_child(load("res://tests/look_at.gd").new())
+		elif a.begins_with("--light-set="):
+			add_child(load("res://tests/light_set.gd").new())
 
 
 var _intro_id := 0              # the current opening, so a restarted one's title timer is the only one shown

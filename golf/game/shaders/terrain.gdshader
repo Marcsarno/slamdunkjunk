@@ -31,11 +31,11 @@ uniform vec2 extent = vec2(100.0);
 uniform float tile_grass = 7.0;
 uniform float tile_green = 4.5;
 uniform float tile_sand = 3.5;
-uniform vec3 col_rough : source_color = vec3(0.15, 0.25, 0.09);
+uniform vec3 col_rough : source_color = vec3(0.19, 0.3, 0.11);
 uniform vec3 col_fairway : source_color = vec3(0.29, 0.47, 0.13);
 uniform vec3 col_green : source_color = vec3(0.33, 0.53, 0.15);
 uniform vec3 col_sand : source_color = vec3(0.72, 0.60, 0.42);
-uniform vec3 dark_tint : source_color = vec3(0.45, 0.45, 0.42);
+uniform vec3 dark_tint : source_color = vec3(0.68, 0.68, 0.7);
 uniform float texture_strength = 0.35;
 uniform float brightness = 1.0;
 uniform vec2 pin_xy = vec2(0.0);           // the cup, course coords
@@ -44,6 +44,7 @@ uniform float green_checker = 0.0;         // 1: a checkerboard cut instead of s
 uniform float stripe_width = 2.4;          // m
 uniform vec3 shade_dir = vec3(0.0, 0.5, 0.87);   // toward the key light (world)
 uniform float slope_shade = 0.6;           // hill shading: how much the ground's shape is drawn out
+uniform float night_grade = 0.12;          // the grass cooled toward moonlit blue-teal (lanterns, pumpkins stay warm)
 
 const int MAX_POOLS = 16;
 uniform vec4 pools[MAX_POOLS];          // xyz world position, w strength (0 = unused)
@@ -153,7 +154,12 @@ void fragment() {
 	vec3 ne = normalize(vec3(nw.x * 5.0, nw.y, nw.z * 5.0));
 	vec3 sd = normalize(shade_dir);
 	c *= 1.0 + clamp((dot(ne, sd) - sd.y) * slope_shade, -0.28, 0.22);
+	// moonlight is cool and pale: grade the turf toward it (the lit pumpkins, lanterns and the
+	// golfer stay warm against it, the night's colour contrast)
+	c = mix(c, vec3(lum(c)) * vec3(0.8, 0.95, 1.2), night_grade * (1.0 - w.b));
 	c *= det * brightness;
+	// dither: a speck of noise under one shade, so the fog and dark turf don't band on 8-bit screens
+	c += (fract(sin(dot(floor(FRAGCOORD.xy), vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
 	ALBEDO = c;
 	// dew on the green: a soft sheen toward the moon, brighter at a glancing look
 	float dew = smoothstep(0.55, 0.9, w.g);

@@ -1,7 +1,7 @@
 // Soft dark corners and a touch of purple at the edges, like the Blender render.
 shader_type canvas_item;
 
-uniform float strength = 0.55;
+uniform float strength = 0.3;
 uniform vec3 tint : source_color = vec3(0.06, 0.02, 0.1);
 
 void fragment() {
