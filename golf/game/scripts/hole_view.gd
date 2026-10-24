@@ -30,6 +30,7 @@ var ambience := Ambience.new()
 var _fog_base := 0.0045
 var _sky_mat: ShaderMaterial
 var _moon_dir := Vector3(0, 0.5, -1)
+var _key_dir := Vector3(0, 0.5, 0.87)     # toward the key light (the ground's hill shading follows it)
 var _light_points: Array = []      # [course position, color]: the lanterns and the light props, for the pooled lights
 var _floaters: Array = []          # light props that hover (ghosts, the skull): [node, base y, phase]
 
@@ -170,6 +171,7 @@ func _environment() -> void:
 		key = Vector3(sin(la) * cos(le), sin(le), -cos(la) * cos(le))
 	moon_light.look_at_from_position(key * 100.0, Vector3.ZERO, Vector3.UP)
 	moon_dir = key
+	_key_dir = key
 	var rim := DirectionalLight3D.new()
 	rim.light_color = Color(1.0, 0.56, 0.36)
 	rim.light_energy = float(theme.get("rim_energy", 0.32))
@@ -201,6 +203,8 @@ func _terrain_material() -> ShaderMaterial:
 	m.set_shader_parameter("extent", Vector2(terrain.meta.extent[0], terrain.meta.extent[1]))
 	m.set_shader_parameter("texture_strength", float(theme.get("texture_strength", 0.35)))
 	m.set_shader_parameter("brightness", float(theme.get("ground_brightness", 1.0)))
+	m.set_shader_parameter("shade_dir", _key_dir)
+	m.set_shader_parameter("slope_shade", float(theme.get("slope_shade", 0.6)))
 	# the green's cut: stripes across the way in (or a checker, if the theme says), centred on the cup
 	var path: Array = terrain.meta.path
 	var gin := Vector2(path[-1][0], path[-1][1]) - Vector2(path[-2][0], path[-2][1])

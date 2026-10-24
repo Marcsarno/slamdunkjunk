@@ -42,6 +42,8 @@ uniform vec2 pin_xy = vec2(0.0);           // the cup, course coords
 uniform vec2 green_dir = vec2(0.0, 1.0);   // the way the hole comes in to the green (course coords)
 uniform float green_checker = 0.0;         // 1: a checkerboard cut instead of stripes
 uniform float stripe_width = 2.4;          // m
+uniform vec3 shade_dir = vec3(0.0, 0.5, 0.87);   // toward the key light (world)
+uniform float slope_shade = 0.6;           // hill shading: how much the ground's shape is drawn out
 
 const int MAX_POOLS = 16;
 uniform vec4 pools[MAX_POOLS];          // xyz world position, w strength (0 = unused)
@@ -145,6 +147,12 @@ void fragment() {
 		pave *= 0.92 + 0.16 * smoothstep(0.55, 1.0, pm) + (big - 0.5) * 0.2;
 		c = mix(c, pave, smoothstep(0.15, 0.6, pm));
 	}
+	// hill shading, as on a relief map: the ground's tilt exaggerated five times against the key
+	// light, so a 3-5% swell reads at night (faces toward the light a touch brighter, the backs of
+	// rises darker) where plain moonlight would leave it flat
+	vec3 ne = normalize(vec3(nw.x * 5.0, nw.y, nw.z * 5.0));
+	vec3 sd = normalize(shade_dir);
+	c *= 1.0 + clamp((dot(ne, sd) - sd.y) * slope_shade, -0.28, 0.22);
 	c *= det * brightness;
 	ALBEDO = c;
 	// dew on the green: a soft sheen toward the moon, brighter at a glancing look

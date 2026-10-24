@@ -133,8 +133,8 @@
     }
   ],
   "elevation": {
-    "tee": 2.4,
-    "green": 2.4,
+    "tee": 7.0,
+    "green": 2.6,
     "cross_tilt": 0.004,
     "roll_height": 0.2,
     "bank_height": 2.5,
@@ -163,6 +163,24 @@
         "radius": 24,
         "height": 2.4
       }
+    ],
+    "profile": [
+      [
+        0,
+        7.0
+      ],
+      [
+        30,
+        6.2
+      ],
+      [
+        100,
+        3.2
+      ],
+      [
+        165,
+        2.6
+      ]
     ]
   },
   "wind": {

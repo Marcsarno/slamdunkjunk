@@ -458,6 +458,9 @@ func _setup_shot() -> void:
 		var where := "A spider web" if terrain.in_web(ball.x, ball.y) else ("The corn" if terrain.in_corn(ball.x, ball.y) \
 			else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)]))
 		hud.hint.text = "%s: it'll fly %d%% shorter" % [where, roundi((1.0 - _lie) * 100.0)]
+	var sh := _slope_hint()
+	if sh != "":
+		hud.hint.text = sh if hud.hint.text == "" or strokes == 0 else hud.hint.text + "\n" + sh
 	ball_mesh.visible = true
 	_preview_key = ""
 	trail_pts.clear()
@@ -618,9 +621,59 @@ func _lie_at(b: Vector3) -> float:
 	return f
 
 
-## A shot's launch from where the ball lies (every shot and every preview goes through here).
+## A shot's launch from where the ball lies (every shot and every preview goes through here): the
+## lie's loss of distance, and on sloping ground the slope's pull (_slope_lie).
 func _launch(p: float, dir: Vector2) -> Vector3:
-	return Clubs.launch_velocity(club, p * _lie, dir)
+	var s := _slope_lie(dir)
+	return Clubs.launch_velocity(club, p * _lie * s.y, dir.rotated(s.x))
+
+
+const SLOPE_FREE := 0.02          # slopes gentler than this (2%) play as flat
+const SLOPE_TURN := deg_to_rad(0.4)   # per percent of slope across the line, ball above/below her feet
+const SLOPE_TURN_MAX := deg_to_rad(5.0)
+const SLOPE_LENGTH := 0.9         # per unit of slope along the line: uphill shorter, downhill longer
+
+## An uneven lie, for a shot along `dir`: x = how far it turns (radians, + = left), y = the power's
+## factor. She's right-handed, standing left of the line with the ball to her right, so ground rising
+## toward the ball (it sits above her feet) pulls it left, falling away pushes it right; an uphill lie
+## adds loft and comes up short, a downhill one flies lower and runs on. Putts and the tee play level.
+func _slope_lie(dir: Vector2) -> Vector2:
+	if club.get("id", "") == "putter" or terrain == null:
+		return Vector2(0.0, 1.0)
+	var surf := terrain.surface_at(ball.x, ball.y)
+	if surf == Terrain.Surface.TEE or surf == Terrain.Surface.GREEN:
+		return Vector2(0.0, 1.0)
+	var g := _grade(Vector2(ball.x, ball.y))
+	var right := Vector2(dir.y, -dir.x)
+	var across := _past(g.dot(right))
+	var along := _past(g.dot(dir))
+	return Vector2(clampf(across * 100.0 * SLOPE_TURN, -SLOPE_TURN_MAX, SLOPE_TURN_MAX),
+		clampf(1.0 - along * SLOPE_LENGTH, 0.9, 1.08))
+
+
+## The ground's rise per metre at `p` (course coords), over a metre or so either way.
+func _grade(p: Vector2) -> Vector2:
+	return Vector2(terrain.height(p.x + 0.8, p.y) - terrain.height(p.x - 0.8, p.y),
+		terrain.height(p.x, p.y + 0.8) - terrain.height(p.x, p.y - 0.8)) / 1.6
+
+
+func _past(v: float) -> float:
+	return signf(v) * maxf(absf(v) - SLOPE_FREE, 0.0)
+
+
+## What the slope under the ball will do to a shot along the target line, for the hint ("" if nothing).
+func _slope_hint() -> String:
+	if club.get("id", "") == "putter":
+		return ""
+	var s := _slope_lie(aim)
+	var bits: Array[String] = []
+	if absf(s.x) > deg_to_rad(0.6):
+		bits.append("Ball above your feet: it'll pull left" if s.x > 0.0 else "Ball below your feet: it'll push right")
+	if s.y < 0.985:
+		bits.append("Uphill lie: plays shorter")
+	elif s.y > 1.015:
+		bits.append("Downhill lie: flies lower, runs on")
+	return " · ".join(bits)
 
 
 func _carry(p: float, dir: Vector2) -> float:
@@ -1729,6 +1782,10 @@ func _draw_preview(putt: bool) -> void:
 	target_ring.visible = true
 	var dist := Vector2(target.x - ball.x, target.y - ball.y).length()
 	target_label.text = _dist_text(dist, putt)
+	# up or down to it: what it plays like (a metre of rise is about a metre more to carry)
+	var rise := terrain.height(target.x, target.y) - terrain.height(ball.x, ball.y)
+	if not putt and absf(rise) >= 1.5:
+		target_label.text += "\nplays %s %s" % [_dist_text(dist + rise, false).trim_suffix(" yds"), "uphill" if rise > 0.0 else "downhill"]
 	# the margin of error, round where this pull comes down: wide across the line, shorter along it
 	var r := _spread(_carry_m)
 	spread_ring.visible = not putt and r > 0.3

@@ -349,7 +349,20 @@ holes = [
     },
 ]
 
+# heights (m) along the line of play, [metres from the tee, height]: each hole's rise and fall
+PROFILES = {
+    "h04_spiderwood": [[0, 3.0], [120, 5.0], [200, 8.0], [335, 10.5]],                       # climbing into the woods
+    "h05_haunted_harvest": [[0, 8.0], [90, 6.0], [220, 2.0], [330, 4.0], [445, 6.5]],         # down into the harvest, back up
+    "h06_ghostlight_marsh": [[0, 7.0], [30, 6.2], [100, 3.2], [165, 2.6]],                    # off the bank, down to the marsh
+    "h07_vampires_garden": [[0, 3.0], [150, 4.0], [240, 6.5], [325, 9.0]],                    # up to the mansion
+    "h08_headless_trail": [[0, 9.0], [150, 6.0], [200, 5.0], [240, 6.0], [325, 10.0]],        # down to the ravine, up beyond it
+    "h09_midnight_homecoming": [[0, 12.0], [80, 9.0], [180, 4.0], [260, 5.0], [360, 7.5]],    # a high tee for the last
+}
+
 for h in holes:
+    prof = PROFILES[h["id"]]
+    h["elevation"]["profile"] = prof
+    h["elevation"]["tee"], h["elevation"]["green"] = prof[0][1], prof[-1][1]
     path = f"{OUT}/{h['id']}.json"
     with open(path, "w") as f:
         json.dump(h, f, indent=2, ensure_ascii=False)

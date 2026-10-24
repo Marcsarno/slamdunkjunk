@@ -123,9 +123,11 @@ def realistic_bunkers(spec):
             b["center"] = [round(gx + ux * dist, 2), round(gy + uy * dist, 2)]
             b["radius"] = [round(long_r, 2), round(short_r, 2)]
             b["rotation"] = round(ang + math.pi / 2, 3)          # long way round the green
-            b["depth"] = max(b.get("depth", 0.45), 0.55)
+            b["depth"] = max(b.get("depth", 0.45), 0.8)            # a face you can see from the fairway
+            b["greenside"] = True
         else:
             b["radius"] = [round(float(np.clip(r * 1.35, 3.0, 12.0)), 2) for r in b["radius"]]
+            b["depth"] = max(b.get("depth", 0.45), 0.6)
         out.append(b)
     spec["bunkers"] = out
 
@@ -154,6 +156,8 @@ class Hole:
         self.widths = np.asarray(spec["fairway_width"], float)
         # broad rolls only: wavelengths of 70-200 m keep fairway grades to a few percent
         self.noise = Noise(spec.get("seed", 1), wavelength=(70.0, 200.0))
+        # and the undulation you play over: 30-60 m swells, the 3-6% a golfer sees and feels
+        self.noise_mid = Noise(spec.get("seed", 1) + 11, wavelength=(30.0, 60.0))
         self.noise_fine = Noise(spec.get("seed", 1) + 7, wavelength=(5.0, 14.0))   # paint only, never height
         self.edge_noise = Noise(spec.get("seed", 1) + 3, wavelength=(9.0, 30.0))
         # ponds sit just below the local ground so their banks stay ~3:1 instead of cliffs
@@ -178,8 +182,16 @@ class Hole:
         self.x0, self.y0 = math.floor(min(lo[0], self.path.min(axis=0)[0] - reach)), math.floor(min(lo[1], self.path.min(axis=0)[1] - reach))
         self.x1, self.y1 = math.ceil(max(hi[0], self.path.max(axis=0)[0] + reach)), math.ceil(max(hi[1], self.path.max(axis=0)[1] + reach))
         for w in spec.get("water", []):
+            # under the lowest point of its rim, so no bank stands below the water on rolling ground
+            a = np.linspace(0, math.tau, 48, endpoint=False)
+            rx, ry = w["radius"]
+            ca, sa = math.cos(w.get("rotation", 0.0)), math.sin(w.get("rotation", 0.0))
+            ex = w["center"][0] + 1.1 * (rx * np.cos(a) * ca - ry * np.sin(a) * sa)
+            ey = w["center"][1] + 1.1 * (rx * np.cos(a) * sa + ry * np.sin(a) * ca)
             c = np.array([[w["center"][0]]], float), np.array([[w["center"][1]]], float)
-            w["level"] = round(float(self.base_height(*c)[0, 0]) + w.get("level_offset", -0.6), 3)
+            centre = float(self.base_height(*c)[0, 0])
+            rim = float(self.base_height(ex[None, :], ey[None, :]).min())
+            w["level"] = round(min(centre, rim + 0.25) + w.get("level_offset", -0.6), 3)
         self.cart = self._cart_path()
         if self.cart is not None and not spec.get("bunkers_as_drawn"):
             self._bunkers_off_path()
@@ -307,6 +319,11 @@ class Hole:
         play = self.half_width(s) + sp["rough_width"] * 0.5
         rolls = el.get("roll_height", 0.45)
         h += rolls * self.noise(x, y) * (1.0 + 0.8 * smoothstep(play * 0.5, play * 1.5, d))
+        # swells through the playing corridor, eased out round the tee and the green so they sit level
+        gx, gy = sp["green"]["center"]
+        tx, ty = sp["tee"]["center"]
+        calm = smoothstep(14.0, 32.0, np.hypot(x - gx, y - gy)) * smoothstep(8.0, 22.0, np.hypot(x - tx, y - ty))
+        h += el.get("undulation", 0.3) * self.noise_mid(x, y) * calm
         # framing banks beyond the rough: smoothstep rise, steepest grade = 1.5 * H / width
         bank_h = el.get("bank_height", 3.0)
         bank_w = max(bank_h * 10.0, 20.0)                          # keeps banks under ~15%
@@ -345,7 +362,7 @@ class Hole:
         mag = np.linalg.norm(slope)
         if mag > 0:
             slope = slope / mag * np.clip(mag, 0.015, 0.028)
-        center_h = float(self.base_height(np.array([[gx]], float), np.array([[gy]], float))[0, 0]) + 0.35
+        center_h = float(self.base_height(np.array([[gx]], float), np.array([[gy]], float))[0, 0]) + g.get("raise", 0.8)
         plane = center_h + slope[0] * (x - gx) + slope[1] * (y - gy)
         # contours on top of the tilt: two gentle rolls across the green (a few centimetres, under 1.5%
         # of slope), softened round the cup so the pin sits on a fair spot
@@ -354,7 +371,12 @@ class Hole:
         for ang, wl, ph in self.contour:
             plane = plane + 0.03 * calm * np.sin((np.cos(ang) * (x - gx) + np.sin(ang) * (y - gy)) * 2 * math.pi / wl + ph)
         r_min = min(g["radius"])
-        falloff = 6.0 / r_min                                          # ~6 m apron/falloff
+        # it stands up off the fairway: a false front, steeper on the side the approach comes from
+        # (~6 m, about 20%), easing off round the sides and back (~8 m)
+        ax, ay = self.tangent[-1]
+        rx_, ry_ = x - gx, y - gy
+        front = np.clip(-(rx_ * ax + ry_ * ay) / (np.hypot(rx_, ry_) + 1e-6), 0.0, 1.0)
+        falloff = (8.0 - 2.0 * front) / r_min
         h = h + (plane - h) * (1 - smoothstep(1.0, 1.0 + falloff, gr))
         # bunkers: flat sand floor, faces ~35-40%, lip raised on the side facing the tee
         for b in sp["bunkers"]:
@@ -362,11 +384,16 @@ class Hole:
             depth = b.get("depth", 0.45)
             bmin = min(b["radius"])
             edge_w = min(0.6, 1.5 * depth / (0.38 * bmin))              # radius fraction for the face
-            h = h - depth * (1 - smoothstep(1.0 - edge_w, 1.0, br))
-            toward_tee = np.clip(((ty - b["center"][1]) * (y - b["center"][1])
-                                  + (tx - b["center"][0]) * (x - b["center"][0])) /
-                                 (np.hypot(ty - b["center"][1], tx - b["center"][0]) * bmin + 1e-6), 0, 1)
-            h = h + 0.25 * (1 - toward_tee) * np.exp(-((br - 1.12) / 0.14) ** 2)
+            inside = 1 - smoothstep(1.0 - edge_w, 1.0, br)
+            h = h - depth * inside
+            toward = (((ty - b["center"][1]) * (y - b["center"][1]) + (tx - b["center"][0]) * (x - b["center"][0])) /
+                      (np.hypot(ty - b["center"][1], tx - b["center"][0]) * bmin + 1e-6))
+            toward_tee = np.clip(toward, 0, 1)
+            # the floor tilts up toward the side you walk in from (the tee's), deep under the face
+            h = h + 0.35 * depth * np.clip((toward + 1) * 0.5, 0, 1) * inside
+            # and the lip stands up on the far side, the face you play out over
+            lip = 0.4 if b.get("greenside") else 0.25
+            h = h + lip * (1 - toward_tee) * np.exp(-((br - 1.12) / 0.14) ** 2)
         # water: banks fall away under the waterline. An "island" pond leaves the green and a collar
         # round it standing (an island green: the green's ground stays as built above)
         for w in sp.get("water", []):
@@ -375,6 +402,8 @@ class Hole:
             sink = 1 - smoothstep(0.8, 1.5, wr)
             if w.get("island"):
                 sink = sink * smoothstep(1.4, 2.2, gr)
+            else:
+                sink = sink * smoothstep(1.05, 1.5, gr)       # a bank never reaches up into the green
             h = h + (floor - h) * sink
         return h
 
@@ -485,7 +514,7 @@ def paint_albedo(hole, out_path):
 
 
 GRADE_LIMITS = {  # percent; from golf architecture guidance (pin areas <=3%, surrounds <=17.5%)
-    "green": 3.0, "tee": 2.0, "fairway": 6.0, "fringe": 17.5, "rough": 17.5, "deep_rough": 20.0, "sand": 45.0,
+    "green": 4.0, "tee": 2.0, "fairway": 9.0, "fringe": 17.5, "rough": 17.5, "deep_rough": 20.0, "sand": 45.0,
 }
 
 
