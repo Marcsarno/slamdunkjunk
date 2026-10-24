@@ -140,6 +140,31 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   putting grid) and loads every sound and loads all her frames, so no shader compiles and no
   texture loads mid-flyover or mid-swing. Props under 2.5 m aren't drawn past 90 m (`hole_view.gd`).
 
+## Added 24 Oct (late session)
+
+- **Lighting pass** (`hole_view.gd` constants AMBIENT_LIFT, MOON_LIFT, RIM_LIFT, EXPOSURE_LIFT, HAZE,
+  HAZE_MIX, FOG_THIN, HORIZON_LIFT, on top of each theme's numbers): distance fades into a pale
+  moonlit haze, cool fill x2.6, cooler moon key, terrain `night_grade` 0.12, lighter `dark_tint`,
+  softer vignette (0.3), dither in sky and terrain. Brightness option (Quality.brightness, applied as
+  `adjustment_brightness`). Check with `tests/light_set.gd` (`--light-set=<dir>`: four fixed views of
+  a hole) and `$S/lum.py` (mean / near-black share). Before/after: `docs/img/lighting_before_after.png`.
+  Measured: mean 61 -> 80, far ground 41 -> 59 (of 255). Rule from Marc's research: readability beats
+  darkness; everything here is free on performance (no extra lights, passes or shadows).
+- **Hole packs on the web** load via the page's own fetch into the engine's memory file system
+  (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
+  download is the fallback.
+- **Opening**: a high shot behind the tee (HIGH_TIME 3.6) with `intro_fx.gd` (lightning bolts with
+  `Ambience.strike()`, bats, lantern ghosts, spirits drifting past), then the hole's CINEMA shot, then
+  the swoop back. `_intro_length()` replaces INTRO_TIME.
+- **Marc's bag** `assets/props/bag/bag.glb` (his pack in `art_src/bag/final`), placed by
+  `main._place_bag()` ahead-left of her, off the green when putting. Pumpkin post lanterns as tee
+  markers (`hole_view._tee_markers`).
+- **Backspin**: on greens irons/wedges hop, check and draw back (`ball_sim.gd` SPIN_BACK_MAX, BITE;
+  `tests/spin_probe.gd` prints each club). Wind-up creak removed.
+- **Builder**: trees 7 m and everything else 1 m off a green's real edge (`build_hole.off_green`).
+- **Thunder**: Marc wants a real recording; the sound sites are blocked by this environment's network
+  policy, so he'll upload one (OpenGameArt "Rain + Long Thunder", CC0, is the pick).
+
 ## What's next (in Marc's order of interest)
 
 1. **Performance**: Marc says the lantern cut "really, really helped"; the flyover was the last choppy

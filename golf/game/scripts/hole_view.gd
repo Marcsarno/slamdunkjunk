@@ -84,13 +84,13 @@ func _sky_style() -> String:
 ## and exposure run than the themes' first numbers, the haze the distance fades into, and the sky's
 ## horizon band. All cheap: no extra lights, passes or shadows.
 const AMBIENT_COLOR := Color(0.5, 0.53, 0.82)
-const AMBIENT_LIFT := 2.0
+const AMBIENT_LIFT := 2.6
 const MOON_LIFT := 1.12
 const MOON_COOL := Color(0.75, 0.82, 1.0)
 const RIM_LIFT := 1.3
-const EXPOSURE_LIFT := 1.0
+const EXPOSURE_LIFT := 1.05
 const HAZE := Color(0.36, 0.38, 0.58)     # moonlit mist: the colour far things fade toward
-const HAZE_MIX := 0.7
+const HAZE_MIX := 0.78
 const FOG_THIN := 0.85
 const HORIZON_LIFT := 1.5
 
