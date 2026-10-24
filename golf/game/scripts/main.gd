@@ -47,8 +47,24 @@ const DRAG_TURN := 0.9          # dragging the target: radians of aim per screen
 const DRAG_REACH := 1.4         # ... and club ranges of distance per screen height up or down
 const HINT := "Drag up top to move the target"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
-const INTRO_TIME := 6.5
-const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
+## The opening: two framed shots (the hole's own centrepiece, then its green and flag) and a swoop back
+## to her on the tee.
+const SHOT_TIME := 2.7
+const FLY_BACK := 2.4
+const INTRO_TIME := SHOT_TIME * 2.0 + FLY_BACK
+## Each hole's establishing shot (course metres): the camera glides from `from` to `to` (x, y, height
+## above the ground there) looking at `look` (x, y, height above the ground there).
+const CINEMA := {
+	"h01": {"from": [-88, 36, 3.0], "to": [-82, 58, 3.6], "look": [-38, 140, 2.0]},      # the patch, the pond
+	"h02": {"from": [51, 77, 1.6], "to": [54, 82, 2.1], "look": [62, 90, 4.6]},          # the cauldron
+	"h03": {"from": [-18, 78, 2.6], "to": [-10, 92, 3.4], "look": [16, 116, 1.0]},       # into the graveyard
+	"h04": {"from": [8, 46, 9.0], "to": [22, 58, 11.0], "look": [62, 104, 0.0]},         # over the web
+	"h05": {"from": [94, 228, 3.2], "to": [90, 246, 3.8], "look": [52, 262, 1.6]},       # along the corn
+	"h06": {"from": [-14, 36, 2.6], "to": [-6, 48, 3.2], "look": [28, 70, 0.6]},         # the marsh
+	"h07": {"from": [-22, 318, 2.6], "to": [-16, 326, 3.4], "look": [-4, 356, 6.5]},     # the vampire's house
+	"h08": {"from": [-16, 236, 2.2], "to": [-21, 242, 2.8], "look": [-36, 256, 5.5]},    # the Horseman
+	"h09": {"from": [-24, 100, 3.6], "to": [-18, 116, 4.4], "look": [16, 135, 1.0]},     # the pumpkin patch
+}
 const AIM_BACK := 3.1           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 1.65        # ... and above it; fixed so she is the same size every shot
 const AIM_FOV := 60.0
@@ -246,10 +262,13 @@ func _prewarm() -> void:
 	cam.look_at_from_position(top, top + Vector3.DOWN, Terrain.to_world(Vector3(0, 1, 0)) - Terrain.to_world(Vector3.ZERO))
 	await _drawn(2)
 	cam.projection = Camera3D.PROJECTION_PERSPECTIVE
-	# the opening, close on the lantern
-	_intro_cam()
-	_apply_cam(0.0)
-	await _drawn(1)
+	# the opening's framed shots
+	for k in _intro_shots().size():
+		phase_t = k * SHOT_TIME + 0.1
+		_intro_cam()
+		_apply_cam(0.0)
+		await _drawn(1)
+	phase_t = 0.0
 	# the aiming view with its markers, a ball trail, and every landing effect (out of sight underground)
 	view.moon_light.shadow_enabled = true
 	await _drawn(1)
@@ -386,6 +405,7 @@ func _start_hole() -> void:
 	_setup_shot()
 	phase = Phase.INTRO
 	phase_t = 0.0
+	_shot = -1
 	hud.hide_aim_map()
 	_flyover(true)
 	hud.hint.text = "Tap to skip"
@@ -394,9 +414,9 @@ func _start_hole() -> void:
 	var title := "Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)]
 	_intro_id += 1
 	var this_intro := _intro_id
-	get_tree().create_timer(INTRO_SWING * 0.8).timeout.connect(func():
+	get_tree().create_timer(0.5).timeout.connect(func():
 		if phase == Phase.INTRO and _intro_id == this_intro:
-			hud.flash(title, INTRO_TIME - INTRO_SWING * 0.8))
+			hud.flash(title, SHOT_TIME - 0.7))
 
 
 func _to_pin() -> float:
@@ -1194,44 +1214,69 @@ func _path_height(f: float) -> float:
 
 ## Each hole opens close on the jack-o'-lantern's glowing face, swings round behind it and rises off
 ## the tee into the flight down the hole to the pin.
+var _shot := -1                  # which of the opening's shots is showing (a dip to black between them)
+
+
 func _intro_cam() -> void:
-	var s := smoothstep(0.0, INTRO_SWING, phase_t)
-	var lc := Terrain.to_course(lantern.pumpkin_world())
-	var a0 := _lantern_face.angle()
-	var a1 := a0 + angle_difference(a0, (-aim + _right() * 0.25).angle())
-	var ang := lerpf(a0, a1, s)
-	var rad := lerpf(1.75, 6.5, s * s)
-	var o2 := Vector2(lc.x, lc.y) + Vector2.from_angle(ang) * rad
-	var ground := terrain.height(o2.x, o2.y)
-	var orbit_pos := Vector3(o2.x, o2.y, maxf(lc.z + lerpf(0.12, 4.5, s * s), ground + 0.35))
-	var ahead3 := Vector3(ball.x, ball.y, ball.z) + Vector3(aim.x, aim.y, 0) * 40.0
-	var orbit_look := lc.lerp(ahead3, smoothstep(0.5, 1.0, s))     # on the lantern until halfway round
-	# then the flight down the hole, starting as the swing finishes and taking over from it
-	var fly0 := INTRO_SWING * 0.6
-	var b := smoothstep(fly0, INTRO_SWING * 1.25, phase_t)
-	_intro_fly(clampf((phase_t - fly0) / (INTRO_TIME - fly0), 0.0, 1.0))
-	cam_pos = Terrain.to_world(orbit_pos).lerp(cam_pos, b)
-	cam_target = Terrain.to_world(orbit_look).lerp(cam_target, b)
-	cam_fov = lerpf(50.0, 62.0, b)
+	var shots := _intro_shots()
+	var i := mini(int(phase_t / SHOT_TIME), shots.size())
+	if i != _shot:
+		_shot = i
+		if i > 0 and i < shots.size():
+			hud.fade_in(0.3)                  # a quick dip to black between the framed shots
+	if i < shots.size():
+		var sh: Dictionary = shots[i]
+		var u := clampf((phase_t - i * SHOT_TIME) / SHOT_TIME, 0.0, 1.0)
+		u = u * (2.0 - u) * 0.65 + u * 0.35     # a slow glide that eases off
+		cam_pos = Terrain.to_world((sh.from as Vector3).lerp(sh.to, u))
+		cam_target = Terrain.to_world(sh.look)
+		cam_fov = sh.fov
+	else:
+		# then a swoop back to her: from the green shot's end, up over the hole and down to the aim view
+		var last: Dictionary = shots[-1]
+		_aim_cam()
+		var p0 := Terrain.to_world(last.to)
+		var t0 := Terrain.to_world(last.look)
+		var u := smoothstep(0.0, 1.0, clampf((phase_t - shots.size() * SHOT_TIME) / FLY_BACK, 0.0, 1.0))
+		# a curve up over the hole, round behind her, and down into the aim view (not over her head)
+		var behind := _want_pos - (_want_target - _want_pos).normalized() * 14.0 + Vector3(0, 7.0, 0)
+		var mid := (p0 + _want_pos) * 0.5 + Vector3(0, 24.0, 0)
+		var a1 := p0.lerp(mid, u)
+		var b1 := mid.lerp(behind, u)
+		var c1 := behind.lerp(_want_pos, u)
+		cam_pos = a1.lerp(b1, u).lerp(b1.lerp(c1, u), u)
+		cam_target = t0.lerp(_want_target, smoothstep(0.15, 0.85, u))
+		cam_fov = lerpf(last.fov, _want_fov, u)
 	_want_pos = cam_pos
 	_want_target = cam_target
 	_want_fov = cam_fov
 
 
-func _intro_fly(u: float) -> void:
-	var n: int = terrain.meta.path.size()
-	u = u * u * (3.0 - 2.0 * u)
-	var f := u * (n - 1)
-	var p2 := _path_at(f)
-	# looking four points ahead, sliding toward the pin over the last stretch
-	var fa := f + 4.0
-	var ahead := _path_at(fa)
-	var pin2 := Vector2(terrain.pin().x, terrain.pin().y)
-	ahead = ahead.lerp(pin2, clampf(fa - (n - 1.0) + 1.0, 0.0, 1.0))
-	var h := _path_height(f)
-	cam_pos = Terrain.to_world(Vector3(p2.x, p2.y, h + 26.0 - 8.0 * u))
-	cam_target = Terrain.to_world(Vector3(ahead.x, ahead.y, _path_height(minf(fa, n - 1.0))))
+## The opening's shots: the hole's own (CINEMA), then a push in on the green from behind it, looking
+## back at the flag with the hole running away beyond. Positions are absolute course coordinates.
+func _intro_shots() -> Array:
+	var out: Array = []
+	var id := str(Round.current().get("id", ""))
+	var c: Dictionary = CINEMA.get(id, {})
+	if not c.is_empty():
+		out.append({"from": _above(c.from), "to": _above(c.to), "look": _above(c.look), "fov": 52.0})
+	var pin := terrain.pin()
+	var path: Array = terrain.meta.path
+	var p2 := Vector2(pin.x, pin.y)
+	var way := (p2 - Vector2(path[-3][0], path[-3][1])).normalized()      # the way the hole comes in
+	var side := Vector2(way.y, -way.x)
+	var a := p2 - way * 11.0 + side * 4.0
+	var b := p2 - way * 6.5 + side * 1.8
+	out.append({"from": _above([a.x, a.y, 1.9]), "to": _above([b.x, b.y, 1.2]),
+		"look": Vector3(pin.x, pin.y, pin.z + 1.3), "fov": 44.0})
+	return out
 
+
+## A point given as [x, y, height above the ground there] (never below the ground).
+func _above(v: Array) -> Vector3:
+	var x := float(v[0])
+	var y := float(v[1])
+	return Vector3(x, y, terrain.height(x, y) + maxf(float(v[2]), 0.6))
 
 
 func _apply_cam(delta: float) -> void:

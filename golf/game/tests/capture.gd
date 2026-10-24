@@ -3,7 +3,7 @@ extends Node
 ## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 -- --capture=<dir> [--introonly | --intro-frames]
 
 var main: Node
-const INTRO_AT := [0.05, 0.6, 1.2, 1.8, 2.4, 3.0, 3.8, 5.0]   # --intro-frames: when to snap (s into the opening)
+const INTRO_AT := [0.3, 1.5, 2.6, 3.0, 4.2, 5.3, 6.0, 6.8, 7.4, 7.7]   # --intro-frames: when to snap (s into the opening)
 var out_dir := ""
 var t := 0.0
 var step := 0
@@ -29,10 +29,14 @@ func _process(delta: float) -> void:
 	t += delta
 	if "--intro-frames" in OS.get_cmdline_user_args():
 		# the opening shot, a frame every so often through it
-		if step < INTRO_AT.size() and main.phase_t >= INTRO_AT[step]:
+		if step < INTRO_AT.size() and main.phase == main.Phase.INTRO and main.phase_t >= INTRO_AT[step]:
 			snap("intro_%.1f" % main.phase_t)
 			step += 1
-		elif step >= INTRO_AT.size():
+		elif step >= INTRO_AT.size() and main.phase != main.Phase.INTRO:
+			t = 0.0
+			step = -100
+		elif step == -100 and t > 0.6:
+			snap("after_intro")                 # where the opening hands over to the aim
 			get_tree().quit()
 		return
 	match step:

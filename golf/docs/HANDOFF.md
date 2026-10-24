@@ -116,6 +116,10 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   up close, mowing stripes across the way in (a checker on `hole_view.CHECKER_GREENS`) that swap light
   and dark with the view, a darker collar, a soft dew gloss and a few glints, a worn ring round the cup;
   the cup has a white liner rim.
+- The opening (`main._intro_cam`): two framed shots, the hole's own centrepiece (`main.CINEMA`, per hole:
+  the camera glides from `from` to `to` looking at `look`, heights above the ground) and a low push in on
+  the flag from the approach, with a dip to black between, then a curve up over the hole, round behind
+  her and down into the aim view. Tap skips. `tests/capture.gd --intro-frames` snaps it and the hand-over.
 - Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`). No slow motion
   near the cup (Marc took it out); flight plays at 1.25x, easing to real time on landing (`main._time_scale`).
 - The clubhouse board (`scripts/front.gd`) is pages: main (Play Now = the round from hole 1, Pick a Hole,
