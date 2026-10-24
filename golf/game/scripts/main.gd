@@ -48,26 +48,14 @@ const DRAG_TURN := 0.9          # dragging the target: radians of aim per screen
 const DRAG_REACH := 1.4         # ... and club ranges of distance per screen height up or down
 const HINT := "Drag up top to move the target"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
-## The opening: one camera move (_intro_shots): the reveal high over the hole, the fly down it, round
-## the flag, then a dip to black and up behind her on the tee.
-const HIGH_TIME := 2.6        # the reveal, high behind the tee (with the lightning)
-const FLY_TIME := 3.0          # the fly down the hole, past its landmark
-const GREEN_TIME := 2.2        # round the flag
-const SHOT_TIME := 2.7         # (a framed shot's length, for the CINEMA spots)
+## The opening: one camera move (_intro_shots), dark at first: on the lantern and her bag by the tee
+## while the lightning cracks and the lantern catches, rising behind the tee, then on down the hole
+## lighting it as it goes (HoleView.light_front) to the flag; then a dip to black and up behind her.
+const TEE_TIME := 4.6          # on the lantern and bag, rising behind the tee
+const FLY_TIME := 5.0          # down the hole to the flag
 const FLY_BACK := 0.5          # the dip to black and up behind her
-## Each hole's establishing shot (course metres): the camera glides from `from` to `to` (x, y, height
-## above the ground there) looking at `look` (x, y, height above the ground there).
-const CINEMA := {
-	"h01": {"from": [-88, 36, 3.0], "to": [-82, 58, 3.6], "look": [-38, 140, 2.0]},      # the patch, the pond
-	"h02": {"from": [51, 77, 1.6], "to": [54, 82, 2.1], "look": [62, 90, 4.6]},          # the cauldron
-	"h03": {"from": [-18, 78, 2.6], "to": [-10, 92, 3.4], "look": [16, 116, 1.0]},       # into the graveyard
-	"h04": {"from": [8, 46, 9.0], "to": [22, 58, 11.0], "look": [62, 104, 0.0]},         # over the web
-	"h05": {"from": [94, 228, 3.2], "to": [90, 246, 3.8], "look": [52, 262, 1.6]},       # along the corn
-	"h06": {"from": [-14, 36, 2.6], "to": [-6, 48, 3.2], "look": [28, 70, 0.6]},         # the marsh
-	"h07": {"from": [-22, 318, 2.6], "to": [-16, 326, 3.4], "look": [-4, 356, 6.5]},     # the vampire's house
-	"h08": {"from": [-16, 236, 2.2], "to": [-21, 242, 2.8], "look": [-36, 256, 5.5]},    # the Horseman
-	"h09": {"from": [-24, 100, 3.6], "to": [-18, 116, 4.4], "look": [16, 135, 1.0]},     # the pumpkin patch
-}
+const LIGHT_LEAD := 75.0       # the lights come on this far down the hole ahead of the camera ...
+const LIGHT_SPEED := 130.0     # ... the front moving no faster than this (m/s), so they catch one by one
 const AIM_BACK := 3.1           # aim camera: meters behind the ball ...
 const AIM_HEIGHT := 1.65        # ... and above it; fixed so she is the same size every shot
 const AIM_FOV := 60.0
@@ -240,6 +228,8 @@ func _ready() -> void:
 			add_child(load("res://tests/capture_hole.gd").new())
 		elif a.begins_with("--look-out="):
 			add_child(load("res://tests/look_at.gd").new())
+		elif a == "--intro-path":
+			add_child(load("res://tests/intro_path.gd").new())
 		elif a == "--knock-probe":
 			add_child(load("res://tests/knock_probe.gd").new())
 		elif a.begins_with("--light-set="):
@@ -431,13 +421,16 @@ func _start_hole() -> void:
 	_flyover(true)
 	hud.hint.text = "Tap to skip"
 	_place_lantern()
-	# the hole's name once the camera has swung round the lantern and starts down the hole
+	_front = -12.0
+	view.lights_from(Terrain.to_world(terrain.tee()),
+		Terrain.to_world(Vector3(_hole_dir().x, _hole_dir().y, 0.0)) - Terrain.to_world(Vector3.ZERO))
+	# the hole's name over the dark tee, as the lantern catches
 	var title := "Hole %d · Par %d\n%s" % [terrain.meta.number, par, _dist_text(_to_pin(), false)]
 	_intro_id += 1
 	var this_intro := _intro_id
 	get_tree().create_timer(0.5).timeout.connect(func():
 		if phase == Phase.INTRO and _intro_id == this_intro:
-			hud.flash(title, HIGH_TIME - 0.9))
+			hud.flash(title, TEE_TIME - 1.1))
 
 
 func _to_pin() -> float:
@@ -464,6 +457,7 @@ func _setup_shot() -> void:
 	target_dragging = false
 	_set_target(_default_target())
 	_place_bag()
+	view.face_flag(Terrain.to_world(ball))     # under the fade, so it's already round when the shot comes up
 	hud.set_stroke(strokes + 1, par)
 	hud.set_distance(_dist_text(_to_pin(), club.id == "putter"))
 	hud.set_club(club.label, club.carry_m * YD)
@@ -871,6 +865,8 @@ func _on_contact() -> void:
 
 
 const BAG_LAYER := 1 << 15      # render layer only the bag is on: its own warm light lights nothing else
+const BAG_LIGHT := 1.6          # that light's strength
+var _bag_light: OmniLight3D
 const BAG_MODEL := "res://assets/props/bag/bag.glb"     # Marc's Pumpkin Golf Stand Bag (art_src/bag/final)
 
 
@@ -896,13 +892,14 @@ func _make_bag() -> void:
 				mi.set_surface_override_material(i, m)
 	var warm := OmniLight3D.new()
 	warm.light_color = Color(1.0, 0.62, 0.3)
-	warm.light_energy = 1.6
+	warm.light_energy = BAG_LIGHT
 	warm.omni_range = 2.4
 	warm.omni_attenuation = 1.2
 	warm.shadow_enabled = false
 	warm.light_cull_mask = BAG_LAYER
 	warm.position = Vector3(0.55, 0.95, 0.85)      # up and out in front of the pocket, to one side
 	bag.add_child(warm)
+	_bag_light = warm
 	add_child(bag)
 
 
@@ -1259,6 +1256,10 @@ func _process(delta: float) -> void:
 
 func _end_intro() -> void:
 	intro_fx.stop()
+	view.light_front(INF)            # every light on, whenever the opening ends (or is skipped)
+	lantern.on = 1.0
+	if _bag_light:
+		_bag_light.light_energy = BAG_LIGHT
 	phase = Phase.AIM
 	_flyover(false)
 	Quality.watching = true          # the scene's sharpness adapts from here on, never mid-flyover
@@ -1426,9 +1427,10 @@ func _path_height(f: float) -> float:
 	return h / 5.0
 
 
-## Each hole opens close on the jack-o'-lantern's glowing face, swings round behind it and rises off
-## the tee into the flight down the hole to the pin.
+## Each hole opens on the lantern and her bag in the dark, rises behind the tee and flies on down the
+## hole to the flag, the lights catching ahead of it.
 var _shot := -1                  # which of the opening's shots is showing (a dip to black between them)
+var _front := 0.0                # how far down the hole the lights have come on (HoleView.light_front)
 
 
 func _intro_cam() -> void:
@@ -1462,90 +1464,201 @@ func _intro_cam() -> void:
 	_want_pos = cam_pos
 	_want_target = cam_target
 	_want_fov = cam_fov
+	_intro_lights()
 
 
-## How a shot's time runs: "in" starts slow, "out" settles, "linear" holds its speed (so one shot can
-## hand straight on to the next with no hitch).
+## The lights in the opening: all dark, then the lantern by the tee catches (and her bag in its glow)
+## and the markers, then everything down the hole as the camera comes to it, a little ahead of it.
+func _intro_lights() -> void:
+	var goal := lerpf(-12.0, 14.0, smoothstep(1.6, 3.0, phase_t))
+	if phase_t > TEE_TIME:
+		var c := Terrain.to_course(cam_pos)
+		var t := terrain.tee()
+		goal = maxf(goal, Vector2(c.x - t.x, c.y - t.y).dot(_hole_dir()) + LIGHT_LEAD)
+	_front = minf(goal, _front + LIGHT_SPEED * get_process_delta_time()) if phase_t > TEE_TIME else goal
+	view.light_front(_front)
+	# the lantern catches as the camera holds on it: a sputter, then the candle takes
+	var catch := clampf((phase_t - 0.7) / 0.6, 0.0, 1.0)
+	lantern.on = catch if catch >= 1.0 else catch * (0.6 + 0.4 * sin(phase_t * 37.0))
+	if _bag_light:
+		_bag_light.light_energy = BAG_LIGHT * lantern.on       # her bag is lit by the lantern beside it
+
+
+## Straight down the hole, tee to pin (course coords, level).
+func _hole_dir() -> Vector2:
+	var t := terrain.tee()
+	var p := terrain.pin()
+	return Vector2(p.x - t.x, p.y - t.y).normalized()
+
+
+## How a shot's time runs: "in" starts slow, "out" settles, "inout" both, "late" holds still first,
+## "linear" holds its speed.
 func _ease(u: float, how: String) -> float:
 	match how:
 		"in": return u * u * (1.5 - 0.5 * u)
 		"out": return 1.0 - (1.0 - u) * (1.0 - u)
+		"inout": return u * u * (3.0 - 2.0 * u)
+		"late": return smoothstep(0.3, 1.0, u)          # held still a while, then eased in and out
 	return u
 
 
 ## Where the camera is, what it looks at and its field of view, `u` (0..1) through a shot (course coords).
 func _shot_pose(sh: Dictionary, u: float) -> Array:
-	match str(sh.get("kind", "line")):
-		"fly":
-			# down the line of play at tree-top height, looking on ahead; turning to the hole's landmark
-			# as it goes by
-			var f: float = lerpf(float(sh.f0), float(sh.f1), u)
-			var g := _along_hole(f)
-			var side: Vector2 = sh.side
-			var h: float = lerpf(float(sh.h0), float(sh.h1), u)
-			var pos := Vector3(g.x + side.x * float(sh.offset), g.y + side.y * float(sh.offset), g.z + h)
-			pos = pos.lerp(sh.from, (1.0 - smoothstep(0.0, 0.3, u)))      # handed on from the reveal
-			var ahead := _along_hole(minf(f + 0.28, 1.0))
-			var look := ahead
-			if sh.has("landmark"):
-				var lm: Vector3 = sh.landmark
-				var near := 1.0 - smoothstep(25.0, 90.0, Vector2(pos.x - lm.x, pos.y - lm.y).length())
-				look = ahead.lerp(lm, near * 0.75)
-			look = look.lerp(sh.look_from, 1.0 - smoothstep(0.0, 0.3, u))
-			return [pos, look, lerpf(56.0, 50.0, u)]
-		"orbit":
-			# round the flag, coming down onto the green
-			var c: Vector3 = sh.center
-			var a: float = lerpf(float(sh.a0), float(sh.a1), u)
-			var r: float = lerpf(float(sh.r0), float(sh.r1), u)
-			var pos := c + Vector3(cos(a) * r, sin(a) * r, lerpf(float(sh.h0), float(sh.h1), u))
-			var look := c + Vector3(0, 0, 1.1)
-			if sh.has("from"):                         # handed on from the fly, no cut
-				var k := 1.0 - smoothstep(0.0, 0.45, u)
-				pos = pos.lerp(sh.from, k)
-				look = look.lerp(sh.look_from, k)
-			return [pos, look, lerpf(50.0, 46.0, u)]
-	return [(sh.from as Vector3).lerp(sh.to, u), (sh.look as Vector3).lerp(sh.get("look_to", sh.look), u), sh.fov]
+	if str(sh.get("kind", "line")) == "fly":
+		# along one smoothed line from the rise's end down the hole to the flag, at an even pace (the
+		# shot's ease sets it going and brings it to rest), looking on along the same line ahead and
+		# at the flag at the end
+		var line: Array = sh.line
+		var total: float = line[-1][1]
+		var at := u * total
+		var pos := _on_line(line, at)
+		var look := _on_line(line, at + FLY_LOOK) + Vector3(0, 0, -4.0)
+		look = look.lerp(sh.pin, smoothstep(total - FLY_LOOK * 1.5, total, at))
+		look = look.lerp(sh.look_from, 1.0 - smoothstep(0.0, 0.2, u))   # handed on from the rise
+		return [pos, look, lerpf(56.0, 46.0, u)]
+	if str(sh.get("kind", "line")) == "rise":
+		# through its keys on one rounded line at an even pace, the look turning one way only, through
+		# the middle key's look, at a pace kept to the camera's (so it never swings faster than it moves)
+		var line: Array = sh.line
+		var at: float = u * float(line[-1][1])
+		var dirs: Array = sh.dirs
+		var x: float = at / float(line[-1][1])
+		var xb: float = sh.xb                    # how far along the line its middle key is
+		var y0 := atan2(dirs[0].x, dirs[0].y)
+		var turn := wrapf(atan2(dirs[2].x, dirs[2].y) - y0, -PI, PI)
+		var gb := clampf(wrapf(atan2(dirs[1].x, dirs[1].y) - y0, -PI, PI) / turn, 0.05, 0.95) if absf(turn) > 0.01 else 0.5
+		var yaw := y0 + turn * _monotone(x, xb, gb)
+		var pitch := lerpf(asin(dirs[0].z), asin(dirs[1].z), smoothstep(0.0, xb, x)) if x < xb \
+			else lerpf(asin(dirs[1].z), asin(dirs[2].z), smoothstep(xb, 1.0, x))
+		var p0 := _on_line(line, at)
+		var dir := Vector3(sin(yaw) * cos(pitch), cos(yaw) * cos(pitch), sin(pitch))
+		return [p0, p0 + dir * 20.0, lerpf(float(sh.fov), float(sh.fov_to), u)]
+	# a straight move, turning steadily (not swinging) from one look to the other
+	var p: Vector3 = (sh.from as Vector3).lerp(sh.to, u)
+	var d0: Vector3 = ((sh.look as Vector3) - (sh.from as Vector3)).normalized()
+	var d1: Vector3 = ((sh.look_to as Vector3) - (sh.to as Vector3)).normalized()
+	var dir := d0.slerp(d1, u) if d0.dot(d1) > -0.99 else d0.lerp(d1, u).normalized()
+	return [p, p + dir * 20.0, lerpf(float(sh.fov), float(sh.fov_to), u)]
 
 
-## The opening, one camera move: high behind the tee with the whole hole laid out (lightning cracks
-## over it), on down the line of play at tree-top height turning to the hole's landmark as it passes,
-## down round the flag on the green, then a dip to black and up behind her. Course coordinates.
+## 0 .. 1 as `x` goes 0 .. 1, through (xb, gb), never turning back, still at both ends (a Hermite
+## curve each side of the middle, its slope there kept low enough that it can't overshoot).
+func _monotone(x: float, xb: float, gb: float) -> float:
+	var m := minf(minf(3.0 * gb / xb, 3.0 * (1.0 - gb) / (1.0 - xb)), 1.2)
+	if x < xb:
+		var t := x / xb
+		return _hermite(t, 0.0, gb, 0.0, m * xb)
+	var t2 := (x - xb) / (1.0 - xb)
+	return _hermite(t2, gb, 1.0, m * (1.0 - xb), 0.0)
+
+
+func _hermite(t: float, p0: float, p1: float, m0: float, m1: float) -> float:
+	var t2 := t * t
+	var t3 := t2 * t
+	return (2.0 * t3 - 3.0 * t2 + 1.0) * p0 + (t3 - 2.0 * t2 + t) * m0 + (-2.0 * t3 + 3.0 * t2) * p1 + (t3 - t2) * m1
+
+
+const FLY_LOOK := 60.0           # m: the fly looks this far on ahead along its line
+
+
+## The point `at` metres along a line of [point, metres from its start] (held at its ends).
+func _on_line(line: Array, at: float) -> Vector3:
+	if at <= 0.0:
+		return line[0][0]
+	for i in range(1, line.size()):
+		if at <= float(line[i][1]):
+			var a: float = line[i - 1][1]
+			return (line[i - 1][0] as Vector3).lerp(line[i][0], (at - a) / maxf(float(line[i][1]) - a, 0.001))
+	return line[-1][0]
+
+
+## The fly's line: from `from` (where the rise ends, high behind the tee) down the line of play,
+## coming down from tree-top height, to `end` before the flag; the corners rounded off (Chaikin) so
+## it turns smoothly, never above or into the ground.
+func _fly_line(from: Vector3, end: Vector3) -> Array:
+	var pts: Array[Vector3] = [from]
+	var n := 14
+	for k in range(1, n):
+		var f := lerpf(0.06, 0.94, float(k) / n)
+		var g := _along_hole(f)
+		pts.append(Vector3(g.x, g.y, g.z + lerpf(from.z - terrain.tee().z, 4.0, smoothstep(0.35, 1.0, f))))
+	pts.append(end)
+	return _rounded(pts, 2.2)
+
+
+## A line through `pts` with its corners rounded off (Chaikin), as [point, metres from its start],
+## kept `clear` metres over the ground.
+func _rounded(pts: Array[Vector3], clear: float) -> Array:
+	for it in 3:
+		var sm: Array[Vector3] = [pts[0]]
+		for k in pts.size() - 1:
+			sm.append(pts[k].lerp(pts[k + 1], 0.25))
+			sm.append(pts[k].lerp(pts[k + 1], 0.75))
+		sm.append(pts[-1])
+		pts = sm
+	var line: Array = []
+	var dist := 0.0
+	for k in pts.size():
+		var q := pts[k]
+		q.z = maxf(q.z, terrain.height(q.x, q.y) + clear)
+		if k > 0:
+			dist += q.distance_to(line[-1][0])
+		line.append([q, dist])
+	return line
+
+
+var _fly_cache := {}             # the fly's line for the hole being played (it's the same every frame)
+
+
+## The opening, one camera move: close on the lantern by the tee in the dark (the lightning cracks,
+## the lantern catches), pulling back past her bag and up behind the tee, turning one way to look down
+## the hole; then on down the line of play, lower as it goes, in to the flag. Course coordinates.
 func _intro_shots() -> Array:
-	var reveal := _high_shot()
-	var t := terrain.tee()
-	var mid := _along_hole(0.55)
-	var d := Vector2(mid.x - t.x, mid.y - t.y).normalized()
-	var fly := {"kind": "fly", "time": FLY_TIME, "ease": "linear", "f0": 0.12, "f1": 0.8, "h0": 22.0, "h1": 14.0,
-		"side": Vector2(d.y, -d.x), "offset": -6.0, "from": reveal.to, "look_from": reveal.look_to}
-	var c: Dictionary = CINEMA.get(str(Round.current().get("id", "")), {})
-	if not c.is_empty():
-		fly["landmark"] = _above(c.look)
+	var rise := _tee_shot()
 	var pin := terrain.pin()
 	var path: Array = terrain.meta.path
-	var way := (Vector2(pin.x, pin.y) - Vector2(path[-3][0], path[-3][1])).normalized()   # the way in to the green
-	var back := atan2(-way.y, -way.x)                  # from the pin, back down the approach
-	var orbit := {"kind": "orbit", "time": GREEN_TIME, "ease": "out", "center": pin, "a0": back - 0.6, "a1": back + 0.35,
-		"r0": 15.0, "r1": 6.5, "h0": 8.0, "h1": 2.2}
-	var end: Array = _shot_pose(fly, 1.0)
-	orbit["from"] = end[0]
-	orbit["look_from"] = end[1]
-	return [reveal, fly, orbit]
+	var way := (Vector2(pin.x, pin.y) - Vector2(path[-2][0], path[-2][1])).normalized()   # the way in to the green
+	var e := Vector2(pin.x, pin.y) - way * 11.0
+	var end := Vector3(e.x, e.y, maxf(pin.z, terrain.height(e.x, e.y)) + 2.6)
+	var key := "%s %s" % [rise.to, end]
+	if not _fly_cache.has(key):
+		_fly_cache = {key: _fly_line(rise.to, end)}
+	var fly := {"kind": "fly", "time": FLY_TIME, "ease": "inout", "line": _fly_cache[key], "pin": pin + Vector3(0, 0, 0.9),
+		"look_from": rise.to + ((rise.look_to as Vector3) - (rise.to as Vector3)).normalized() * FLY_LOOK}
+	return [rise, fly]
 
 
-## The opening's first look: high up behind the tee with the whole hole laid out ahead, pushing on and
-## down over the tee while the lightning cracks (IntroFx).
-func _high_shot() -> Dictionary:
+## The opening's first look: close on the lantern's carved face as it catches, easing back until
+## she, her bag and the lantern are all in the frame, then up behind the tee, turning one way to look
+## down the hole.
+func _tee_shot() -> Dictionary:
 	var t := terrain.tee()
-	var mid := _along_hole(0.55)
-	var far := _along_hole(0.8)
-	var d := Vector2(mid.x - t.x, mid.y - t.y).normalized()
-	var sd := Vector2(d.y, -d.x)
-	var a := Vector2(t.x, t.y) - d * 34.0 + sd * 12.0
-	var b := Vector2(t.x, t.y) + d * 10.0 - sd * 4.0
-	var b_ground := _along_hole(0.12)
-	return {"from": Vector3(a.x, a.y, t.z + 58.0), "to": Vector3(b_ground.x - sd.x * 6.0, b_ground.y - sd.y * 6.0, b_ground.z + 22.0),
-		"look": mid, "look_to": far, "fov": 56.0, "time": HIGH_TIME, "ease": "in"}
+	var d := _hole_dir()
+	var r := Vector2(d.y, -d.x)            # to the right, looking down the hole
+	var pumpkin := Terrain.to_course(lantern.pumpkin_world())
+	var p2 := Vector2(pumpkin.x, pumpkin.y)
+	var bag3 := Terrain.to_course(bag.global_position) if bag else t
+	var both := (pumpkin + bag3 + Vector3(0, 0, 0.7)) * 0.5        # between the lantern and the top of the bag
+	var a := p2 + _lantern_face * 2.3
+	var b := Vector2(both.x, both.y) + (_lantern_face - d).normalized() * 6.5
+	var e := Vector2(t.x, t.y) - d * 16.0 - r * 2.0
+	var keys: Array[Vector3] = [Vector3(a.x, a.y, pumpkin.z + 0.15),
+		Vector3(b.x, b.y, terrain.height(b.x, b.y) + 3.8), Vector3(e.x, e.y, t.z + 16.0)]
+	var line := _rounded(keys, 0.6)
+	var look_to := _along_hole(0.3) + Vector3(0, 0, 1.0)
+	# held on the pumpkin while it catches ("late"), back to take in all three, then away
+	return {"kind": "rise", "line": line, "to": keys[2], "xb": keys[0].distance_to(keys[1]) / (keys[0].distance_to(keys[1]) + keys[1].distance_to(keys[2])),
+		"dirs": [(pumpkin - keys[0]).normalized(), (both - keys[1]).normalized(), (look_to - keys[2]).normalized()],
+		"look_to": look_to, "fov": 46.0, "fov_to": 56.0, "time": TEE_TIME, "ease": "late"}
+
+
+## How long the line of play is, tee to pin (metres).
+func _hole_length() -> float:
+	var path: Array = terrain.meta.path
+	var total := 0.0
+	for i in path.size() - 1:
+		total += Vector2(path[i][0], path[i][1]).distance_to(Vector2(path[i + 1][0], path[i + 1][1]))
+	return total
 
 
 ## The point `share` of the way along the line of play, on the ground.
@@ -1573,19 +1686,6 @@ func _intro_length() -> float:
 	for sh in _intro_shots():
 		total += float(sh.time)
 	return total
-
-
-## A point [x, y, height] that height above the ground there or the green's level `gz`, whichever is higher.
-func _over_green(v: Array, gz: float) -> Vector3:
-	var p := _above(v)
-	return Vector3(p.x, p.y, maxf(p.z, gz + float(v[2])))
-
-
-## A point given as [x, y, height above the ground there] (never below the ground).
-func _above(v: Array) -> Vector3:
-	var x := float(v[0])
-	var y := float(v[1])
-	return Vector3(x, y, terrain.height(x, y) + maxf(float(v[2]), 0.6))
 
 
 func _apply_cam(delta: float) -> void:

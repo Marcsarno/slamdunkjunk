@@ -116,10 +116,8 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   up close, mowing stripes across the way in (a checker on `hole_view.CHECKER_GREENS`) that swap light
   and dark with the view, a darker collar, a soft dew gloss and a few glints, a worn ring round the cup;
   the cup has a white liner rim.
-- The opening (`main._intro_cam`): two framed shots, the hole's own centrepiece (`main.CINEMA`, per hole:
-  the camera glides from `from` to `to` looking at `look`, heights above the ground) and a low push in on
-  the flag from the approach, with a dip to black between, then a curve up over the hole, round behind
-  her and down into the aim view. Tap skips. `tests/capture.gd --intro-frames` snaps it and the hand-over.
+- The opening (`main._intro_cam`): see **Opening** below. Tap skips. `tests/capture.gd --intro-frames`
+  snaps it and the hand-over.
 - Rolls die away gently: the turf's drag eases to 30% at a crawl (`ball_sim.ROLL_TAIL`). No slow motion
   near the cup (Marc took it out); flight plays at 1.25x, easing to real time on landing (`main._time_scale`).
 - The clubhouse board (`scripts/front.gd`) is pages: main (Play Now = the round from hole 1, Pick a Hole,
@@ -152,18 +150,24 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Hole packs on the web** load via the page's own fetch into the engine's memory file system
   (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
   download is the fallback.
-- **Opening** (`main._intro_shots`, `_shot_pose`): one camera move: the reveal high behind the tee
-  (HIGH_TIME 2.6, a lightning bolt from `intro_fx.gd` with `Ambience.strike()` and its thunder), the fly
-  down the line of play at tree-top height turning to the hole's landmark (CINEMA "look") as it passes
-  (FLY_TIME 3.0), round the flag onto the green (GREEN_TIME 2.2, blended in from the fly), then a dip
-  to black and up behind her (FLY_BACK 0.5). Marc rejected the ghosts/bats drifting past the lens;
-  the course's own ghosts (Ambience) stay.
+- **Opening** (`main._intro_shots`, `_shot_pose`): one camera move, starting dark. Close on the tee's
+  lantern while the lightning cracks (`intro_fx.gd`, `Ambience.strike()` and its thunder) and the
+  lantern catches; back until she, her bag and the lantern share the frame; up behind the tee turning
+  one way to look down the hole (TEE_TIME 4.6, kind "rise"); then down one rounded line along the
+  hole to the flag (FLY_TIME 5.0, kind "fly", `_fly_line`), then the dip to black (FLY_BACK 0.5).
+  The look never swings back and forth (Marc: no jerking left and right); `tests/intro_path.gd`
+  (`--intro-path`) prints the camera's speed and turn rate through it. Lights come on as it goes:
+  `HoleView.light_front()` moves a front down the hole (LIGHT_LEAD ahead of the camera); halos,
+  ground pools, lantern lights, post lanterns and the cup glow follow `HoleView.lit()`, and the
+  carved faces and pumpkin shells in the hole's model follow it in their shader
+  (`shaders/lamp_front.gdshaderinc`). The intro's end (or a skip) turns everything on.
 - **Thunder**: a real CC0 recording (rubberduck, OpenGameArt "100 CC0 SFX #2", via the
   Legerdo/open-game-sfx-index GitHub mirror) in `art_src/sfx/`, turned into `assets/sfx/thunder.wav`
   by `tools/make_sfx.py`; played 0.9-2 s after each flash, louder the brighter.
 - **Cup and flag**: the cup drawn 1.8x real size (CUP_DRAWN) with a bright rim, a faint glow rising
-  out of it and a ring of light on the grass; the flag (on `_flag_pivot`) eases round to face the
-  camera, FLAG_TURN off square. Lanterns: faces at HeroLantern.LANTERN_GLOW 7 (carved jacks 8) with a
+  out of it and a ring of light on the grass; the flag (on `_flag_pivot`) turns to face her
+  (FLAG_TURN off square) when each shot is set up, under the fade, and stays put after that
+  (`HoleView.face_flag`). Lanterns: faces at HeroLantern.LANTERN_GLOW 7 (carved jacks 8) with a
   camera-facing halo (`HoleView.glow_halo`). The bag: rim light plus a warm light only it gets
   (`main.BAG_LAYER`).
 - **Marc's bag** `assets/props/bag/bag.glb` (his pack in `art_src/bag/final`), placed by

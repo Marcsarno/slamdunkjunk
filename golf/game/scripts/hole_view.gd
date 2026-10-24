@@ -34,6 +34,15 @@ var _key_dir := Vector3(0, 0.5, 0.87)     # toward the key light (the ground's h
 var _light_points: Array = []      # [course position, color, pool size, pool strength]: the lanterns and the light props
 var _halos: Array = []             # the light props' glows: [halo node, its size, phase], breathing
 var _floaters: Array = []          # light props that hover (ghosts, the skull): [node, base y, phase]
+var _posts: Array = []             # the post lanterns (tee markers, by the green): [world pos, [their lit materials], halo]
+var _lamp_mats: Array[ShaderMaterial] = []    # the lantern faces and pumpkin shells, lit by the front in their shader
+# The opening lights the course as the camera goes: a front moves down the hole from the tee, and
+# every light behind it is on (each catching over LIGHT_RAMP metres with a flicker), every light past
+# it still dark. INF: all on (the rest of the game).
+const LIGHT_RAMP := 10.0
+var _front_from := Vector3.ZERO    # world coords: where the front is measured from (the tee)...
+var _front_dir := Vector3.FORWARD  # ... and the way it goes (level, down the hole)
+var _front_d := INF                # how far down the hole it has come, metres
 
 
 func build(hole_dir: String, t: Terrain) -> void:
@@ -273,12 +282,85 @@ func _textured_vc(tex_name: String, scale: float, boost: float, rough: float) ->
 
 
 ## Pumpkin shells glow faintly from the candle inside, which keeps them orange under blue moonlight.
-func _pumpkin_material() -> StandardMaterial3D:
-	var m := _textured_vc("", 1.0, 1.0, 0.5)
-	m.emission_enabled = true
-	m.emission = Color(1.0, 0.42, 0.08)
-	m.emission_energy_multiplier = 0.45
+func _pumpkin_material() -> ShaderMaterial:
+	return _lamp_material(LAMP_SHELL)
+
+
+## The lit things built into the hole share a material each, so they're lit by the front in their
+## shader: a carved face is its warm colour (unshaded) when lit, near black when not; a pumpkin shell
+## is lit by the moon like anything else, with the candle's faint glow when lit.
+const LAMP_FACE := """
+shader_type spatial;
+render_mode unshaded, cull_%s;
+#include "res://shaders/lamp_front.gdshaderinc"
+void fragment() {
+	ALBEDO = mix(vec3(0.05, 0.03, 0.02), vec3(1.0, 0.78, 0.35), lamp_on(v_world, TIME));
+}
+"""
+const LAMP_SHELL := """
+shader_type spatial;
+render_mode cull_%s;
+#include "res://shaders/lamp_front.gdshaderinc"
+void fragment() {
+	ALBEDO = COLOR.rgb;
+	ROUGHNESS = 0.5;
+	EMISSION = vec3(1.0, 0.42, 0.08) * 0.45 * lamp_on(v_world, TIME);
+}
+"""
+
+
+func _lamp_material(code: String, two_sided := false) -> ShaderMaterial:
+	var sh := Shader.new()
+	sh.code = code % ("disabled" if two_sided else "back")
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	_lamp_mats.append(m)
+	_set_front_params(m)
 	return m
+
+
+func _set_front_params(m: ShaderMaterial) -> void:
+	m.set_shader_parameter("front_from", _front_from)
+	m.set_shader_parameter("front_dir", _front_dir)
+	m.set_shader_parameter("front_d", 1.0e6 if _front_d == INF else _front_d)
+	m.set_shader_parameter("ramp", LIGHT_RAMP)
+
+
+## Start the opening's lighting: everything dark from `from` (world coords, the tee) on down `dir`.
+func lights_from(from: Vector3, dir: Vector3) -> void:
+	_front_from = from
+	_front_dir = Vector3(dir.x, 0.0, dir.z).normalized()
+	light_front(-LIGHT_RAMP * 2.0)
+
+
+## Move the front: lights up to `d` metres down the hole are on. INF turns every light on.
+func light_front(d: float) -> void:
+	_front_d = d
+	for m in _lamp_mats:
+		_set_front_params(m)
+	_light_timer = 0.0               # the lights and pools follow it this frame, not in a quarter second
+	_apply_front()
+
+
+## How far a light at world `w` has come on, 0 (dark) .. 1, with a candle's flicker while it catches.
+func lit(w: Vector3) -> float:
+	if _front_d == INF:
+		return 1.0
+	var on := clampf((_front_d - (w - _front_from).dot(_front_dir)) / LIGHT_RAMP, 0.0, 1.0)
+	if on > 0.0 and on < 1.0:
+		on *= 0.7 + 0.3 * sin(_bat_t * 31.0 + w.x * 1.7 + w.z * 2.3)
+	return on
+
+
+func _apply_front() -> void:
+	for p in _posts:
+		var on := lit(p[0])
+		for m: StandardMaterial3D in p[1]:
+			m.emission_energy_multiplier = HeroLantern.LANTERN_GLOW * on
+		p[2].visible = on > 0.0
+		p[2].material_override.set_shader_parameter("strength", on)
+	for g in _cup_glows:
+		g.visible = lit(g.global_position) > 0.5
 
 
 ## A soft additive glow (always facing the camera) at `at` in its parent's space, `size` m across: the
@@ -324,21 +406,10 @@ const SMALL_PROP := 2.5          # meters: props smaller than this ...
 const SMALL_PROP_RANGE := 90.0   # ... aren't drawn past this far from the camera
 
 
-func _two_sided(m: StandardMaterial3D) -> StandardMaterial3D:
-	var d := m.duplicate() as StandardMaterial3D
-	d.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return d
-
-
 func _apply_materials(root: Node) -> void:
 	var terrain_mat := _terrain_material()
 	_terrain_mat = terrain_mat
-	var glow := StandardMaterial3D.new()
-	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	glow.albedo_color = Color(1.0, 0.78, 0.35)
-	glow.emission_enabled = true
-	glow.emission = Color(1.0, 0.55, 0.15)
-	glow.emission_energy_multiplier = 8.0        # the carved faces blaze (over the bloom threshold)
+	var glow := _lamp_material(LAMP_FACE)       # the carved faces and lit windows, dark till the front reaches them
 	var water := ShaderMaterial.new()
 	water.shader = load("res://shaders/water.gdshader")
 	water.set_shader_parameter("sky_color", env.fog_light_color)
@@ -357,7 +428,7 @@ func _apply_materials(root: Node) -> void:
 		"wood_vc": _textured_vc("wood", 0.7, 1.6, 0.85),
 		"LandmarkBody": _textured_vc("wood", 0.5, 2.0, 0.95),
 		"hedge_vc": _textured_vc("hedge", 0.45, 2.2, 0.95),
-		"LandmarkGlow": _two_sided(glow),
+		"LandmarkGlow": _lamp_material(LAMP_FACE, true),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
@@ -647,27 +718,29 @@ func _lantern_post(scene: PackedScene, at: Vector2, face: Vector2, size: float) 
 	post.basis = Basis.looking_at(-f, Vector3.UP).scaled(Vector3.ONE * size)
 	for node in post.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
-		var glows := false
+		var mats: Array[StandardMaterial3D] = []
 		for i in mi.mesh.get_surface_count():
 			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
 			if m and m.emission_enabled:
 				m = m.duplicate()
 				m.emission_energy_multiplier = HeroLantern.LANTERN_GLOW
 				mi.set_surface_override_material(i, m)
-				glows = true
-		if glows:
+				mats.append(m)
+		if not mats.is_empty():
 			# a soft warm glow hanging round the lit pumpkin
 			var t := Transform3D.IDENTITY             # the glowing part's place within the lantern
 			var n: Node = mi
 			while n != post and n is Node3D:
 				t = (n as Node3D).transform * t
 				n = n.get_parent()
-			post.add_child(glow_halo(t * mi.get_aabb().get_center(), 1.3, Color(1.0, 0.55, 0.18, 0.5)))
+			var halo := glow_halo(t * mi.get_aabb().get_center(), 1.3, Color(1.0, 0.55, 0.18, 0.5))
+			post.add_child(halo)
+			_posts.append([post.transform * halo.position, mats, halo])
 
 
 const FLAG_SIZE := Vector2(0.8, 0.5)
 const CUP_DRAWN := 1.8           # the cup is drawn this many times its real radius (so it reads)
-const FLAG_TURN := deg_to_rad(20.0)   # the flag faces the camera but this much off square, so it looks solid
+const FLAG_TURN := deg_to_rad(20.0)   # the flag faces the player but this much off square, so it looks solid
 var _flag_pivot: Node3D
 var _cup_glows: Array = []
 ## Greens cut in a checker rather than stripes (a layout's theme can say with "green_cut").
@@ -846,6 +919,14 @@ func _make_bats() -> void:
 			"bob": randf_range(1, 3), "flap": randf() * 0.2})
 
 
+## Turn the flag to face where the player stands (world coords), a touch off square; it stays put
+## after that, whatever the camera does, until the next shot is set up.
+func face_flag(from: Vector3) -> void:
+	if _flag_pivot:
+		var d := from - _flag_pivot.global_position
+		_flag_pivot.rotation.y = atan2(d.x, d.z) + FLAG_TURN
+
+
 func _process(delta: float) -> void:
 	ambience.camera = camera
 	if camera:
@@ -870,11 +951,6 @@ func _process(delta: float) -> void:
 	_bat_t += delta
 	for f in _floaters:
 		f[0].position.y = f[1] + sin(_bat_t * 1.4 + f[2]) * 0.12
-	if _flag_pivot and camera:
-		# the flag eases round to face the camera (a touch off square), never snapping
-		var d := camera.global_position - _flag_pivot.global_position
-		var want := atan2(d.x, d.z) + FLAG_TURN
-		_flag_pivot.rotation.y = lerp_angle(_flag_pivot.rotation.y, want, 1.0 - exp(-3.0 * delta))
 	var breathe := 0.85 + 0.15 * sin(_bat_t * 1.3)
 	for g in _cup_glows:
 		if g.material_override is ShaderMaterial:
@@ -882,9 +958,12 @@ func _process(delta: float) -> void:
 		else:
 			g.material_override.albedo_color.a = 0.32 * breathe
 	for hl in _halos:
-		# the glow breathes, slow and a little uneven, like a flame or a spirit
+		# the glow breathes, slow and a little uneven, like a flame or a spirit (and in the opening,
+		# grows in as the light catches)
 		var k: float = 1.0 + 0.08 * sin(_bat_t * 1.7 + hl[1]) + 0.04 * sin(_bat_t * 4.3 + hl[1] * 2.0)
-		hl[0].scale = Vector3.ONE * k
+		hl[0].scale = Vector3.ONE * maxf(k * lit(hl[0].global_position), 0.001)
+	if _front_d != INF:
+		_apply_front()
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed
 		var c: Vector3 = b.center
@@ -894,28 +973,32 @@ func _process(delta: float) -> void:
 	_light_timer -= delta
 	if _light_timer > 0.0 or camera == null:
 		return
-	_light_timer = 0.25
+	_light_timer = 0.25 if _front_d == INF else 0.0
 	var cam := camera.global_position
 	# the nearest lanterns and light props get the real lights, each in its own color
-	var lit: Array = _light_points.duplicate()
-	lit.sort_custom(func(a, b):
+	var near: Array = _light_points.duplicate()
+	near.sort_custom(func(a, b):
 		return Terrain.to_world(a[0]).distance_squared_to(cam) < Terrain.to_world(b[0]).distance_squared_to(cam))
+	var on := []
+	for p in near:
+		on.append(lit(Terrain.to_world(p[0])))
 	for i in lantern_lights.size():
 		var l := lantern_lights[i]
-		l.visible = i < lit.size()
+		l.visible = i < near.size() and on[i] > 0.0
 		if l.visible:
-			l.position = Terrain.to_world(lit[i][0] + Vector3(0, 0, 0.35))
-			l.light_color = lit[i][1]
+			l.position = Terrain.to_world(near[i][0] + Vector3(0, 0, 0.35))
+			l.light_color = near[i][1]
+			l.light_energy = 2.6 * on[i]
 	if _terrain_mat:
 		# the nearest lights (lanterns and light props together) pool on the ground, each its colour
 		var pools: Array[Vector4] = []
 		var cols: Array[Vector4] = []
 		for i in POOLS:
-			if i < lit.size():
-				var w := Terrain.to_world(lit[i][0])
-				var col: Color = lit[i][1]
-				pools.append(Vector4(w.x, w.y, w.z, float(lit[i][3])))
-				cols.append(Vector4(col.r, col.g, col.b, float(lit[i][2])))
+			if i < near.size():
+				var w := Terrain.to_world(near[i][0])
+				var col: Color = near[i][1]
+				pools.append(Vector4(w.x, w.y, w.z, float(near[i][3]) * on[i]))
+				cols.append(Vector4(col.r, col.g, col.b, float(near[i][2])))
 			else:
 				pools.append(Vector4.ZERO)
 				cols.append(Vector4.ZERO)

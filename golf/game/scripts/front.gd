@@ -52,7 +52,7 @@ var _press_x := 0.0
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out=") or a.begins_with("--light-set=") or a == "--knock-probe":
+		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out=") or a.begins_with("--light-set=") or a == "--knock-probe" or a == "--intro-path":
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)

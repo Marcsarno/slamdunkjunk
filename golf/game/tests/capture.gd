@@ -3,7 +3,7 @@ extends Node
 ## Run: xvfb-run godot --path golf/game --rendering-driver opengl3 -- --capture=<dir> [--introonly | --intro-frames]
 
 var main: Node
-const INTRO_AT := [0.3, 0.75, 1.5, 2.4, 3.2, 4.0, 4.8, 5.6, 6.4, 7.2, 7.9]   # --intro-frames: when to snap (s into the opening)
+const INTRO_AT := [0.4, 1.0, 1.5, 1.9, 2.2, 2.6, 3.2, 4.0, 5.0, 6.2, 7.4, 8.4, 9.3]   # --intro-frames: when to snap (s into the opening)
 var out_dir := ""
 var t := 0.0
 var step := 0
