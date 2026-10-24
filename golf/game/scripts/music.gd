@@ -7,6 +7,7 @@ extends Node
 const SONGS := [
 	"res://assets/music/brittanys_graveyard_shift.mp3",
 	"res://assets/music/bad_luck_on_the_back_nine.mp3",     # "Bad Luck on the Back Nine" (Marc's)
+	"res://assets/music/stay_off_the_grass.mp3",            # "Stay Off the Grass" (Marc's), last before it starts over
 ]
 const MENU_DB := -2.0
 const PLAY_DB := -11.0
