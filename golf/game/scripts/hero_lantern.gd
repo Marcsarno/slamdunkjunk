@@ -13,6 +13,9 @@ var light := OmniLight3D.new()
 var _t := randf() * 10.0
 
 
+const LANTERN_GLOW := 7.0      # the carved face's glow: well over the bloom threshold, so it blazes
+
+
 func _ready() -> void:
 	var scene: Node3D = load(MODEL).instantiate()
 	add_child(scene)
@@ -23,8 +26,9 @@ func _ready() -> void:
 			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
 			if m and m.emission_enabled:
 				m = m.duplicate()
-				m.emission_energy_multiplier = 3.0     # the candle inside glows through the carving at night
+				m.emission_energy_multiplier = LANTERN_GLOW   # the candle inside blazes through the carving
 				mi.set_surface_override_material(i, m)
+	add_child(HoleView.glow_halo(PUMPKIN, 1.6, Color(1.0, 0.55, 0.18, 0.55), 0.62))
 	light.light_color = Color(1.0, 0.55, 0.18)
 	light.light_energy = 1.4
 	light.omni_range = 5.5

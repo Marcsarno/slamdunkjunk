@@ -277,8 +277,47 @@ func _pumpkin_material() -> StandardMaterial3D:
 	var m := _textured_vc("", 1.0, 1.0, 0.5)
 	m.emission_enabled = true
 	m.emission = Color(1.0, 0.42, 0.08)
-	m.emission_energy_multiplier = 0.35
+	m.emission_energy_multiplier = 0.45
 	return m
+
+
+## A soft additive glow (always facing the camera) at `at` in its parent's space, `size` m across: the
+## light hanging round a lantern's face, so it reads as light, not just a bright colour. It sits a little
+## toward the camera from its point, so the thing it lights doesn't hide it, and keeps its parent's scale.
+static var _halo_shader: Shader
+
+
+static func glow_halo(at: Vector3, size: float, col: Color, pull := 0.35) -> MeshInstance3D:
+	if _halo_shader == null:
+		_halo_shader = Shader.new()
+		_halo_shader.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, fog_disabled, shadows_disabled;
+uniform vec4 col : source_color = vec4(1.0, 0.55, 0.18, 0.5);
+uniform float strength = 1.0;
+uniform float pull = 0.35;
+void vertex() {
+	float s = length(MODEL_MATRIX[0].xyz);
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0] * s, INV_VIEW_MATRIX[1] * s, INV_VIEW_MATRIX[2] * s, MODEL_MATRIX[3]);
+	VERTEX.z += pull / max(s, 0.01);
+}
+void fragment() {
+	float r = length(UV - 0.5) * 2.0;
+	ALBEDO = col.rgb * col.a * strength * pow(clamp(1.0 - r, 0.0, 1.0), 1.7);
+}
+"""
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE * size
+	var m := ShaderMaterial.new()
+	m.shader = _halo_shader
+	m.set_shader_parameter("col", col)
+	m.set_shader_parameter("pull", pull)
+	var mi := MeshInstance3D.new()
+	mi.mesh = q
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = at
+	return mi
 
 
 const SMALL_PROP := 2.5          # meters: props smaller than this ...
@@ -299,7 +338,7 @@ func _apply_materials(root: Node) -> void:
 	glow.albedo_color = Color(1.0, 0.78, 0.35)
 	glow.emission_enabled = true
 	glow.emission = Color(1.0, 0.55, 0.15)
-	glow.emission_energy_multiplier = 4.5
+	glow.emission_energy_multiplier = 8.0        # the carved faces blaze (over the bloom threshold)
 	var water := ShaderMaterial.new()
 	water.shader = load("res://shaders/water.gdshader")
 	water.set_shader_parameter("sky_color", env.fog_light_color)
@@ -608,15 +647,29 @@ func _lantern_post(scene: PackedScene, at: Vector2, face: Vector2, size: float) 
 	post.basis = Basis.looking_at(-f, Vector3.UP).scaled(Vector3.ONE * size)
 	for node in post.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
+		var glows := false
 		for i in mi.mesh.get_surface_count():
 			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
 			if m and m.emission_enabled:
 				m = m.duplicate()
-				m.emission_energy_multiplier = 3.0
+				m.emission_energy_multiplier = HeroLantern.LANTERN_GLOW
 				mi.set_surface_override_material(i, m)
+				glows = true
+		if glows:
+			# a soft warm glow hanging round the lit pumpkin
+			var t := Transform3D.IDENTITY             # the glowing part's place within the lantern
+			var n: Node = mi
+			while n != post and n is Node3D:
+				t = (n as Node3D).transform * t
+				n = n.get_parent()
+			post.add_child(glow_halo(t * mi.get_aabb().get_center(), 1.3, Color(1.0, 0.55, 0.18, 0.5)))
 
 
 const FLAG_SIZE := Vector2(0.8, 0.5)
+const CUP_DRAWN := 1.8           # the cup is drawn this many times its real radius (so it reads)
+const FLAG_TURN := deg_to_rad(20.0)   # the flag faces the camera but this much off square, so it looks solid
+var _flag_pivot: Node3D
+var _cup_glows: Array = []
 ## Greens cut in a checker rather than stripes (a layout's theme can say with "green_cut").
 const CHECKER_GREENS := ["h03", "h06", "h09"]
 ## Which of Marc's flags flies on each hole (a layout's theme can name its own with "flag").
@@ -631,22 +684,24 @@ func _flag_name() -> String:
 func _pin() -> void:
 	var p := Terrain.to_world(terrain.pin())
 	# the cup: a white liner showing as a rim round the dark hole, like a real one
+	# (drawn about twice real size, as golf games do, so it reads from the tee of a putt; the ball
+	# still drops by the real cup)
 	var liner := MeshInstance3D.new()
 	var lm := CylinderMesh.new()
-	lm.top_radius = BallSim.CUP_RADIUS * 1.6
+	lm.top_radius = BallSim.CUP_RADIUS * CUP_DRAWN * 1.28
 	lm.bottom_radius = lm.top_radius
 	lm.height = 0.02
 	liner.mesh = lm
 	var white_rim := StandardMaterial3D.new()
 	white_rim.albedo_color = Color(0.92, 0.92, 0.88)
 	white_rim.emission_enabled = true
-	white_rim.emission = Color(0.35, 0.35, 0.35)
+	white_rim.emission = Color(0.6, 0.6, 0.58)
 	liner.material_override = white_rim
 	liner.position = p + Vector3(0, 0.004, 0)
 	add_child(liner)
 	var cup := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
-	cm.top_radius = BallSim.CUP_RADIUS * 1.25
+	cm.top_radius = BallSim.CUP_RADIUS * CUP_DRAWN
 	cm.bottom_radius = cm.top_radius
 	cm.height = 0.02
 	cup.mesh = cm
@@ -655,6 +710,30 @@ func _pin() -> void:
 	cup.material_override = dark
 	cup.position = p + Vector3(0, 0.007, 0)
 	add_child(cup)
+	# a faint glow rising out of the cup (as if something's down there), and a soft ring of light on
+	# the grass round it: it finds the eye from across the green without looking like a target
+	var cup_glow := glow_halo(p + Vector3(0, 0.22, 0), 0.9, Color(1.0, 0.82, 0.5, 0.42), 0.0)
+	add_child(cup_glow)
+	var ring := MeshInstance3D.new()
+	var rp := PlaneMesh.new()
+	rp.size = Vector2.ONE * 0.9
+	ring.mesh = rp
+	var rmat := StandardMaterial3D.new()
+	rmat.albedo_texture = Fx._dot_texture()
+	rmat.albedo_color = Color(1.0, 0.85, 0.55, 0.32)
+	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rmat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rmat.disable_fog = true
+	ring.material_override = rmat
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ring.position = p + Vector3(0, 0.012, 0)
+	add_child(ring)
+	_cup_glows = [cup_glow, ring]
+	# the pole and flag turn together (see _process): the flag eases round to face whoever is looking
+	_flag_pivot = Node3D.new()
+	_flag_pivot.position = p
+	add_child(_flag_pivot)
 	var pole := MeshInstance3D.new()
 	var pm := CylinderMesh.new()
 	pm.top_radius = 0.02
@@ -664,8 +743,8 @@ func _pin() -> void:
 	var white := StandardMaterial3D.new()
 	white.albedo_color = Color(0.9, 0.88, 0.85)
 	pole.material_override = white
-	pole.position = p + Vector3(0, 1.15, 0)
-	add_child(pole)
+	pole.position = Vector3(0, 1.15, 0)
+	_flag_pivot.add_child(pole)
 	# Marc's painted flag for the hole (a jack-o'-lantern, ghost, skull or moon and bat), a gentle wave
 	var flag := MeshInstance3D.new()
 	var st := SurfaceTool.new()
@@ -710,8 +789,8 @@ void fragment() {
 	fm.shader = fsh
 	fm.set_shader_parameter("cloth", load("res://assets/flags/%s.png" % _flag_name()))
 	flag.material_override = fm
-	flag.position = p + Vector3(0.02, 2.3 - FLAG_SIZE.y * 0.5 - 0.02, 0)
-	add_child(flag)
+	flag.position = Vector3(0.02, 2.3 - FLAG_SIZE.y * 0.5 - 0.02, 0)
+	_flag_pivot.add_child(flag)
 	# a slim beam to find the pin from far away: bright at the foot, gone by the top, and fading out
 	# as you get close (on the green it would only stand in the way)
 	var beam := MeshInstance3D.new()
@@ -791,6 +870,17 @@ func _process(delta: float) -> void:
 	_bat_t += delta
 	for f in _floaters:
 		f[0].position.y = f[1] + sin(_bat_t * 1.4 + f[2]) * 0.12
+	if _flag_pivot and camera:
+		# the flag eases round to face the camera (a touch off square), never snapping
+		var d := camera.global_position - _flag_pivot.global_position
+		var want := atan2(d.x, d.z) + FLAG_TURN
+		_flag_pivot.rotation.y = lerp_angle(_flag_pivot.rotation.y, want, 1.0 - exp(-3.0 * delta))
+	var breathe := 0.85 + 0.15 * sin(_bat_t * 1.3)
+	for g in _cup_glows:
+		if g.material_override is ShaderMaterial:
+			g.material_override.set_shader_parameter("strength", breathe)
+		else:
+			g.material_override.albedo_color.a = 0.32 * breathe
 	for hl in _halos:
 		# the glow breathes, slow and a little uneven, like a flame or a spirit
 		var k: float = 1.0 + 0.08 * sin(_bat_t * 1.7 + hl[1]) + 0.04 * sin(_bat_t * 4.3 + hl[1] * 2.0)

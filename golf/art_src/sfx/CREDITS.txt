@@ -1,0 +1,5 @@
+thunder_rubberduck.ogg
+  "sfx100v2_thunder_01" from "100 CC0 SFX #2" by rubberduck, OpenGameArt.org
+  https://opengameart.org/content/100-cc0-sfx-2  -- CC0 (public domain), no credit required.
+  Fetched from the Legerdo/open-game-sfx-index mirror on GitHub (OpenGameArt itself is blocked here).
+  tools/make_sfx.py turns it into game/assets/sfx/thunder.wav (mono, trimmed, levelled).

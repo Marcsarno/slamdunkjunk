@@ -121,7 +121,7 @@ void fragment() {
 		c *= 1.0 + 0.07 * band * clamp(facing * 2.5, -1.0, 1.0) * on_green;
 		// a worn, slightly paler ring of turf round the cup
 		float dc = distance(cxy, pin_xy);
-		c *= mix(vec3(1.0), vec3(1.07, 1.05, 0.9), (1.0 - smoothstep(0.12, 0.6, dc)) * on_green);
+		c *= mix(vec3(1.0), vec3(1.16, 1.13, 0.95), (1.0 - smoothstep(0.15, 0.8, dc)) * on_green);
 	}
 	// big patches: two scales of noise, ~70 m and ~18 m across
 	float big = texture(blotch, cxy / 70.0).r;

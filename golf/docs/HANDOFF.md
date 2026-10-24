@@ -152,17 +152,26 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Hole packs on the web** load via the page's own fetch into the engine's memory file system
   (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
   download is the fallback.
-- **Opening**: a high shot behind the tee (HIGH_TIME 3.6) with `intro_fx.gd` (lightning bolts with
-  `Ambience.strike()`, bats, lantern ghosts, spirits drifting past), then the hole's CINEMA shot, then
-  the swoop back. `_intro_length()` replaces INTRO_TIME.
+- **Opening** (`main._intro_shots`, `_shot_pose`): one camera move: the reveal high behind the tee
+  (HIGH_TIME 2.6, a lightning bolt from `intro_fx.gd` with `Ambience.strike()` and its thunder), the fly
+  down the line of play at tree-top height turning to the hole's landmark (CINEMA "look") as it passes
+  (FLY_TIME 3.0), round the flag onto the green (GREEN_TIME 2.2, blended in from the fly), then a dip
+  to black and up behind her (FLY_BACK 0.5). Marc rejected the ghosts/bats drifting past the lens;
+  the course's own ghosts (Ambience) stay.
+- **Thunder**: a real CC0 recording (rubberduck, OpenGameArt "100 CC0 SFX #2", via the
+  Legerdo/open-game-sfx-index GitHub mirror) in `art_src/sfx/`, turned into `assets/sfx/thunder.wav`
+  by `tools/make_sfx.py`; played 0.9-2 s after each flash, louder the brighter.
+- **Cup and flag**: the cup drawn 1.8x real size (CUP_DRAWN) with a bright rim, a faint glow rising
+  out of it and a ring of light on the grass; the flag (on `_flag_pivot`) eases round to face the
+  camera, FLAG_TURN off square. Lanterns: faces at HeroLantern.LANTERN_GLOW 7 (carved jacks 8) with a
+  camera-facing halo (`HoleView.glow_halo`). The bag: rim light plus a warm light only it gets
+  (`main.BAG_LAYER`).
 - **Marc's bag** `assets/props/bag/bag.glb` (his pack in `art_src/bag/final`), placed by
   `main._place_bag()` ahead-left of her, off the green when putting. Pumpkin post lanterns as tee
   markers (`hole_view._tee_markers`).
 - **Backspin**: on greens irons/wedges hop, check and draw back (`ball_sim.gd` SPIN_BACK_MAX, BITE;
   `tests/spin_probe.gd` prints each club). Wind-up creak removed.
 - **Builder**: trees 7 m and everything else 1 m off a green's real edge (`build_hole.off_green`).
-- **Thunder**: Marc wants a real recording; the sound sites are blocked by this environment's network
-  policy, so he'll upload one (OpenGameArt "Rain + Long Thunder", CC0, is the pick).
 
 ## What's next (in Marc's order of interest)
 

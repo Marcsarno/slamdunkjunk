@@ -73,6 +73,23 @@ def bell(freq, seconds, decay, partials=((1, 1.0), (2.76, 0.35), (5.4, 0.15))):
     return y * env(len(t), 0.003, 10.0)
 
 
+def recorded_thunder(path):
+    """The recording, mono at RATE, its quiet lead-in trimmed to a breath before the clap (the game
+    already plays thunder a second or two after the flash), faded out over its last half second."""
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(RATE),
+                          "-f", "s16le", "-"], capture_output=True, check=True).stdout
+    y = np.frombuffer(raw, "<i2").astype(float) / 32768.0
+    loud = np.nonzero(np.abs(y) > 0.15 * np.max(np.abs(y)))[0]
+    start = max(0, loud[0] - int(0.12 * RATE))
+    end = min(len(y), np.nonzero(np.abs(y) > 0.01)[0][-1] + int(0.2 * RATE))
+    y = y[start:end]
+    fade = int(0.5 * RATE)
+    y[-fade:] *= np.linspace(1, 0, fade)
+    y[:int(0.02 * RATE)] *= np.linspace(0, 1, int(0.02 * RATE))
+    return y
+
+
 def save(out, name, y, gain=0.9):
     y = np.asarray(y, float)
     peak = np.max(np.abs(y)) or 1.0
@@ -190,7 +207,12 @@ def main():
     brown = high(brown, 25)
     rumble = low(brown, 140, 4) * env(n, 0.6, 1.2) * (0.7 + 0.3 * np.sin(2 * np.pi * 1.3 * t) * np.sin(2 * np.pi * 0.47 * t))
     rng.standard_normal(n)                                   # (keeps the later sounds' dice as they were)
-    save(out, "thunder", rumble / np.max(np.abs(rumble)), 0.6)
+    # a real recording when we have one (art_src/sfx: a CC0 thunderclap and its roll), the rumble if not
+    rec = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "art_src", "sfx", "thunder_rubberduck.ogg")
+    if os.path.exists(rec):
+        save(out, "thunder", recorded_thunder(rec), 0.85)
+    else:
+        save(out, "thunder", rumble / np.max(np.abs(rumble)), 0.6)
 
     # click: a tiny tick
     n = int(0.03 * RATE)
