@@ -585,7 +585,7 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 	var d := b.distance_to(spot)
 	var dir := (spot - b).normalized()
 	var land := d
-	for i in 3:
+	for i in 5:
 		var r := BallSim.simulate(terrain, obstacles, terrain.pin(), Vector2.ZERO, ball,
 			_launch(_power_for(land, dir), dir), club.lift)
 		if r.state == BallSim.State.HOLED:
@@ -593,7 +593,8 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 		var f := Vector2(r.end.x, r.end.y).distance_to(b)
 		if absf(f - d) < 0.5:
 			break
-		land = clampf(land - (f - d), d * 0.6, d)
+		# down to a third of the way: onto a green running away it's landed short and run up on
+		land = clampf(land - (f - d), d * 0.35, d)
 	return b + dir * land
 
 
@@ -1379,11 +1380,19 @@ func _intro_shots() -> Array:
 	var p2 := Vector2(pin.x, pin.y)
 	var way := (p2 - Vector2(path[-3][0], path[-3][1])).normalized()      # the way the hole comes in
 	var side := Vector2(way.y, -way.x)
-	var a := p2 - way * 11.0 + side * 4.0
-	var b := p2 - way * 6.5 + side * 1.8
-	out.append({"from": _above([a.x, a.y, 1.9]), "to": _above([b.x, b.y, 1.2]),
-		"look": Vector3(pin.x, pin.y, pin.z + 1.3), "fov": 44.0})
+	var a := p2 - way * 15.0 + side * 4.5
+	var b := p2 - way * 8.5 + side * 2.0
+	# the greens stand up off the approach: heights over the green's level as well as the ground, so
+	# its front edge never fills the shot
+	out.append({"from": _over_green([a.x, a.y, 2.4], pin.z), "to": _over_green([b.x, b.y, 1.8], pin.z),
+		"look": Vector3(pin.x, pin.y, pin.z + 1.1), "fov": 44.0})
 	return out
+
+
+## A point [x, y, height] that height above the ground there or the green's level `gz`, whichever is higher.
+func _over_green(v: Array, gz: float) -> Vector3:
+	var p := _above(v)
+	return Vector3(p.x, p.y, maxf(p.z, gz + float(v[2])))
 
 
 ## A point given as [x, y, height above the ground there] (never below the ground).

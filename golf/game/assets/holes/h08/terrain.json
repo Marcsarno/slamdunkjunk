@@ -140,12 +140,12 @@
  "tee": [
   0.0,
   0.0,
-  4.075236615045456
+  10.020586761932204
  ],
  "pin": [
   0,
   322,
-  6.451441076541797
+  10.327449447200685
  ],
  "green": {
   "center": [
@@ -311,7 +311,7 @@
    ],
    "rotation": -0.4145,
    "level_offset": -4.2,
-   "level": 3.038
+   "level": 4.878
   },
   {
    "center": [
@@ -324,7 +324,7 @@
    ],
    "rotation": -0.3097,
    "level_offset": -4.2,
-   "level": 2.064
+   "level": 1.747
   },
   {
    "center": [
@@ -337,7 +337,7 @@
    ],
    "rotation": -0.3805,
    "level_offset": -4.2,
-   "level": -0.001
+   "level": 1.005
   },
   {
    "center": [
@@ -350,7 +350,7 @@
    ],
    "rotation": -0.3456,
    "level_offset": -4.2,
-   "level": 3.454
+   "level": 1.422
   },
   {
    "center": [
@@ -363,7 +363,7 @@
    ],
    "rotation": -0.1974,
    "level_offset": -4.2,
-   "level": 3.064
+   "level": 4.783
   }
  ],
  "wind": {

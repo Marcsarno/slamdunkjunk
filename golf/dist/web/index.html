@@ -163,7 +163,7 @@ body {
 }());
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
-  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm", "bytes": 9239552}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm", "index.pck.etc2.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 42263466}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm", "index.pck.s3tc.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 40564391}};
+  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm", "bytes": 9239552}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm", "index.pck.etc2.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 42300659}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm", "index.pck.s3tc.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 40600389}};
   // the game data with textures in the format this device's graphics chip reads: phones (and Macs with
   // Apple chips) ETC2, other desktops S3TC
   let etc2 = true;
@@ -209,7 +209,7 @@ body {
 </script>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":88725912,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":88768536,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
