@@ -66,6 +66,7 @@ var bounces := 0
 var first_land := Vector3.INF
 var apex := 0.0
 var hit_obstacle := false
+var hits: Array = []              # {shape, speed} per knock off a prop, for whoever plays the sounds
 var caught := false               # came down in a spider web
 var skid := 0.0
 var spin := 0.0                  # 0 (a driver's low spin) .. 1 (a wedge's); bites at the first landing
@@ -95,6 +96,7 @@ func launch(from: Vector3, velocity: Vector3, lift_coef: float) -> void:
 	first_land = Vector3.INF
 	apex = from.z
 	hit_obstacle = false
+	hits.clear()
 	caught = false
 	_over_cup = false
 	state = State.FLYING if velocity.z > 0.01 else State.ROLLING
@@ -302,6 +304,7 @@ func _collide_obstacles(prev: Vector3) -> void:
 	if hit.is_empty():
 		return
 	hit_obstacle = true
+	hits.append({"shape": hit.shape, "speed": vel.length()})
 	pos = hit.pos
 	vel = hit.vel
 	if state == State.ROLLING and vel.length() < 0.05:

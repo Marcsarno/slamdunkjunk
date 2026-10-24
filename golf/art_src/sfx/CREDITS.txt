@@ -3,3 +3,16 @@ thunder_rubberduck.ogg
   https://opengameart.org/content/100-cc0-sfx-2  -- CC0 (public domain), no credit required.
   Fetched from the Legerdo/open-game-sfx-index mirror on GitHub (OpenGameArt itself is blocked here).
   tools/make_sfx.py turns it into game/assets/sfx/thunder.wav (mono, trimmed, levelled).
+
+kenney_impactWood_light_000.ogg, kenney_impactGeneric_light_000.ogg, kenney_impactSoft_heavy_000.ogg
+  From "Impact Sounds" by Kenney (kenney.nl/assets/impact-sounds) -- CC0 (public domain), no credit required.
+  The ball knocking off a tree trunk, clacking off a tombstone, thudding into a pumpkin or lantern.
+
+tinyworlds_leaves01.ogg
+  "leaves01" from "Different steps on wood, stone, leaves, gravel and mud" by TinyWorlds, OpenGameArt.org
+  https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud -- CC0 (public domain).
+  The ball crashing through a tree's leaves.
+
+All four fetched from the Legerdo/open-game-sfx-index mirror on GitHub (kenney.nl and OpenGameArt are
+blocked here; the mirror lists only CC0 packs and records each one's source). tools/make_sfx.py turns
+them into game/assets/sfx/hit_wood, hit_stone, hit_soft and hit_leaves.wav (mono, trimmed, levelled).

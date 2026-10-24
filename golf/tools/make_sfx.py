@@ -13,6 +13,7 @@ usage: python3 -I make_sfx.py <out_dir>
   perfect     a bright two-note chime for a perfect strike
   holed       a spooky celesta run when the ball drops
   thunder     a crack and a long rumble, for the lightning
+  hit_wood, hit_stone, hit_soft, hit_leaves   the ball off a trunk, a tombstone, a pumpkin, through leaves
   click       a tiny tick as the pull settles on the mark
   stretch     a short rubbery creak as the slingshot's band stretches
   twang       the band snapping back when it's let go
@@ -88,6 +89,18 @@ def recorded_thunder(path):
     y[-fade:] *= np.linspace(1, 0, fade)
     y[:int(0.02 * RATE)] *= np.linspace(0, 1, int(0.02 * RATE))
     return y
+
+
+def recorded(path, tail=0.05):
+    """A short recording, mono at RATE, from just before its first loud sample to where it dies away."""
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(RATE),
+                          "-f", "s16le", "-"], capture_output=True, check=True).stdout
+    y = np.frombuffer(raw, "<i2").astype(float) / 32768.0
+    peak = np.max(np.abs(y))
+    start = max(0, np.nonzero(np.abs(y) > 0.05 * peak)[0][0] - int(0.003 * RATE))
+    end = min(len(y), np.nonzero(np.abs(y) > 0.01 * peak)[0][-1] + int(tail * RATE))
+    return y[start:end]
 
 
 def save(out, name, y, gain=0.9):
@@ -254,6 +267,14 @@ def main():
     t = np.arange(n) / RATE
     swish = np.abs(np.sin(2 * np.pi * 3.0 * t)) ** 1.5 * np.sin(np.pi * t / 0.5)
     save(out, "erase", sweep_band(mr.standard_normal(n), 500, 1400, 0.9) * swish, 0.4)
+    # the ball off the props: CC0 recordings in art_src/sfx (see CREDITS.txt), skipped if they're missing
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "art_src", "sfx")
+    for name, f, gain in [("hit_wood", "kenney_impactWood_light_000.ogg", 0.8),       # tree trunks
+                          ("hit_stone", "kenney_impactGeneric_light_000.ogg", 0.8),   # tombstones
+                          ("hit_soft", "kenney_impactSoft_heavy_000.ogg", 0.8),       # pumpkins, lanterns
+                          ("hit_leaves", "tinyworlds_leaves01.ogg", 0.6)]:            # through a canopy
+        if os.path.exists(os.path.join(src, f)):
+            save(out, name, recorded(os.path.join(src, f)), gain)
     print("wrote", sorted(os.listdir(out)))
 
 

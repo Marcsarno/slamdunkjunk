@@ -240,6 +240,8 @@ func _ready() -> void:
 			add_child(load("res://tests/capture_hole.gd").new())
 		elif a.begins_with("--look-out="):
 			add_child(load("res://tests/look_at.gd").new())
+		elif a == "--knock-probe":
+			add_child(load("res://tests/knock_probe.gd").new())
 		elif a.begins_with("--light-set="):
 			add_child(load("res://tests/light_set.gd").new())
 
@@ -1016,6 +1018,33 @@ func _unhandled_input(e: InputEvent) -> void:
 		_drag(e.position, e.relative)
 
 
+var _knock_at := -1.0
+
+
+## The ball off a prop this frame: a knock off a trunk, a clack off a stone, a thud off a pumpkin,
+## a rustle through leaves; louder the harder it hit, and only one every so often (a ball dropping
+## through a canopy touches it step after step).
+func _prop_knocks() -> void:
+	if sim.hits.is_empty():
+		return
+	var h: Dictionary = sim.hits[0]
+	for k in sim.hits:
+		if float(k.speed) > float(h.speed):
+			h = k
+	sim.hits.clear()
+	var now := Time.get_ticks_msec() / 1000.0
+	if float(h.speed) < 1.5 or now - _knock_at < 0.15:
+		return
+	_knock_at = now
+	var s: Dictionary = h.shape
+	var name := "hit_soft"
+	match s.type:
+		"cylinder": name = "hit_wood"
+		"box": name = "hit_stone"
+		"sphere": name = "hit_leaves" if s.get("soft", false) else "hit_soft"
+	var k := clampf(float(h.speed) / 30.0, 0.0, 1.0)
+	Sfx.play(name, lerpf(-16.0, -2.0, k), randf_range(0.9, 1.1))
+
 func _press(p: Vector2) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	match phase:
@@ -1165,6 +1194,7 @@ func _process(delta: float) -> void:
 			var was_flying := sim.state == BallSim.State.FLYING
 			_time_scale = move_toward(_time_scale, FLIGHT_SPEED if was_flying else 1.0, delta * 2.0)
 			sim.advance(delta * _time_scale)
+			_prop_knocks()
 			if not _landed_fx and sim.first_land != Vector3.INF:
 				_landed_fx = true
 				var surf := terrain.surface_at(sim.first_land.x, sim.first_land.y)
