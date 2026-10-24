@@ -142,14 +142,13 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 
 ## Added 24 Oct (late session)
 
-- **Lighting pass** (`hole_view.gd` constants AMBIENT_LIFT, MOON_LIFT, RIM_LIFT, EXPOSURE_LIFT, HAZE,
-  HAZE_MIX, FOG_THIN, HORIZON_LIFT, on top of each theme's numbers): distance fades into a pale
-  moonlit haze, cool fill x2.6, cooler moon key, terrain `night_grade` 0.12, lighter `dark_tint`,
-  softer vignette (0.3), dither in sky and terrain. Brightness option (Quality.brightness, applied as
-  `adjustment_brightness`). Check with `tests/light_set.gd` (`--light-set=<dir>`: four fixed views of
-  a hole) and `$S/lum.py` (mean / near-black share). Before/after: `docs/img/lighting_before_after.png`.
-  Measured: mean 61 -> 80, far ground 41 -> 59 (of 255). Rule from Marc's research: readability beats
-  darkness; everything here is free on performance (no extra lights, passes or shadows).
+- **Lighting** (`hole_view.gd` constants AMBIENT_LIFT, MOON_LIFT, RIM_LIFT, EXPOSURE_LIFT, HAZE,
+  HAZE_MIX, FOG_THIN, HORIZON_LIFT, on top of each theme's numbers). Marc wants the night **slightly
+  darker** than the original look (a brighter pass was tried and rejected): fill 0.7, moon 0.75,
+  exposure 0.84, plain night fog (HAZE_MIX 0); mean frame brightness ~9% under the original. Kept: dither
+  in sky and terrain, a cooler moon, turf `night_grade` 0.12, and the Brightness option
+  (Quality.brightness -> `adjustment_brightness`). Check with `tests/light_set.gd` (`--light-set=<dir>`:
+  four fixed views of a hole) and `$S/lum.py`. Comparison: `docs/img/lighting_darker.png`.
 - **Hole packs on the web** load via the page's own fetch into the engine's memory file system
   (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
   download is the fallback.

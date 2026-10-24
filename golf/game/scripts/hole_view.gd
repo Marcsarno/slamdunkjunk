@@ -80,19 +80,20 @@ func _sky_style() -> String:
 	return theme.get("sky_style", "night")
 
 
-## The night's lighting pass (on top of each hole's theme): how much brighter the fill, moon, rim
-## and exposure run than the themes' first numbers, the haze the distance fades into, and the sky's
+## The night's lighting (on top of each hole's theme): how the fill, moon, rim and exposure run
+## against the themes' first numbers (a shade darker: Marc wants the night a little darker than the
+## first look), the haze the distance fades into (HAZE_MIX 0: plain night fog), and the sky's
 ## horizon band. All cheap: no extra lights, passes or shadows.
 const AMBIENT_COLOR := Color(0.5, 0.53, 0.82)
-const AMBIENT_LIFT := 2.6
-const MOON_LIFT := 1.12
+const AMBIENT_LIFT := 0.7
+const MOON_LIFT := 0.75
 const MOON_COOL := Color(0.75, 0.82, 1.0)
-const RIM_LIFT := 1.3
-const EXPOSURE_LIFT := 1.05
+const RIM_LIFT := 1.0
+const EXPOSURE_LIFT := 0.84
 const HAZE := Color(0.36, 0.38, 0.58)     # moonlit mist: the colour far things fade toward
-const HAZE_MIX := 0.78
-const FOG_THIN := 0.85
-const HORIZON_LIFT := 1.5
+const HAZE_MIX := 0.0
+const FOG_THIN := 1.0
+const HORIZON_LIFT := 1.0
 
 
 func _environment() -> void:
@@ -172,8 +173,8 @@ func _environment() -> void:
 	# a touch more contrast and colour, so the oranges and purples carry at night
 	env.adjustment_enabled = true
 	env.adjustment_brightness = Quality.brightness_factor()     # the clubhouse's Brightness option
-	env.adjustment_contrast = 1.03
-	env.adjustment_saturation = 1.04
+	env.adjustment_contrast = 1.0
+	env.adjustment_saturation = 1.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
