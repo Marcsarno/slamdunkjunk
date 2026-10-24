@@ -45,7 +45,7 @@ const SLING_DEAD := 0.06        # share of SLING_SPAN
 const SIDE_EASE := 12.0         # the aim follows the finger at this rate (1/s): smooth, not laggy
 const DRAG_TURN := 0.9          # dragging the target: radians of aim per screen width across ...
 const DRAG_REACH := 1.4         # ... and club ranges of distance per screen height up or down
-const HINT := "Drag up top to move the target · pull down from the bottom to shoot"
+const HINT := "Drag up top to move the target"
 const FLIGHT_SPEED := 1.25      # flight plays a bit faster than real time
 const INTRO_TIME := 6.5
 const INTRO_SWING := 2.8      # the opening: swinging round the jack-o'-lantern by the tee, before the flight down the hole
@@ -142,8 +142,28 @@ func _ready() -> void:
 		set_process(false)            # nothing runs until the hole is built
 		set_process_unhandled_input(false)
 		# on the web, holes past the first arrive when the round reaches them (scripts/holes.gd)
-		var wait := _waiting_note("Fog is lifting over %s..." % Round.current().name)
-		if not await Holes.fetch(id):
+		var note := "Fog is lifting over %s..." % Round.current().name
+		var wait := _waiting_note(note)
+		var bar := _waiting_bar(wait)
+		var t0 := Time.get_ticks_msec()
+		var show := func():
+			var f := Holes.progress(id)
+			if f >= 0.0:
+				bar.value = f
+				wait.text = note + "\n%d%%" % roundi(f * 100.0)
+			else:
+				# size unknown: creep along (most holes take a few seconds), with what's arrived if known
+				bar.value = 0.92 * (1.0 - exp(-float(Time.get_ticks_msec() - t0) / 5000.0))
+				var mb := Holes.downloaded(id) / 1048576.0
+				wait.text = note + ("\n%.1f MB" % mb if mb > 0.05 else "")
+		var ticker := Timer.new()
+		ticker.wait_time = 0.2
+		ticker.timeout.connect(show)
+		add_child(ticker)
+		ticker.start()
+		var ok: bool = await Holes.fetch(id)
+		ticker.queue_free()
+		if not ok:
 			wait.text = "The fog won't lift (no connection?).\nBack to the clubhouse..."
 			await get_tree().create_timer(2.5).timeout
 			get_tree().set_meta("front_menu", true)
@@ -282,6 +302,7 @@ func _prewarm() -> void:
 	await _drawn(1)
 	putt_grid.visible = false
 	pull = 0.0
+	phase = Phase.AIM                        # out of the rehearsal's pull, so the shot set-up puts her at address
 	hud.hide_gauge()
 	hud.hide_aim_map()
 	_show_preview(false)
@@ -296,6 +317,28 @@ func _prewarm() -> void:
 func _drawn(frames: int) -> void:
 	for i in frames:
 		await RenderingServer.frame_post_draw
+
+
+## A pumpkin-orange progress bar under a waiting note.
+func _waiting_bar(note: Label) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.max_value = 1.0
+	bar.set_anchors_preset(Control.PRESET_CENTER)
+	bar.size = Vector2(440, 18)
+	bar.position = Vector2(-220, 110)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.09, 0.05, 0.14)
+	bg.border_color = Color(1.0, 0.62, 0.24)
+	bg.set_border_width_all(2)
+	bg.set_corner_radius_all(9)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(1.0, 0.55, 0.15)
+	fill.set_corner_radius_all(9)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	note.get_parent().add_child(bar)
+	return bar
 
 
 ## A line of text on a dark screen while a hole is fetched.
@@ -804,6 +847,7 @@ func _press(p: Vector2) -> void:
 			_end_intro()
 		Phase.AIM:
 			if p.y > vp.y * PULL_ZONE:
+				hud.show_pull_tip(false)
 				phase = Phase.PULL
 				pull_start = p
 				pull_goal = 0.0
@@ -969,6 +1013,8 @@ func _process(delta: float) -> void:
 				if Round.scores.size() > 1:
 					detail += "\nRound: %s after %d" % [Round.to_par_text(), Round.scores.size()]
 				hud.show_card(_score_name(strokes - par), detail, "Next hole" if Round.has_next() else ("New round" if Round.scores.size() > 1 else "Play again"))
+	# the pull prompt, while lining up a hole's first shot
+	hud.show_pull_tip(phase == Phase.AIM and strokes == 0 and not target_dragging)
 	_apply_cam(delta)
 	_update_ball_visual()   # after the camera moves: the ball's size is set from its distance to the camera
 	_update_wind_hud()

@@ -19,6 +19,11 @@ var gauge := Gauge.new()
 var aim_map := AimMap.new()
 var message := Label.new()
 var hint := Label.new()
+var pull_tip := Control.new()
+var _tip_ball := TextureRect.new()
+var _tip_glow := TextureRect.new()
+var _tip_arrow := Line2D.new()
+var _tip_t := 0.0
 var club := Button.new()
 var card := PanelContainer.new()
 var card_title: Label
@@ -345,10 +350,45 @@ func _ready() -> void:
 
 	hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.position = Vector2(-340, -300)
+	hint.position = Vector2(-340, -520)
 	hint.size = Vector2(680, 90)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_label(hint, 26, Color(1, 1, 1, 0.85)))
+
+	# the pull prompt: the ball you play with, glowing, a down arrow pulsing under it, "Pull down to swing"
+	pull_tip.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	pull_tip.position = Vector2(-150, -420)
+	pull_tip.size = Vector2(300, 250)
+	pull_tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pull_tip.visible = false
+	root.add_child(pull_tip)
+	_tip_glow.texture = _soft_dot()
+	_tip_glow.size = Vector2(190, 190)
+	_tip_glow.position = Vector2(55, -30)
+	_tip_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tip_glow.self_modulate = Color(1.0, 0.62, 0.2, 0.8)
+	pull_tip.add_child(_tip_glow)
+	_tip_ball.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_tip_ball.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_tip_ball.size = Vector2(96, 96)
+	_tip_ball.position = Vector2(102, 17)
+	_tip_ball.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pull_tip.add_child(_tip_ball)
+	# a fat chevron pointing down
+	_tip_arrow.points = PackedVector2Array([Vector2(-26, 0), Vector2(0, 22), Vector2(26, 0)])
+	_tip_arrow.width = 10.0
+	_tip_arrow.default_color = ORANGE
+	_tip_arrow.joint_mode = Line2D.LINE_JOINT_ROUND
+	_tip_arrow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_tip_arrow.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_tip_arrow.position = Vector2(150, 128)
+	pull_tip.add_child(_tip_arrow)
+	var tip_text := Label.new()
+	tip_text.text = "Pull down to swing"
+	tip_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tip_text.size = Vector2(300, 40)
+	tip_text.position = Vector2(0, 186)
+	pull_tip.add_child(_label(tip_text, 28, CREAM))
 
 	var vig := ColorRect.new()
 	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -519,7 +559,32 @@ func fade_in(seconds := 0.35) -> void:
 	fade.color.a = 1.0
 
 
+## Show (with the ball you play with) or hide the pull prompt.
+func show_pull_tip(on: bool) -> void:
+	if on and not pull_tip.visible:
+		_tip_ball.texture = Balls.texture(Balls.chosen(), "still")
+		_tip_t = 0.0
+	pull_tip.visible = on
+
+
+func _soft_dot() -> ImageTexture:
+	var n := 64
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var d := Vector2(x - n * 0.5 + 0.5, y - n * 0.5 + 0.5).length() / (n * 0.5)
+			img.set_pixel(x, y, Color(1, 1, 1, pow(clampf(1.0 - d, 0.0, 1.0), 2.0)))
+	return ImageTexture.create_from_image(img)
+
+
 func _process(delta: float) -> void:
+	if pull_tip.visible:
+		_tip_t += delta
+		var k := 0.5 + 0.5 * sin(_tip_t * 5.0)
+		_tip_arrow.position.y = 124.0 + 18.0 * k              # the arrow nudges down, over and over
+		_tip_arrow.modulate.a = 0.55 + 0.45 * k
+		_tip_glow.self_modulate.a = 0.65 + 0.35 * (0.5 + 0.5 * sin(_tip_t * 2.6))
+		pull_tip.modulate.a = minf(1.0, _tip_t * 3.0)
 	if fps.is_inside_tree():
 		_fps_worst = maxf(_fps_worst, delta)
 		_fps_t += delta

@@ -35,11 +35,12 @@ body {
 
 #status {
 	background-color: #170d24;
+	z-index: 3;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	visibility: hidden;
+	visibility: visible;
 }
 
 #status-splash {
@@ -67,6 +68,7 @@ body {
 }
 
 #status-progress {
+	visibility: hidden;
 	bottom: 10%;
 	width: 50%;
 	margin: 0 auto;
@@ -99,13 +101,43 @@ body {
 			<img id="status-splash" class="show-image--false fullsize--true use-filter--true" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
+<div id="loader" style="position:absolute;inset:0;z-index:0;background:#170d24 url(loading.jpg) top center/min(100%,560px) auto no-repeat">
+  <div style="position:absolute;left:12%;right:12%;bottom:9%;font:600 16px/1.3 system-ui,sans-serif;color:#ffe0b8;text-align:center;text-shadow:0 1px 3px #000">
+    <div id="loader-text">Lighting the jack-o'-lanterns...</div>
+    <div style="margin-top:10px;height:14px;border-radius:8px;background:rgba(23,13,36,.85);border:2px solid #ff9e3d;overflow:hidden">
+      <div id="loader-bar" style="height:100%;width:2%;background:linear-gradient(90deg,#ff7a1a,#ffc46b);box-shadow:0 0 12px #ff9e3d;transition:width .25s"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  const bar = document.getElementById('loader-bar'), text = document.getElementById('loader-text');
+  const lines = ["Lighting the jack-o'-lanterns...", 'Raking the bunkers...', 'Waking the ghosts...', 'Mowing the greens by moonlight...'];
+  let k = 0, t = 0;
+  const tick = () => {
+    if (!document.getElementById('loader')) return;
+    const f = window.__total ? Math.min(1, window.__loaded / window.__total) : 0;
+    bar.style.width = Math.max(2, Math.round(f * 92 + (f >= 1 ? 6 : 0))) + '%';
+    if (++t % 12 === 0) k = (k + 1) % lines.length;
+    text.textContent = (f >= 1 ? 'Teeing up...' : lines[k]) + '  ' + Math.round(f * 100) + '%';
+    setTimeout(tick, 250);
+  };
+  tick();
+}());
+</script>
+
 		</div>
 
 		<div id="diag" style="position:fixed;left:8px;right:8px;bottom:8px;z-index:9;font:13px/1.4 system-ui,sans-serif;color:#f3e6ff;background:rgba(23,13,36,.92);border:1px solid #6b4a8a;border-radius:8px;padding:8px 10px;white-space:pre-wrap;pointer-events:none"></div>
 <script>
 (function () {
   const box = document.getElementById('diag');
-  const line = (t) => { box.textContent += (box.textContent ? '\n' : '') + t; };
+  // the checks stay out of sight unless one fails (then the box shows, with what went wrong)
+  box.style.display = 'none';
+  const line = (t) => {
+    box.textContent += (box.textContent ? '\n' : '') + t;
+    if (/NO|BLOCKED|rror|failed/.test(t)) box.style.display = 'block';
+  };
   window.__diag = line;
   window.addEventListener('error', (e) => line('Error: ' + (e.message || e.type) + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')));
   window.addEventListener('unhandledrejection', (e) => line('Error: ' + (e.reason && e.reason.message || e.reason)));
@@ -131,7 +163,7 @@ body {
 }());
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
-  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm"}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm", "index.pck.etc2.gz.3.wasm"], "gzip": true, "type": "application/octet-stream"}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm", "index.pck.s3tc.gz.3.wasm"], "gzip": true, "type": "application/octet-stream"}};
+  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm", "bytes": 9239552}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm", "index.pck.etc2.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 39550498}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm", "index.pck.s3tc.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 37849922}};
   // the game data with textures in the format this device's graphics chip reads: phones (and Macs with
   // Apple chips) ETC2, other desktops S3TC
   let etc2 = true;
@@ -141,6 +173,9 @@ body {
   } catch (e) {}
   if (!etc2 && PLAN['index.pck@desktop']) PLAN['index.pck'] = PLAN['index.pck@desktop'];
   const realFetch = window.fetch.bind(window);
+  // what's been downloaded, for the loading bar (window.__loaded of window.__total bytes)
+  window.__loaded = 0;
+  window.__total = PLAN['index.wasm'].bytes + PLAN['index.pck'].bytes;
   function joined(urls) {
     return new ReadableStream({
       async start(ctrl) {
@@ -149,7 +184,12 @@ body {
             const r = await realFetch(u);
             if (!r.ok) throw new Error(u + ': ' + r.status);
             const rd = r.body.getReader();
-            for (;;) { const { done, value } = await rd.read(); if (done) break; ctrl.enqueue(value); }
+            for (;;) {
+              const { done, value } = await rd.read();
+              if (done) break;
+              window.__loaded += value.length;
+              ctrl.enqueue(value);
+            }
           }
           ctrl.close();
         } catch (e) { ctrl.error(e); }
@@ -169,7 +209,7 @@ body {
 </script>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":85992760,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":85996568,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

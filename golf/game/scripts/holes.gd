@@ -8,6 +8,22 @@ extends Node
 signal done(id: String, ok: bool)
 
 var _loading := {}       # id -> true while its download runs
+var _req := {}           # id -> its HTTPRequest while one runs
+
+
+## How much of a hole's download has arrived, 0..1, or -1 when its size isn't known (a browser may not
+## say until it's done).
+func progress(id: String) -> float:
+	var r: HTTPRequest = _req.get(id)
+	if r == null or r.get_body_size() <= 0:
+		return -1.0
+	return clampf(float(r.get_downloaded_bytes()) / float(r.get_body_size()), 0.0, 1.0)
+
+
+## Bytes of a hole's download received so far.
+func downloaded(id: String) -> int:
+	var r: HTTPRequest = _req.get(id)
+	return r.get_downloaded_bytes() if r != null else 0
 
 
 ## True once the hole's files can be loaded.
@@ -43,11 +59,13 @@ func _download(id: String) -> void:
 	for attempt in 3:
 		var req := HTTPRequest.new()
 		add_child(req)
+		_req[id] = req
 		req.download_file = file
 		var url := str(JavaScriptBridge.eval("new URL('hole_%s.pck.wasm', document.baseURI).href" % id, true))
 		if req.request(url) == OK:
 			var res: Array = await req.request_completed
 			ok = res[0] == HTTPRequest.RESULT_SUCCESS and res[1] == 200
+		_req.erase(id)
 		req.queue_free()
 		if ok:
 			ok = ProjectSettings.load_resource_pack(file) and is_ready(id)
