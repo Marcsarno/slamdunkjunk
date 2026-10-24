@@ -15,6 +15,8 @@ var grid := MeshInstance3D.new()
 var line := MeshInstance3D.new()
 var _line_mesh := ImmediateMesh.new()
 var _terrain: Terrain
+var _ring := MeshInstance3D.new()          # where the putt stops
+var _cup_glow := MeshInstance3D.new()      # the cup, lit when the putt would drop
 
 
 func _ready() -> void:
@@ -60,6 +62,34 @@ void fragment() {
 	lm.no_depth_test = false
 	lm.disable_fog = true
 	lm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# the stop ring and the cup's glow: flat discs drawn as rings by a little shader
+	var rsh := Shader.new()
+	rsh.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, fog_disabled, shadows_disabled;
+uniform vec3 col : source_color = vec3(1.0);
+uniform float fill = 0.0;
+void fragment() {
+	float r = length(UV - 0.5) * 2.0;
+	float ring = smoothstep(0.72, 0.8, r) * (1.0 - smoothstep(0.9, 1.0, r));
+	float pulse = 0.75 + 0.25 * sin(TIME * 5.0);
+	ALBEDO = col;
+	ALPHA = (ring + fill * (1.0 - smoothstep(0.0, 0.8, r)) * 0.6) * pulse;
+}
+"""
+	for spec: Array in [[_ring, 0.34, Color(1.0, 1.0, 1.0), 0.0], [_cup_glow, 0.55, Color(0.4, 1.0, 0.6), 1.0]]:
+		var mi: MeshInstance3D = spec[0]
+		var pm := PlaneMesh.new()
+		pm.size = Vector2.ONE * float(spec[1])
+		mi.mesh = pm
+		var mm := ShaderMaterial.new()
+		mm.shader = rsh
+		mm.set_shader_parameter("col", spec[2])
+		mm.set_shader_parameter("fill", spec[3])
+		mi.material_override = mm
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visible = false
+		add_child(mi)
 	line.mesh = _line_mesh
 	line.material_override = lm
 	line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -105,6 +135,46 @@ func build(t: Terrain, ball: Vector2, pin: Vector2) -> void:
 			st.add_index(a + n + 1)
 	grid.mesh = st.commit()
 	visible = true
+
+
+## The putt's roll as it will go (`pts`: course positions along it, the last where it stops): a line
+## draped on the turf following the break, a ring where it stops, and the cup lit when it would drop.
+func set_path(pts: Array, holed: bool, pin: Vector3) -> void:
+	_line_mesh.clear_surfaces()
+	_ring.visible = false
+	_cup_glow.visible = holed
+	if holed:
+		_cup_glow.position = Terrain.to_world(pin) + Vector3(0, 0.03, 0)
+	if _terrain == null or pts.size() < 2:
+		return
+	# resample every ~0.15 m so the line is smooth whatever the record rate
+	var dense: Array[Vector2] = []
+	for i in pts.size() - 1:
+		var a2 := Vector2(pts[i].x, pts[i].y)
+		var b2 := Vector2(pts[i + 1].x, pts[i + 1].y)
+		var n := maxi(1, int(a2.distance_to(b2) / 0.15))
+		for k in n:
+			dense.append(a2.lerp(b2, float(k) / n))
+	dense.append(Vector2(pts[-1].x, pts[-1].y))
+	if dense.size() < 2:
+		return
+	var col := Color(0.55, 1.0, 0.7) if holed else Color(1.0, 1.0, 1.0)
+	_line_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+	for i in dense.size():
+		var c := dense[i]
+		var dir := (dense[mini(i + 1, dense.size() - 1)] - dense[maxi(i - 1, 0)]).normalized()
+		var right := Vector2(dir.y, -dir.x)
+		var f := float(i) / (dense.size() - 1)
+		var w := LINE_WIDTH * lerpf(1.1, 0.8, f)
+		for sgn: float in [1.0, -1.0]:
+			var p := c + right * w * sgn
+			_line_mesh.surface_set_color(Color(col, lerpf(0.95, 0.7, f)))
+			_line_mesh.surface_add_vertex(Terrain.to_world(Vector3(p.x, p.y, _terrain.height(p.x, p.y) + LIFT + 0.004)))
+	_line_mesh.surface_end()
+	if not holed:
+		var e := dense[-1]
+		_ring.position = Terrain.to_world(Vector3(e.x, e.y, _terrain.height(e.x, e.y) + LIFT + 0.02))
+		_ring.visible = true
 
 
 ## The straight aim line, from the ball along `dir` for `length` metres, draped on the turf.

@@ -40,7 +40,8 @@ const SPREAD_LONG := 0.75       # the margin is shorter along the line than acro
 ## crooked pull go straight without a step where the aim starts to move.
 const SLING_SPAN := 0.4
 const SLING_AIM_MAX := deg_to_rad(18.0)
-const SLING_AIM_PUTT := deg_to_rad(8.0)
+const PUTT_TURN := 0.5            # putts: the line turns this share of the pull's angle (fine, not twitchy)
+const PUTT_TURN_MAX := deg_to_rad(40.0)
 const SLING_DEAD := 0.06        # share of SLING_SPAN
 const SIDE_EASE := 12.0         # the aim follows the finger at this rate (1/s): smooth, not laggy
 const DRAG_TURN := 0.9          # dragging the target: radians of aim per screen width across ...
@@ -72,7 +73,7 @@ const ORBIT_TIME := 0.42        # the sweep round from behind her to her side as
 const CHASE_BACK := 5.0         # the camera after the ball in the air: this far behind it ...
 const CHASE_SIDE := 1.8         # ... to the side ...
 const CHASE_UP := 1.8           # ... and above
-const PUTT_BALL_Y := 0.76        # the putting stroke's view, from behind her: the ball this far down
+const PUTT_BALL_Y := 0.74        # the putting stroke's view, from behind her: the ball this far down
 const AIM_BALL_Y := 0.8         # the aiming view tips down until the ball sits this far down the screen
 const CLUB_FACE := 0.13         # m from the middle of a driver or iron head in her sprite to its face
 const BALL_LOOK_GROUND := 0.018  # the ball's drawn width as a share of its distance from the camera ...
@@ -195,7 +196,7 @@ func _ready() -> void:
 	obstacles = ObstacleGrid.new(view.props.obstacles)
 	add_child(fx)
 	view.ambience.lightning.connect(func(k: float):
-		Sfx.play_after(randf_range(0.4, 1.8), "thunder", lerpf(-12.0, -3.0, k), randf_range(0.85, 1.1)))
+		Sfx.play_after(randf_range(1.0, 2.2), "thunder", lerpf(-18.0, -9.0, k), randf_range(0.8, 1.0)))
 	par = int(terrain.meta.par)
 	add_child(golfer)
 	add_child(lantern)
@@ -431,6 +432,7 @@ func _on_green() -> bool:
 
 func _setup_shot() -> void:
 	_lie = 1.0
+	_celebrating = false
 	club = _pick_club()
 	_lie = _lie_at(ball)
 	if club.id == "putter":
@@ -791,6 +793,9 @@ func _on_contact() -> void:
 	phase_t = 0.0
 
 
+const CELEBRATE_SET := "video_celebrate"
+const CELEBRATE_AT := 1.1        # s after the ball drops: the cut to her celebrating
+var _celebrating := false
 var _time_scale := 1.0           # how fast the shot plays: flight a bit quick, eased to real time on the ground
 
 
@@ -902,7 +907,10 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 	elif phase == Phase.PULL:
 		# the band, from where the finger went down: how far down it is drawn is the power, its tilt the aim
 		var v := p - pull_start
-		var g := clampf(v.y / _pull_len, 0.0, 1.0)      # how far down is the power; sideways only aims
+		var putt: bool = club.id == "putter"
+		# full swings: how far down is the power, sideways only aims; putts: a true slingshot, the
+		# length of the pull is the pace and the ball goes straight away from the finger
+		var g := clampf((v.length() if putt else v.y) / _pull_len, 0.0, 1.0)
 		var m := mark_pull()
 		if absf(g - m) < MAGNET:
 			if absf(pull_goal - m) >= MAGNET:
@@ -910,9 +918,14 @@ func _drag(p: Vector2, _rel: Vector2) -> void:
 				Sfx.play("click", -6.0)
 			g = m
 		pull_goal = g
-		var u := clampf(v.x / (get_viewport().get_visible_rect().size.x * SLING_SPAN), -1.0, 1.0)
-		u *= smoothstep(0.0, 2.0 * SLING_DEAD, absf(u))
-		_side_goal = u * (SLING_AIM_PUTT if club.id == "putter" else SLING_AIM_MAX)
+		if putt:
+			# the angle of the pull, eased in close to the start so a short pull can't swing it wildly
+			var ang := atan2(v.x, maxf(v.y, 1.0))
+			_side_goal = clampf(ang * PUTT_TURN * smoothstep(12.0, 60.0, v.length()), -PUTT_TURN_MAX, PUTT_TURN_MAX)
+		else:
+			var u := clampf(v.x / (get_viewport().get_visible_rect().size.x * SLING_SPAN), -1.0, 1.0)
+			u *= smoothstep(0.0, 2.0 * SLING_DEAD, absf(u))
+			_side_goal = u * SLING_AIM_MAX
 
 
 ## The power of a full pull: the club's full power, or for a putt PUTT_HEADROOM times this putt.
@@ -1010,7 +1023,7 @@ func _process(delta: float) -> void:
 				match surf:
 					Terrain.Surface.WATER: Sfx.play("splash", -2.0)
 					Terrain.Surface.SAND: Sfx.play("land_sand", -3.0)
-					Terrain.Surface.PATH: Sfx.play("hit_iron", -14.0, 0.55)      # a clack off the paving
+					Terrain.Surface.PATH: Sfx.play("land_grass", -3.0, 1.5)       # a harder tap off the paving
 					_: Sfx.play("land_grass", -4.0, randf_range(0.9, 1.1))
 			if sim.state == BallSim.State.FLYING or sim.state == BallSim.State.ROLLING:
 				var hv := Vector2(sim.vel.x, sim.vel.y)
@@ -1026,8 +1039,27 @@ func _process(delta: float) -> void:
 			if phase_t > 1.8:
 				_setup_shot()
 		Phase.HOLED:
-			_chase_cam(delta)
-			if phase_t > 2.4 and not hud.card.visible:
+			# the ball drops, then a cut to her, front-on, celebrating (Marc's fist pump), then the card
+			if phase_t > CELEBRATE_AT and not _celebrating and golfer.sets.has(CELEBRATE_SET):
+				_celebrating = true
+				golfer.play_downswing(CELEBRATE_SET)       # where she stood for the stroke
+				# in front of her, the flag behind her
+				var g := golfer.global_position
+				var away := g - Terrain.to_world(terrain.pin())
+				away.y = 0.0
+				away = away.normalized() if away.length() > 0.5 else Vector3.BACK
+				_want_pos = g + away * 2.7 + Vector3(0, 1.05, 0)
+				_want_target = g + Vector3(0, 0.95, 0)
+				_want_fov = 50.0
+				cam_pos = _want_pos
+				cam_target = _want_target
+				cam_fov = _want_fov
+				hud.fade_in(0.3)
+				Sfx.play("holed", -6.0)
+			if not _celebrating:
+				_chase_cam(delta)
+			var card_at := CELEBRATE_AT + 3.6 if _celebrating else 2.4
+			if phase_t > card_at and not hud.card.visible:
 				Round.record(strokes)
 				var detail := "%d strokes on a par %d" % [strokes, par]
 				if Round.scores.size() > 1:
@@ -1040,7 +1072,8 @@ func _process(delta: float) -> void:
 	_update_wind_hud()
 	# while the camera follows the ball she steps out of shot if it comes right up beside her (after a
 	# putt the camera settles where she stands)
-	var following := (phase == Phase.FLIGHT and phase_t > SWING_HOLD) or phase == Phase.RESULT or phase == Phase.HOLED
+	var following := (phase == Phase.FLIGHT and phase_t > SWING_HOLD) or phase == Phase.RESULT \
+		or (phase == Phase.HOLED and not _celebrating)
 	golfer.visible = not (following and cam.global_position.distance_to(golfer.global_position) < 3.0)
 
 
@@ -1071,7 +1104,7 @@ func _aim_cam_dir() -> Vector3:
 func _aim_cam_pos() -> Vector3:
 	var a := _aim_cam_dir()
 	if club.id == "putter":
-		return Terrain.to_world(ball - a * 3.0 + Vector3(0, 0, 1.3))
+		return Terrain.to_world(ball - a * 3.4 + Vector3(0, 0, 2.7))     # up behind the ball, the green laid out
 	return Terrain.to_world(ball - a * AIM_BACK + Vector3(0, 0, AIM_HEIGHT))
 
 
@@ -1633,8 +1666,10 @@ func _draw_preview(putt: bool) -> void:
 	if putt:
 		# putts: a straight line along the aim, as long as this pull rolls (the target's distance
 		# while aiming); the grid's beads show which way it will break
-		var length := _carry_m if phase == Phase.PULL else Vector2(target.x - ball.x, target.y - ball.y).length()
-		putt_grid.set_line(Vector2(ball.x, ball.y), aim, minf(length, 60.0))
+		var roll: Array = (preview.get("points", []) as Array).duplicate()
+		if not roll.is_empty():
+			roll.append(preview.end)
+		putt_grid.set_path(roll, preview.get("state", -1) == BallSim.State.HOLED, terrain.pin())
 	else:
 		# the flight: dots along the arc, about a dot per 4 m, sized to stay the same on screen
 		var air: Array = []

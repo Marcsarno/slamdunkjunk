@@ -88,9 +88,59 @@ def kidney_r(x, y, e):
     return r / (1.0 - 0.18 * np.exp(-((np.angle(np.exp(1j * (th - 1.2)))) / 0.5) ** 2))
 
 
+def green_r(x, y, g):
+    """The green's shape: its ellipse with a couple of soft lobes (kidney, pear), so no two read as the
+    same oval. g["lobes"] = [a2, phase2, a3, phase3] (set by Hole from the hole's seed)."""
+    r, th = ellipse_r(x, y, g)
+    a2, p2, a3, p3 = g.get("lobes", [0.0, 0.0, 0.0, 0.0])
+    return r / (1.0 + a2 * np.cos(2.0 * (th - p2)) + a3 * np.cos(3.0 * (th - p3)))
+
+
+def realistic_bunkers(spec):
+    """Greenside bunkers hug the green, a couple of metres off its edge, long and curved round it, at
+    real sizes (8-12 m by 5-7 m); fairway bunkers grow to real sizes too (a layout's numbers were
+    drawn small). Bunkers set "fixed": true are left alone."""
+    g = spec["green"]
+    gx, gy = g["center"]
+    gmax = max(g["radius"])
+    out = []
+    for b in spec.get("bunkers", []):
+        b = dict(b)
+        if b.get("fixed"):
+            out.append(b)
+            continue
+        bx, by = b["center"]
+        d = math.hypot(bx - gx, by - gy)
+        if d < gmax + 16.0 and d > 0.1:
+            ang = math.atan2(by - gy, bx - gx)
+            # the green's edge that way (its ellipse with lobes), then the bunker just off it
+            ux, uy = math.cos(ang), math.sin(ang)
+            r1 = float(green_r(np.array([gx + ux]), np.array([gy + uy]), g)[0])
+            edge = 1.0 / max(r1, 1e-3)
+            long_r = float(np.clip(max(b["radius"]) * 1.5, 4.5, 6.5))
+            short_r = float(np.clip(min(b["radius"]) * 1.25, 2.6, 3.6))
+            dist = edge + 2.2 + short_r
+            b["center"] = [round(gx + ux * dist, 2), round(gy + uy * dist, 2)]
+            b["radius"] = [round(long_r, 2), round(short_r, 2)]
+            b["rotation"] = round(ang + math.pi / 2, 3)          # long way round the green
+            b["depth"] = max(b.get("depth", 0.45), 0.55)
+        else:
+            b["radius"] = [round(float(np.clip(r * 1.35, 3.0, 12.0)), 2) for r in b["radius"]]
+        out.append(b)
+    spec["bunkers"] = out
+
+
 class Hole:
     def __init__(self, spec):
         self.spec = spec
+        rs = np.random.default_rng(spec.get("seed", 1) + 991)
+        spec["green"] = dict(spec["green"])
+        spec["green"].setdefault("lobes", [round(float(rs.uniform(0.07, 0.15)), 3), round(float(rs.uniform(0, math.pi)), 3),
+                                           round(float(rs.uniform(0.03, 0.08)), 3), round(float(rs.uniform(0, math.pi)), 3)])
+        self.contour = [(float(rs.uniform(0, 2 * math.pi)), float(rs.uniform(13.0, 19.0)), float(rs.uniform(0, 2 * math.pi)))
+                        for _ in range(2)]
+        if not spec.get("bunkers_as_drawn"):
+            realistic_bunkers(spec)
         self.path = catmull_rom(spec["path"], 0.5)
         seg = np.linalg.norm(np.diff(self.path, axis=0), axis=1)
         self.path_s = np.concatenate([[0], np.cumsum(seg)])
@@ -131,6 +181,28 @@ class Hole:
             c = np.array([[w["center"][0]]], float), np.array([[w["center"][1]]], float)
             w["level"] = round(float(self.base_height(*c)[0, 0]) + w.get("level_offset", -0.6), 3)
         self.cart = self._cart_path()
+        if self.cart is not None and not spec.get("bunkers_as_drawn"):
+            self._bunkers_off_path()
+
+    def _bunkers_off_path(self):
+        """A greenside bunker on the cart path slides round the green (either way, a little further each
+        try) until it's clear of it."""
+        g = self.spec["green"]
+        gx, gy = g["center"]
+        for b in self.spec["bunkers"]:
+            bx, by = b["center"]
+            d = math.hypot(bx - gx, by - gy)
+            if d > max(g["radius"]) + 16.0:
+                continue
+            clear = self.cart_width / 2 + max(b["radius"]) + 1.5
+            a0 = math.atan2(by - gy, bx - gx)
+            for k in [0, 1, -1, 2, -2, 3, -3, 4, -4]:
+                a = a0 + k * 0.32
+                cx, cy = gx + math.cos(a) * d, gy + math.sin(a) * d
+                if float(self.cart_distance(np.array([cx]), np.array([cy]))[0]) >= clear:
+                    b["center"] = [round(cx, 2), round(cy, 2)]
+                    b["rotation"] = round(a + math.pi / 2, 3)
+                    break
 
     def _cart_path(self):
         """The cart path: from beside the tee box down one side of the hole in the rough, a few metres
@@ -268,13 +340,19 @@ class Hole:
         # green: tilted plane (1.5-3%), pushed up slightly, falling off at <=17.5% into the surrounds
         g = sp["green"]
         gx, gy = g["center"]
-        gr, _ = ellipse_r(x, y, g)
+        gr = green_r(x, y, g)
         slope = np.array(g["slope"], float)
         mag = np.linalg.norm(slope)
         if mag > 0:
             slope = slope / mag * np.clip(mag, 0.015, 0.028)
         center_h = float(self.base_height(np.array([[gx]], float), np.array([[gy]], float))[0, 0]) + 0.35
         plane = center_h + slope[0] * (x - gx) + slope[1] * (y - gy)
+        # contours on top of the tilt: two gentle rolls across the green (a few centimetres, under 1.5%
+        # of slope), softened round the cup so the pin sits on a fair spot
+        px_, py_ = sp["pin"]
+        calm = 0.35 + 0.65 * smoothstep(2.5, 7.0, np.hypot(x - px_, y - py_))
+        for ang, wl, ph in self.contour:
+            plane = plane + 0.03 * calm * np.sin((np.cos(ang) * (x - gx) + np.sin(ang) * (y - gy)) * 2 * math.pi / wl + ph)
         r_min = min(g["radius"])
         falloff = 6.0 / r_min                                          # ~6 m apron/falloff
         h = h + (plane - h) * (1 - smoothstep(1.0, 1.0 + falloff, gr))
@@ -333,7 +411,7 @@ class Hole:
             out[self.cart_distance(x, y) < self.cart_width / 2] = PATH
         tx, ty = sp["tee"]["center"]
         out[(np.abs(x - tx) <= sp["tee"]["size"][0] / 2) & (np.abs(y - ty) <= sp["tee"]["size"][1] / 2)] = TEE
-        gr, _ = ellipse_r(x, y, sp["green"])
+        gr = green_r(x, y, sp["green"])
         out[(gr < 1.22) & (out != OOB)] = FRINGE
         out[gr < 1.0] = GREEN
         for b in sp["bunkers"]:

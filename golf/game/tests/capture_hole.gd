@@ -211,7 +211,10 @@ func _process(delta: float) -> void:
 				t = 0.0
 				stage = "holed"
 		"holed":
-			if t > 3.2:
+			if main._celebrating and not get_meta("celebrate_shot", false) and t > 2.6:
+				set_meta("celebrate_shot", true)
+				await snap("celebrate")
+			if t > 5.2:
 				stage = "next"
 				await snap("card")
 				if round and Round.has_next():

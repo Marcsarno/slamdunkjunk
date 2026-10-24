@@ -182,14 +182,15 @@ def main():
     shimmer = band(rng.standard_normal(len(y)), 5000, 9000) * env(len(y), 0.3, 0.5) * 0.08
     save(out, "holed", y + shimmer, 0.6)
 
-    # thunder: a crack, then a long, lumpy low rumble
+    # thunder: far off, a long, lumpy low rumble that swells in and rolls away (no crack: heard over
+    # a shot it sounded like something hitting something)
     n = int(3.6 * RATE)
     t = np.arange(n) / RATE
     brown = np.cumsum(rng.standard_normal(n))
     brown = high(brown, 25)
-    rumble = low(brown, 140, 4) * env(n, 0.25, 1.1) * (0.7 + 0.3 * np.sin(2 * np.pi * 1.3 * t) * np.sin(2 * np.pi * 0.47 * t))
-    crack = band(rng.standard_normal(n), 400, 4000) * env(n, 0.003, 0.09)
-    save(out, "thunder", rumble / np.max(np.abs(rumble)) + crack * 0.35, 0.8)
+    rumble = low(brown, 140, 4) * env(n, 0.6, 1.2) * (0.7 + 0.3 * np.sin(2 * np.pi * 1.3 * t) * np.sin(2 * np.pi * 0.47 * t))
+    rng.standard_normal(n)                                   # (keeps the later sounds' dice as they were)
+    save(out, "thunder", rumble / np.max(np.abs(rumble)), 0.6)
 
     # click: a tiny tick
     n = int(0.03 * RATE)
