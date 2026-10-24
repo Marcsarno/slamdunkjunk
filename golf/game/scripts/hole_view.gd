@@ -31,7 +31,8 @@ var _fog_base := 0.0045
 var _sky_mat: ShaderMaterial
 var _moon_dir := Vector3(0, 0.5, -1)
 var _key_dir := Vector3(0, 0.5, 0.87)     # toward the key light (the ground's hill shading follows it)
-var _light_points: Array = []      # [course position, color]: the lanterns and the light props, for the pooled lights
+var _light_points: Array = []      # [course position, color, pool size, pool strength]: the lanterns and the light props
+var _halos: Array = []             # the light props' glows: [halo node, its size, phase], breathing
 var _floaters: Array = []          # light props that hover (ghosts, the skull): [node, base y, phase]
 
 
@@ -252,6 +253,7 @@ func _terrain_material() -> ShaderMaterial:
 	var none: Array[Vector4] = []
 	none.resize(POOLS)
 	m.set_shader_parameter("pools", none)
+	m.set_shader_parameter("pool_cols", none)
 	return m
 
 
@@ -371,6 +373,7 @@ func _cards() -> void:
 		q.center_offset = Vector3(0, 0.5, 0)
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
 		mm.mesh = q
 		mm.instance_count = list.size()
 		for i in list.size():
@@ -379,12 +382,25 @@ func _cards() -> void:
 			var s := float(c.height)
 			var flip := -1.0 if (i * 7919) % 2 == 1 else 1.0     # mirror half of them for variety
 			mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(s * flip, s, s)), p))
+			mm.set_instance_color(i, Color.WHITE * _woods_shade(float(c.pos[0]), float(c.pos[1])))
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
-		mmi.material_override = _card_material(tex, tint)
+		var cm := _card_material(tex, tint)
+		cm.vertex_color_use_as_albedo = true
+		mmi.material_override = cm
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if list[0].get("shadow", false) \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mmi)
+
+
+## Beyond the rough is the darkest part of the night: trees and plants out in the deep rough and the
+## woods are drawn darker than those by the fairway (so the light props glow against them).
+const WOODS_SHADE := {Terrain.Surface.DEEP: 0.78, Terrain.Surface.OOB: 0.6}
+
+
+func _woods_shade(x: float, y: float) -> float:
+	var k: float = WOODS_SHADE.get(terrain.surface_at(x, y), 1.0)
+	return k
 
 
 ## The painted light props along the rough (placed by build_hole.py, their light found by prep_lights.py):
@@ -392,7 +408,7 @@ func _cards() -> void:
 ## joins the lanterns for the pooled lights. The ghosts and the skull hover and bob.
 func _glow_props() -> void:
 	for p in props.lanterns:
-		_light_points.append([Vector3(p[0], p[1], p[2]), Color(1.0, 0.55, 0.2)])
+		_light_points.append([Vector3(p[0], p[1], p[2]), Color(1.0, 0.55, 0.2), 1.0, 2.2])
 	var list: Array = props.get("glows", [])
 	if list.is_empty():
 		return
@@ -420,7 +436,7 @@ func _glow_props() -> void:
 			hm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 			hm.disable_fog = true
 			var hq := QuadMesh.new()
-			var hs := clampf(h * 1.3, 1.8, 4.0)
+			var hs := clampf(h * 2.0, 2.4, 6.0)      # a wide soft glow, so it reads as light, not a sticker
 			hq.size = Vector2(hs, hs)
 			mats[g.image] = [q, mat, hq, hm, col]
 		var parts: Array = mats[g.image]
@@ -438,7 +454,10 @@ func _glow_props() -> void:
 		halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		halo.position = Vector3(0, h * float(m.glow[1]), 0)
 		node.add_child(halo)
-		_light_points.append([Vector3(g.pos[0], g.pos[1], g.pos[2] + lift + h * float(m.glow[1])), parts[4]])
+		_halos.append([halo, randf() * TAU])
+		# its light on the ground round it, in its own colour, as wide as it is tall
+		_light_points.append([Vector3(g.pos[0], g.pos[1], g.pos[2] + lift + h * float(m.glow[1])), parts[4],
+			clampf(h * 0.8, 1.4, 3.5), 5.0])
 		if lift > 0.0 and not g.get("still", false):          # ghosts and the skull hover; a gargoyle sits
 			_floaters.append([node, node.position.y, randf() * TAU])
 
@@ -772,6 +791,10 @@ func _process(delta: float) -> void:
 	_bat_t += delta
 	for f in _floaters:
 		f[0].position.y = f[1] + sin(_bat_t * 1.4 + f[2]) * 0.12
+	for hl in _halos:
+		# the glow breathes, slow and a little uneven, like a flame or a spirit
+		var k: float = 1.0 + 0.08 * sin(_bat_t * 1.7 + hl[1]) + 0.04 * sin(_bat_t * 4.3 + hl[1] * 2.0)
+		hl[0].scale = Vector3.ONE * k
 	for b in _bats:
 		var a: float = b.phase + _bat_t * b.speed
 		var c: Vector3 = b.center
@@ -793,16 +816,18 @@ func _process(delta: float) -> void:
 		if l.visible:
 			l.position = Terrain.to_world(lit[i][0] + Vector3(0, 0, 0.35))
 			l.light_color = lit[i][1]
-	var near: Array = props.lanterns.duplicate()
-	near.sort_custom(func(a, b):
-		return Terrain.to_world(Vector3(a[0], a[1], a[2])).distance_squared_to(cam) \
-			< Terrain.to_world(Vector3(b[0], b[1], b[2])).distance_squared_to(cam))
 	if _terrain_mat:
+		# the nearest lights (lanterns and light props together) pool on the ground, each its colour
 		var pools: Array[Vector4] = []
+		var cols: Array[Vector4] = []
 		for i in POOLS:
-			if i < near.size():
-				var w := Terrain.to_world(Vector3(near[i][0], near[i][1], near[i][2]))
-				pools.append(Vector4(w.x, w.y, w.z, 2.2))
+			if i < lit.size():
+				var w := Terrain.to_world(lit[i][0])
+				var col: Color = lit[i][1]
+				pools.append(Vector4(w.x, w.y, w.z, float(lit[i][3])))
+				cols.append(Vector4(col.r, col.g, col.b, float(lit[i][2])))
 			else:
 				pools.append(Vector4.ZERO)
+				cols.append(Vector4.ZERO)
 		_terrain_mat.set_shader_parameter("pools", pools)
+		_terrain_mat.set_shader_parameter("pool_cols", cols)

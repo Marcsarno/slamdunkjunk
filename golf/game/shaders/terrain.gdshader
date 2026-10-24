@@ -35,7 +35,7 @@ uniform vec3 col_rough : source_color = vec3(0.15, 0.25, 0.09);
 uniform vec3 col_fairway : source_color = vec3(0.29, 0.47, 0.13);
 uniform vec3 col_green : source_color = vec3(0.33, 0.53, 0.15);
 uniform vec3 col_sand : source_color = vec3(0.72, 0.60, 0.42);
-uniform vec3 dark_tint : source_color = vec3(0.45, 0.45, 0.42);
+uniform vec3 dark_tint : source_color = vec3(0.3, 0.3, 0.32);   // beyond the rough: the darkest ground
 uniform float texture_strength = 0.35;
 uniform float brightness = 1.0;
 uniform vec2 pin_xy = vec2(0.0);           // the cup, course coords
@@ -48,7 +48,7 @@ uniform float night_grade = 0.12;          // the grass cooled toward moonlit bl
 
 const int MAX_POOLS = 16;
 uniform vec4 pools[MAX_POOLS];          // xyz world position, w strength (0 = unused)
-uniform vec3 pool_color : source_color = vec3(1.0, 0.55, 0.2);
+uniform vec4 pool_cols[MAX_POOLS];      // each pool's light: rgb its colour, a its size (1: a jack-o'-lantern's)
 uniform float pool_radius = 1.5;
 uniform float pool_range = 9.0;
 
@@ -132,6 +132,7 @@ void fragment() {
 	// fallen leaves drift in the rough, thickest where the small noise peaks inside the big one
 	float leaves = smoothstep(0.55, 0.72, small * 0.6 + big * 0.5) * rough_w * leaf_amount;
 	c = mix(c, leaf_color * (0.8 + 0.4 * small) * mix(1.0, grain, 0.6), leaves);
+	vec3 lit_base = c;                      // what a light falling here shows (before the woods' darkness)
 	c *= mix(vec3(1.0), dark_tint, w.a);
 	// steep ground (a ravine's walls, a pond's banks) is bare rock, mapped onto the face it's on
 	vec3 nw = normalize(wnorm);
@@ -175,13 +176,17 @@ void fragment() {
 	tw *= 1.0 - smoothstep(0.05, 0.18, length(inr));
 	dew_glow += vec3(0.8, 0.9, 1.0) * tw * 0.6 * dew * (1.0 - smoothstep(3.0, 14.0, cam_d));
 
-	float pool = 0.0;
+	// the lights' pools on the ground, each in its own colour: jack-o'-lanterns orange, the painted
+	// light props (lantern ghosts, wisps, spirits, the cauldron) in theirs, bigger as they're taller
+	vec3 pool = vec3(0.0);
 	for (int i = 0; i < MAX_POOLS; i++) {
 		vec4 p = pools[i];
 		if (p.w <= 0.0) { continue; }
+		vec4 pc = pool_cols[i];
+		float sz = max(pc.a, 0.2);
 		float d = distance(wpos, p.xyz);
-		float r = d / pool_radius;
-		pool += p.w / (1.0 + r * r) * smoothstep(pool_range, pool_range * 0.3, d);
+		float r = d / (pool_radius * sz);
+		pool += pc.rgb * p.w / (1.0 + r * r) * smoothstep(pool_range * sz, pool_range * sz * 0.3, d);
 	}
-	EMISSION = c * pool_color * pool + dew_glow;
+	EMISSION = lit_base * det * brightness * pool + dew_glow;
 }
