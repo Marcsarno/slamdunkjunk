@@ -333,7 +333,8 @@ render_mode cull_%s;
 void fragment() {
 	ALBEDO = COLOR.rgb;
 	ROUGHNESS = 0.5;
-	EMISSION = vec3(1.0, 0.42, 0.08) * 0.45 * lamp_on(v_world, TIME);
+	// the candle's glow through the shell, dimmer in the dark creases between lobes
+	EMISSION = vec3(1.0, 0.42, 0.08) * 0.45 * (0.3 + 0.7 * smoothstep(0.08, 0.55, COLOR.r)) * lamp_on(v_world, TIME);
 }
 """
 

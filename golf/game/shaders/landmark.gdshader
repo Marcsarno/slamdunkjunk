@@ -1,7 +1,7 @@
 // The chapel's and the house's surfaces, drawn on the phone instead of shipped as pictures: the
 // vertex colour's alpha says what a face is made of (tools/landmarks.py SURFACE) and this draws it,
 // in the model's own metres so the pattern holds still: stone blocks with mortar, slates in staggered
-// courses, overlapping clapboards, brick, wood planks, leaves (ivy, drifts, flowers). The grain comes from the stone and wood textures
+// courses, overlapping clapboards, brick, wood planks, rock (a headstone), leaves (ivy, drifts, flowers). The grain comes from the stone and wood textures
 // every hole already loads. Each block, slate or board gets its own shade, and the walls darken toward
 // the ground.
 shader_type spatial;
@@ -86,6 +86,13 @@ void fragment() {
 		shade *= mix(0.62, 1.0, smoothstep(0.008, 0.016, min(edge(fu, bl), edge(fv, rh))));
 	} else if (k > 0.45) {                            // wood planks
 		grain = dot(texture(tex_wood, vec2(u, v) * 0.5).rgb, vec3(0.333)) * 3.0;
+	} else if (k < 0.25) {                            // rock: one weathered stone (a headstone), no courses
+		vec2 q = vec2(u, v);
+		float g = dot(texture(tex_stone, q * 1.6).rgb, vec3(0.333));
+		float g2 = dot(texture(tex_stone, q * 0.35 + 0.37).rgb, vec3(0.333));
+		grain = mix(1.0, g * 2.4, 0.75) * mix(0.75, 1.2, clamp(g2 * 1.8, 0.0, 1.0));
+		shade = mix(0.72, 1.0, smoothstep(0.0, 0.5, v_pos.y));                 // damp near the ground
+		base = mix(base, base * vec3(0.85, 1.05, 0.8), smoothstep(0.55, 0.75, g2 * 1.6) * 0.6);   // lichen
 	} else if (k < 0.35) {                            // leaves: overlapping leaf shapes, gaps of shadow between
 		vec2 q = vec2(u, v) * 6.5;
 		vec2 cell = floor(q);
