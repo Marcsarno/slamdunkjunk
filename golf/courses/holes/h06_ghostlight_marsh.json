@@ -15,7 +15,7 @@
    159.0
   ]
  ],
- "fairway_start": 146,
+ "fairway_start": 175,
  "fairway_width": [
   24,
   24
@@ -43,10 +43,10 @@
   ],
   "rotation": -0.0134,
   "slope": [
-   0.01,
-   0.02
+   0.00605,
+   0.01602
   ],
-  "raise": 1.0
+  "raise": 0.9
  },
  "pin": [
   1.56,
@@ -144,6 +144,18 @@
  "zones": [
   {
    "center": [
+    30.03,
+    157.61
+   ],
+   "radius": [
+    23,
+    21
+   ],
+   "rotation": 0.0866,
+   "surface": "rough"
+  },
+  {
+   "center": [
     1.96,
     70.23
    ],
@@ -192,16 +204,7 @@
   "cross_tilt": 0.004,
   "roll_height": 0.2,
   "bank_height": 2.5,
-  "mounds": [
-   {
-    "center": [
-     62.0,
-     135.2
-    ],
-    "radius": 22,
-    "height": 2.2
-   }
-  ],
+  "mounds": [],
   "profile": [
    [
     0,

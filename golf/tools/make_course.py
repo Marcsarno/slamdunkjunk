@@ -121,8 +121,12 @@ def pads_along(line, widths, skip=None):
 def extras(i, p):
     hz = {h.get("label"): h for h in p["hazards"]}
     e = {"water": [], "zones": [], "pads": [ell(q["center"], q["radius"], q.get("rotation", 0.0)) for q in p.get("pads", [])],
+         # (a par 3's bail-out pad stands in a little open ground of its own, level, no bank or woods)
          "graveyards": [], "pumpkin_clusters": copy.deepcopy(TEE_PUMPKINS), "fences": [], "features": [],
          "patches": [], "webs": [], "web_art": [], "cornfields": [], "hedges": []}
+
+    if p["par"] == 3:
+        e["zones"] += [grown(q, 13, surface="rough") for q in e["pads"]]
 
     def water(h, k, **kw):
         w = ell(h["center"], h["radius"], h["rotation"], level_offset=-0.6, lobes=LOBES[k % 4], **kw)
@@ -205,9 +209,12 @@ def extras(i, p):
         e["carry"] = list(p["fairway_gap"])
         # the left route: a narrower fairway past the Horseman, broken by the ravine like the main one
         line, widths = p["extra_fairways"][0]
-        e["pads"] += pads_along([[6, 110], [-26, 190], [-30, 266]], widths[:2]) + pads_along([[-24, 306], [20, 372]], widths[2:3])
+        e["pads"] += pads_along([[6, 110], [-26, 190], [-30, 254]], widths[:2]) + pads_along([[-20, 316], [20, 372]], widths[2:3])
         e["features"].append({"image": "statue_horseman", "pos": [-66, 318], "scale": 1.4, "clear": 9})
         e["zones"].append(ell([-6, 330], [100, 26], -0.25, surface="rough"))           # the far bank
+        # the ground between the two routes stays open (no framing bank rising between them)
+        e["zones"].append(ell([-10, 190], [92, 34], math.pi / 2 + 0.05, surface="rough"))
+        e["zones"] += [grown(q, 10, surface="rough") for q in e["pads"]]
         e["graveyards"].append({"center": [86, 330], "radius": 6, "count": 6, "fence": False})
         e["cart"] = {"side": -1, "offset": 6.0}
         e["pin"] = [-2, 4]
@@ -241,6 +248,9 @@ def turned(obj, A):
         for k, v in obj.items():
             if k in ("center", "pos", "face"):
                 out[k] = turn(v, A)
+            elif k == "slope":                   # a gradient: turned, kept fine (a green tilts ~1.7%)
+                c, sn = math.cos(A), math.sin(A)
+                out[k] = [round(v[0] * c - v[1] * sn, 5), round(v[0] * sn + v[1] * c, 5)]
             elif k == "rotation":
                 out[k] = round(v + A, 4)
             elif k in ("points", "safe", "risk"):
@@ -263,8 +273,8 @@ def layout(i):
     t = (last[0] / L, last[1] / L)
     n = (-t[1], t[0])
     side = 1 if i % 2 else -1
-    # the green tilts up away from the approach (back to front, ~2%), a little across
-    slope = [round(t[0] * 0.018 + n[0] * 0.008 * side, 4), round(t[1] * 0.018 + n[1] * 0.008 * side, 4)]
+    # the green tilts up away from the approach (back to front, ~1.7%), a little across
+    slope = [round(t[0] * 0.016 + n[0] * 0.006 * side, 4), round(t[1] * 0.016 + n[1] * 0.006 * side, 4)]
     green = {"center": g["center"], "radius": g["radius"], "rotation": g["rotation"], "slope": slope}
     if "green_raise" in p:
         green["raise"] = p["green_raise"]

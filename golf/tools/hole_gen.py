@@ -151,7 +151,8 @@ def realistic_bunkers(spec):
             b["center"] = [round(gx + ux * dist, 2), round(gy + uy * dist, 2)]
             b["radius"] = [round(long_r, 2), round(short_r, 2)]
             b["rotation"] = round(ang + math.pi / 2, 3)          # long way round the green
-            b["depth"] = max(b.get("depth", 0.45), 0.8)            # a face you can see from the fairway
+            # a face you can see from the fairway (real-size bunkers are wide enough to read at 0.65 m)
+            b["depth"] = max(b.get("depth", 0.45), 0.65 if spec.get("bunkers_real") else 0.8)
             b["greenside"] = True
         else:
             if spec.get("bunkers_real"):            # drawn at real size: ~12 x 30 m fairway bunkers
@@ -430,7 +431,8 @@ class Hole:
         for w in sp.get("water", []):
             wr, _ = ellipse_r(x, y, w)
             floor = w["level"] - 0.7
-            sink = 1 - smoothstep(0.8, 1.5, wr)
+            # the bank: wide enough to keep it near 3:1 down to the water (a ravine's walls, deeper, are rock)
+            sink = 1 - (smoothstep(0.8, 1.5, wr) if w.get("level_offset", -0.6) < -2.0 else smoothstep(0.7, 1.8, wr))
             if w.get("island"):
                 sink = sink * smoothstep(1.4, 2.2, gr)
             else:
@@ -558,8 +560,10 @@ def slope_report(hole, px, py, heights, spec):
     # a pond's banks are built steeper than playing rough (about 3:1, 33%): reported on their own
     bank = np.zeros(surf.shape, bool)
     for w in spec.get("water", []):
+        if w.get("level_offset", -0.6) < -2.0:       # a ravine: rock walls, not a pond bank
+            continue
         wr, _ = ellipse_r(px, py, w)
-        bank |= wr < 1.6
+        bank |= wr < 1.8
     for k, name in enumerate(SURFACE_NAMES):
         m = ndimage.binary_erosion(surf == k, iterations=1)   # interior cells only
         if name in ("rough", "deep_rough"):
