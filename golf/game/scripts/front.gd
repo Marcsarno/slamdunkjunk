@@ -55,7 +55,7 @@ var _warmed := false                          # hole 1's course loaded behind th
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out=") or a.begins_with("--light-set=") or a == "--knock-probe" or a == "--intro-path":
+		if a.begins_with("--capture=") or a.begins_with("--capture-hole=") or a.begins_with("--look-out=") or a.begins_with("--light-set=") or a == "--knock-probe" or a == "--intro-path" or a.begins_with("--overhead="):
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)

@@ -237,6 +237,8 @@ func _ready() -> void:
 			add_child(load("res://tests/capture_hole.gd").new())
 		elif a.begins_with("--look-out="):
 			add_child(load("res://tests/look_at.gd").new())
+		elif a.begins_with("--overhead="):
+			add_child(load("res://tests/overhead.gd").new())
 		elif a == "--intro-path":
 			add_child(load("res://tests/intro_path.gd").new())
 		elif a == "--knock-probe":
