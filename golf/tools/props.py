@@ -305,7 +305,7 @@ def _rib(phi, amp):
     return 1.0 + amp * math.cos(phi * 8)
 
 
-def jack(col, name, pos, r=0.38, rot_z=0.0, carved=True):
+def jack(col, name, pos, r=0.38, rot_z=0.0, carved=True, shade=None):
     RIB, SQ = 0.11, 0.8
     bm = bmesh.new()
     ret = bmesh.ops.create_uvsphere(bm, u_segments=24 if not carved else 32, v_segments=14, radius=r)
@@ -318,7 +318,7 @@ def jack(col, name, pos, r=0.38, rot_z=0.0, carved=True):
             v.co.z -= (v.co.z - r * SQ * 0.82) * 0.75
     bm.normal_update()
     lay = vcol_layer(bm)
-    shade = random.uniform(0.85, 1.1)
+    shade = random.uniform(0.85, 1.1) if shade is None else shade
     for f in bm.faces:
         for l in f.loops:
             groove = 0.5 + 0.5 * math.cos(math.atan2(l.vert.co.y, l.vert.co.x) * 8)

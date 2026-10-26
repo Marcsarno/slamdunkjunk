@@ -156,6 +156,17 @@ for k, w in enumerate(spec.get("water", [])):
 
 # ---------- props --------------------------------------------------------------------------
 lanterns, obstacles, cards = [], [], []
+# pumpkins are stored once (game/assets/props/pumpkins.glb, tools/export_pumpkins.py) and the game places
+# a copy at each of these: [x, y, z, radius, turn, carved (1/0), shade]
+pumpkins = []
+
+
+def pumpkin(x, y, r, rot_z, carved=True):
+    """Where a pumpkin goes. Draws its shade from the same random stream props.jack did, so every random
+    choice after it (and so the whole hole) comes out as before."""
+    shade = random.uniform(0.85, 1.1)
+    pumpkins.append([round(x, 2), round(y, 2), round(h_at(x, y), 3), round(r, 3), round(rot_z, 3), int(carved),
+                     round(shade, 3)])
 taken = [(float(f["pos"][0]), float(f["pos"][1]), f.get("clear", 2.5 * f.get("scale", 1.0))) for f in spec.get("features", [])]
 
 
@@ -224,8 +235,7 @@ for s in np.repeat(np.arange(spec["fairway_start"] * 0.6, hole.length - 16, spac
     x, y = p + nrm * off
     if surf_at(x, y) in (hole_gen.ROUGH, hole_gen.DEEP) and free(x, y, 1.0):
         r = random.uniform(0.32, 0.42)
-        props.jack(col, f"Jack_{len(lanterns)}", (x, y, h_at(x, y)), r=r,
-                   rot_z=face_tee(x, y) + random.uniform(-0.35, 0.35))
+        pumpkin(x, y, r, face_tee(x, y) + random.uniform(-0.35, 0.35))
         lanterns.append([round(x, 2), round(y, 2), round(h_at(x, y) + r * 0.7, 2)])
         obstacles.append({"type": "sphere", "pos": [x, y, h_at(x, y) + r * 0.6], "r": r})
         taken.append((x, y, 1.0))
@@ -244,8 +254,7 @@ for k, pc in enumerate(spec.get("pumpkin_clusters", [])):
             continue
         carved = i < pc.get("carved", 2)
         r = random.uniform(0.3, 0.45) if carved else random.uniform(0.18, 0.32)
-        props.jack(col, f"Patch_{k}_{i}", (x, y, h_at(x, y)), r=r,
-                   rot_z=face_tee(x, y) + random.uniform(-0.5, 0.5), carved=carved)
+        pumpkin(x, y, r, face_tee(x, y) + random.uniform(-0.5, 0.5), carved)
         if carved:
             lanterns.append([round(x, 2), round(y, 2), round(h_at(x, y) + r * 0.7, 2)])
         obstacles.append({"type": "sphere", "pos": [x, y, h_at(x, y) + r * 0.6], "r": r})
@@ -771,18 +780,19 @@ for f in spec.get("features", []):
 
 for o in obstacles:
     o["pos"] = [round(float(v), 3) for v in o["pos"]]
-out_props = {"lanterns": lanterns, "obstacles": obstacles, "cards": cards, "instances": instances, "glows": glows}
+out_props = {"lanterns": lanterns, "obstacles": obstacles, "cards": cards, "instances": instances, "glows": glows,
+             "pumpkins": pumpkins}
 if moon_pos is not None:
     out_props["moon"] = [round(v, 1) for v in moon_pos]
 json.dump(out_props,
           open(os.path.join(OUT, "props.json"), "w"), indent=1)
 
 # ---------- small props merged by patch of ground --------------------------------------------
-# a graveyard's stones or a patch's pumpkins are dozens of little objects, each a draw call (or
+# a graveyard's stones and skeleton arms are dozens of little objects, each a draw call (or
 # three) for a phone every frame: joined into one mesh per MERGE_CELL square of ground they cost a
 # handful, and a patch far from the camera is still left out whole
 MERGE_CELL = 40.0
-MERGE_PREFIXES = ("Grave_", "Patch_", "Arm_")
+MERGE_PREFIXES = ("Grave_", "Arm_")
 groups = defaultdict(list)
 for ob in list(col.objects):
     if ob.type == "MESH" and ob.name.startswith(MERGE_PREFIXES):

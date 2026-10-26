@@ -54,6 +54,7 @@ func build(hole_dir: String, t: Terrain) -> void:
 	var scene: Node3D = load(dir.path_join("hole.glb")).instantiate()
 	add_child(scene)
 	_apply_materials(scene)
+	_pumpkins()
 	_cards()
 	_glow_props()
 	_horizon_rings()
@@ -481,6 +482,56 @@ func _apply_materials(root: Node) -> void:
 			if name in ["terrain", "skirt_vc"]:
 				mi.layers = TERRAIN_LAYER
 			mi.set_surface_override_material(i, by_name[name])
+
+
+# ---------------------------------------------------------------- pumpkins
+## The lanterns along the fairway and the pumpkin patches: one carved and one plain pumpkin, stored once
+## (tools/export_pumpkins.py), drawn at every place the hole's props.json lists (tools/build_hole.py).
+## Copies are grouped by PUMPKIN_CELL square of ground, so a group far from the camera is left out
+## whole, as the small props are.
+const PUMPKINS := "res://assets/props/pumpkins.glb"
+const PUMPKIN_CELL := 40.0
+
+
+func _pumpkins() -> void:
+	var list: Array = props.get("pumpkins", [])
+	if list.is_empty():
+		return
+	var src: Node = load(PUMPKINS).instantiate()
+	var shell := _pumpkin_material()
+	var face := _lamp_material(LAMP_FACE)
+	var meshes := {}                                       # carved (1/0) -> the pumpkin with the game's materials
+	for kind in [["PumpkinCarved", 1], ["PumpkinPlain", 0]]:
+		var mi := src.find_child(kind[0], true, false) as MeshInstance3D
+		var mesh := mi.mesh.duplicate() as ArrayMesh
+		for i in mesh.get_surface_count():
+			var m := mesh.surface_get_material(i)
+			mesh.surface_set_material(i, face if m and m.resource_name == "glow" else shell)
+		meshes[kind[1]] = mesh
+	src.free()
+	var groups := {}
+	for p in list:
+		var key := "%d|%d|%d" % [int(p[5]), floorf(p[0] / PUMPKIN_CELL), floorf(p[1] / PUMPKIN_CELL)]
+		if not groups.has(key):
+			groups[key] = []
+		groups[key].append(p)
+	for key in groups:
+		var g: Array = groups[key]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = meshes[int(g[0][5])]
+		mm.instance_count = g.size()
+		for i in g.size():
+			var p: Array = g[i]
+			var basis := Basis(Vector3.UP, float(p[4])).scaled(Vector3.ONE * float(p[3]))
+			mm.set_instance_transform(i, Transform3D(basis, Terrain.to_world(Vector3(p[0], p[1], p[2]))))
+			mm.set_instance_color(i, Color(p[6], p[6], p[6]))      # each a shade lighter or darker
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		mmi.visibility_range_end = SMALL_PROP_RANGE + PUMPKIN_CELL * 0.7
+		add_child(mmi)
 
 
 # ---------------------------------------------------------------- painted cards
