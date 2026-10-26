@@ -1,6 +1,5 @@
 """Draw each hole as it is now (from courses/holes/*.json) and as proposed, as course maps in one style,
-beside its concept (a planning aid: the proposals here are not built yet).
-usage: python3 -I golf/tools/plan_holes.py golf golf/docs/img"""
+beside its concept. usage: python3 -I plan_holes.py <golf dir> <out dir>"""
 import json
 import math
 import os
@@ -9,7 +8,7 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
-GOLF, OUT = sys.argv[1], sys.argv[2]
+GOLF, OUT = (sys.argv[1], sys.argv[2]) if len(sys.argv) > 2 else (None, None)
 YD = 1.0936
 SS = 2                      # supersampling
 PX = 470                    # map size
@@ -274,15 +273,6 @@ FILES = {1: "h01_pumpkin_patch.json", 2: "h02_witchs_hollow.json", 3: "h03_forgo
          4: "h04_spiderwood.json", 5: "h05_haunted_harvest.json", 6: "h06_ghostlight_marsh.json",
          7: "h07_vampires_garden.json", 8: "h08_headless_trail.json", 9: "h09_midnight_homecoming.json"}
 
-A = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_2_4_6_9_Concepts_v1.png")).convert("RGB")
-B = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_1_3_5_7_Concepts_v1.png")).convert("RGB")
-H8 = Image.open(os.path.join(GOLF, "art_src/concepts/hole_8.png")).convert("RGB")
-TL, TR, BL, BR = (22, 62, 620, 596), (636, 62, 1234, 596), (22, 612, 620, 1166), (636, 612, 1234, 1166)
-CONCEPT = {1: B.crop(TL), 3: B.crop(TR), 5: B.crop(BL), 7: B.crop(BR), 2: A.crop(TL), 4: A.crop(TR), 6: A.crop(BL),
-           9: A.crop(BR), 8: H8.crop((20, 20, 1234, 1165))}
-
-os.makedirs(OUT, exist_ok=True)
-rows = {}
 def scaled(p):
     k = p.get("scale", 1.0)
     if k == 1.0:
@@ -302,43 +292,59 @@ def scaled(p):
     return q
 
 
-for i in range(1, 10):
-    now = current(FILES[i])
-    p = scaled(PROPOSED[i])
-    prop = dict(p)
-    prop.setdefault("safe", p["path"])
-    img_now = draw(now, "now%d" % i)
-    img_new = draw(prop, "new%d" % i)
-    gap, head, foot = 14, 46, 64
-    row = Image.new("RGB", (3 * PX + 4 * gap, PX + head + foot), (23, 13, 36))
-    d = ImageDraw.Draw(row)
-    con = CONCEPT[i].resize((PX, int(PX * CONCEPT[i].height / CONCEPT[i].width))).crop((0, 0, PX, PX))
-    row.paste(con, (gap, head))
-    row.paste(img_now, (2 * gap + PX, head))
-    row.paste(img_new, (3 * gap + 2 * PX, head))
-    nl, pl = length(now["path"]) * YD, length(p["path"]) * YD
-    d.text((gap, 10), "%d  %s" % (i, NAMES[i]), fill=(255, 196, 120), font=font(26))
-    d.text((gap, head + PX + 6), "concept", fill=(205, 195, 225), font=font(17))
-    d.text((2 * gap + PX, head + PX + 6), "now: par %d, %d yd" % (now["par"], nl), fill=(205, 195, 225), font=font(17))
-    d.text((3 * gap + 2 * PX, head + PX + 6), "proposed: par %d, %d yd, bends %s" % (p["par"], pl, p["turn"]),
-           fill=(255, 230, 160), font=font(17))
-    words, line, y = p["note"].split(), "", head + PX + 30
-    for w in words:
-        if d.textlength(line + " " + w, font=font(15)) > 3 * PX:
-            d.text((gap, y), line, fill=(225, 215, 240), font=font(15))
-            line, y = w, y + 18
-        else:
-            line = (line + " " + w).strip()
-    d.text((gap, y), line, fill=(225, 215, 240), font=font(15))
-    rows[i] = row
-for n, group in enumerate([(1, 2, 3), (4, 5, 6), (7, 8, 9)]):
-    h = sum(rows[i].height for i in group)
-    sheet = Image.new("RGB", (rows[1].width, h + 40), (23, 13, 36))
-    ImageDraw.Draw(sheet).text((14, 8), "Concept  |  as built now  |  proposed      (white dashes: safe line, yellow dots: risky line)",
-                               fill=(255, 214, 160), font=font(20))
-    y = 40
-    for i in group:
-        sheet.paste(rows[i], (0, y))
-        y += rows[i].height
-    sheet.save(os.path.join(OUT, "plan_holes_%d-%d.png" % (group[0], group[-1])))
-print("ok")
+
+def main():
+    global CONCEPT
+    A = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_2_4_6_9_Concepts_v1.png")).convert("RGB")
+    B = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_1_3_5_7_Concepts_v1.png")).convert("RGB")
+    H8 = Image.open(os.path.join(GOLF, "art_src/concepts/hole_8.png")).convert("RGB")
+    TL, TR, BL, BR = (22, 62, 620, 596), (636, 62, 1234, 596), (22, 612, 620, 1166), (636, 612, 1234, 1166)
+    CONCEPT = {1: B.crop(TL), 3: B.crop(TR), 5: B.crop(BL), 7: B.crop(BR), 2: A.crop(TL), 4: A.crop(TR), 6: A.crop(BL),
+               9: A.crop(BR), 8: H8.crop((20, 20, 1234, 1165))}
+
+    os.makedirs(OUT, exist_ok=True)
+    rows = {}
+    for i in range(1, 10):
+        now = current(FILES[i])
+        p = scaled(PROPOSED[i])
+        prop = dict(p)
+        prop.setdefault("safe", p["path"])
+        img_now = draw(now, "now%d" % i)
+        img_new = draw(prop, "new%d" % i)
+        gap, head, foot = 14, 46, 64
+        row = Image.new("RGB", (3 * PX + 4 * gap, PX + head + foot), (23, 13, 36))
+        d = ImageDraw.Draw(row)
+        con = CONCEPT[i].resize((PX, int(PX * CONCEPT[i].height / CONCEPT[i].width))).crop((0, 0, PX, PX))
+        row.paste(con, (gap, head))
+        row.paste(img_now, (2 * gap + PX, head))
+        row.paste(img_new, (3 * gap + 2 * PX, head))
+        nl, pl = length(now["path"]) * YD, length(p["path"]) * YD
+        d.text((gap, 10), "%d  %s" % (i, NAMES[i]), fill=(255, 196, 120), font=font(26))
+        d.text((gap, head + PX + 6), "concept", fill=(205, 195, 225), font=font(17))
+        d.text((2 * gap + PX, head + PX + 6), "now: par %d, %d yd" % (now["par"], nl), fill=(205, 195, 225), font=font(17))
+        d.text((3 * gap + 2 * PX, head + PX + 6), "proposed: par %d, %d yd, bends %s" % (p["par"], pl, p["turn"]),
+               fill=(255, 230, 160), font=font(17))
+        words, line, y = p["note"].split(), "", head + PX + 30
+        for w in words:
+            if d.textlength(line + " " + w, font=font(15)) > 3 * PX:
+                d.text((gap, y), line, fill=(225, 215, 240), font=font(15))
+                line, y = w, y + 18
+            else:
+                line = (line + " " + w).strip()
+        d.text((gap, y), line, fill=(225, 215, 240), font=font(15))
+        rows[i] = row
+    for n, group in enumerate([(1, 2, 3), (4, 5, 6), (7, 8, 9)]):
+        h = sum(rows[i].height for i in group)
+        sheet = Image.new("RGB", (rows[1].width, h + 40), (23, 13, 36))
+        ImageDraw.Draw(sheet).text((14, 8), "Concept  |  as built now  |  proposed      (white dashes: safe line, yellow dots: risky line)",
+                                   fill=(255, 214, 160), font=font(20))
+        y = 40
+        for i in group:
+            sheet.paste(rows[i], (0, y))
+            y += rows[i].height
+        sheet.save(os.path.join(OUT, "plan_holes_%d-%d.png" % (group[0], group[-1])))
+    print("ok")
+
+
+if __name__ == "__main__":
+    main()
