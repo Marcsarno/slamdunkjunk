@@ -5,9 +5,13 @@ uniform vec3 front_dir;
 uniform float front_d = 1.0e6;
 uniform float ramp = 10.0;
 varying vec3 v_world;
+varying vec3 v_local;      // the model's own position and normal (a pattern drawn on the glass: leaded.gdshaderinc)
+varying vec3 v_local_n;
 
 void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_local = VERTEX;
+	v_local_n = NORMAL;
 }
 
 float lamp_on(vec3 w, float t) {

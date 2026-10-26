@@ -44,6 +44,9 @@ class Parts:
         self.glay = props.vcol_layer(self.glow)
         self.stain = bmesh.new()
         self.slay = props.vcol_layer(self.stain)
+        self.lead = bmesh.new()
+        self.llay = props.vcol_layer(self.lead)
+        self.leaded = False                       # lit pointed windows go in the leaded mesh
 
     def _paint(self, bm, lay, faces, color, jitter=0.06, kind=None):
         a = 1.0
@@ -101,7 +104,8 @@ class Parts:
         body = props.material("LandmarkSurface" if self.surfaces else "LandmarkBody", 0.85)
         for bm, mat, suffix in ((self.body, body, ""),
                                 (self.glow, props.material("LandmarkGlow", 0.6, emit=GLOW, strength=3.0), "_Glow"),
-                                (self.stain, props.material("LandmarkStained", 0.6, emit=STAINED, strength=2.5), "_Stained")):
+                                (self.stain, props.material("LandmarkStained", 0.6, emit=STAINED, strength=2.5), "_Stained"),
+                                (self.lead, props.material("LandmarkLeaded", 0.6, emit=GLOW, strength=3.0), "_Leaded")):
             if not bm.faces:
                 bm.free()
                 continue
@@ -290,6 +294,7 @@ def hedge(col, name, points, height_at, height=2.4, width=1.3):
 
 
 CHAPEL_STONE = (0.58, 0.57, 0.68)   # lavender-grey stone in the moonlight (concept: the Forgotten Chapel)
+WARM_STONE = (0.8, 0.6, 0.46)        # the stone round a lit window or the open door, in its light
 QUOIN = (0.42, 0.41, 0.5)
 CHAPEL_ROOF = (0.44, 0.26, 0.62)     # purple slate
 SLATE_LINE = (0.24, 0.13, 0.34)
@@ -318,7 +323,10 @@ def _arch(p, x, y, z, w, h, facing, frame=QUOIN, glow=True, tracery=False):
         if tracery:
             p.box((xx + sx * 0.04, y, z + (h + tip * 0.7) / 2), (0.06, 0.09, h + tip * 0.7), frame)
             p.box((xx + sx * 0.04, y, z + h * 0.62), (0.06, w, 0.09), frame)
-    if glow:
+    if glow and p.leaded:
+        f = p.lead.faces.new([p.lead.verts.new(c) for c in pts])
+        p._paint(p.lead, p.llay, [f], GLOW, 0.0)
+    elif glow:
         p.quad(pts, GLOW, glow=True)
     else:
         p.quad(pts, (0.04, 0.03, 0.05))
@@ -352,6 +360,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     window over the pointed door (ajar, candlelit), tall lit lancet windows, a broken wall and stones
     at its foot. ~8 m wide, 15 m long, 24 m to the cross; the front faces -y."""
     p = Parts(seed=303, surfaces=True)
+    p.leaded = True
     W, L, H = 8.0, 13.0, 5.6
     hw = W / 2
     y0, y1 = -L / 2, L / 2
@@ -391,7 +400,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     # tall lit lancets down each side, between the buttresses
     for yy in (-4.2, 0.2, 4.6):
         for sx in (-1, 1):
-            _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-", tracery=True)
+            _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-", frame=WARM_STONE, tracery=True)
     # the tower on the front: square, a belfry with open arches, a bell, a slate spire and a cross
     # the tower rises just past the nave's ridge, so its belfry and spire stand clear above the roof
     T, ty = 4.0, y0 - 1.6
@@ -445,9 +454,13 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     p.box((0, ty, sz + 7.5), (0.9, 0.14, 0.14), IRON)
     # the front: a pointed door ajar in candlelight, the rose window above it
     fy = ty - T / 2
-    p.box((0, fy - 0.05, 1.7), (2.0, 0.12, 2.5), QUOIN)                              # door surround
-    _arch(p, 0, fy - 0.08, 0.5, 1.5, 1.7, -1)                                        # the open doorway's light
+    p.box((0, fy - 0.05, 1.7), (2.0, 0.12, 2.5), WARM_STONE)                         # door surround, in its light
+    p.leaded = False
+    _arch(p, 0, fy - 0.08, 0.5, 1.5, 1.7, -1, frame=WARM_STONE)                      # the open doorway's light
+    p.leaded = True
     p.box((-0.55, fy - 0.35, 1.55), (0.12, 0.7, 2.1), OAK)                           # the door, swung half open
+    for z in (0.95, 2.05):                                                           # its iron strap hinges
+        p.box((-0.63, fy - 0.4, z), (0.04, 0.55, 0.09), IRON)
     rz = 4.5
     bm = p.stain
     ret = bmesh.ops.create_circle(bm, cap_ends=True, segments=16, radius=0.95)
@@ -461,8 +474,11 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
         bmesh.ops.rotate(p.body, cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(ang, 3, "Y"), verts=ret["verts"])
         bmesh.ops.translate(p.body, vec=Vector((0, fy - 0.2, rz)), verts=ret["verts"])
         p._paint(p.body, p.lay, list({f for v in ret["verts"] for f in v.link_faces}), (0.12, 0.05, 0.1), 0.0)
+    for k in range(12):                                                              # and an inner ring of it
+        a = k * math.pi / 6
+        p.box((0.5 * math.cos(a), fy - 0.21, rz + 0.5 * math.sin(a)), (0.2, 0.04, 0.07), (0.12, 0.05, 0.1))
     for sx in (-1, 1):
-        _arch(p, sx * (hw - 1.1), y0, 1.6, 0.7, 1.9, -1)
+        _arch(p, sx * (hw - 1.1), y0, 1.6, 0.7, 1.9, -1, frame=WARM_STONE)
     # red ivy: clumps grown up the tower's left corner, over the door, and up the nave's corners
     ivy = (LEAVES, (0.66, 0.24, 0.07), (0.45, 0.1, 0.07))
     for k in range(26):
@@ -519,6 +535,8 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
 HOUSE_SIDING = (0.86, 0.8, 0.67)     # warm cream clapboard (concept: the Homecoming House)
 CLAP_LINE = (0.62, 0.57, 0.5)
 POT = (0.5, 0.24, 0.13)
+CURTAIN = (0.5, 0.14, 0.1)
+PORCH_LIT = (0.92, 0.78, 0.58)       # the porch deck and ceiling, warm under the string of lights
 HOUSE_ROOF = (0.4, 0.27, 0.54)         # dusky plum shingles
 SHUTTER = (0.1, 0.22, 0.2)
 RED_DOOR = (0.55, 0.07, 0.06)
@@ -599,7 +617,7 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     # the porch across the front: deck, steps, posts, rails, a shed roof, lights
     PD = 2.6
     py = -hd - PD / 2
-    p.box((0, py, base - 0.1), (W + 0.4, PD, 0.2), TRIM)
+    p.box((0, py, base - 0.1), (W + 0.4, PD, 0.2), PORCH_LIT)                          # the deck, in the lights
     for k, (h, dy) in enumerate(((0.45, 0.55), (0.22, 1.05))):
         p.box((0, -hd - PD - dy + 0.3, h / 2), (2.4, 0.5, h), TRIM)
     for x in (-hw - 0.05, -hw / 2 - 0.3, -1.4, 1.4, hw / 2 + 0.3, hw + 0.05):
@@ -614,6 +632,13 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     _prism_x(p, [(-hd - PD - 0.4, eave), (-hd + 0.02, top - 0.6), (-hd + 0.02, top - 0.4), (-hd - PD - 0.4, eave + 0.2)],
              -hw - 0.4, hw + 0.4, HOUSE_ROOF, HOUSE_ROOF)
     p.box((0, -hd - PD + 0.15, eave - 0.12), (W + 0.6, 0.22, 0.25), TRIM)             # the porch beam
+    p.box((0, py + 0.1, eave - 0.03), (W + 0.2, PD - 0.2, 0.05), PORCH_LIT)           # its lit ceiling
+    for x in (-hw - 0.05, -hw / 2 - 0.3, -1.4, 1.4, hw / 2 + 0.3, hw + 0.05):       # brackets at the post tops
+        for sx in (-1, 1):
+            if abs(x + sx * 0.4) > hw + 0.3:
+                continue
+            p.prism([(x, eave - 0.6), (x, eave - 0.25), (x + sx * 0.45, eave - 0.25)][:: sx],
+                    -hd - PD + 0.1, -hd - PD + 0.2, TRIM)
     for i in range(23):                                                              # the string of lights
         x = -hw + i * W / 22
         sag = 0.12 * math.sin(math.pi * ((i * 2) % 22) / 22)
@@ -623,18 +648,23 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     for k in range(8):                                                               # the wreath: a ring of leaves
         a = k * math.pi / 4
         p.box((0.27 * math.cos(a), -hd - 0.17, base + 1.6 + 0.27 * math.sin(a)), (0.2, 0.08, 0.2), LEAVES, jitter=0.2)
-    p.box((0.95, -hd - 0.15, base + 2.35), (0.22, 0.22, 0.32), GLOW, glow=True)       # porch lamp
+    p.box((0.95, -hd - 0.15, base + 2.35), (0.22, 0.22, 0.32), GLOW, glow=True)       # porch lamp,
+    for dx in (-0.13, 0.13):                                                         # its black housing
+        for dy in (-0.13, 0.13):
+            p.box((0.95 + dx, -hd - 0.15 + dy, base + 2.35), (0.04, 0.04, 0.38), BLACK)
+    p.box((0.95, -hd - 0.15, base + 2.58), (0.36, 0.36, 0.08), BLACK)
+    p.box((0.95, -hd - 0.15, base + 2.68), (0.16, 0.16, 0.12), BLACK)
+    p.box((0.95, -hd - 0.08, base + 2.75), (0.05, 0.2, 0.05), BLACK)
     for x in (-3.4, 3.4):
         _shuttered(p, x, -hd, base + 0.7, 1.6, 1.7, -1)
+        for sx in (-1, 1):                                                           # curtains drawn back
+            p.box((x + sx * 0.66, -hd - 0.075, base + 0.7 + 0.85), (0.26, 0.02, 1.7), CURTAIN)
     # the sides: a window on each floor, in the gable
     for sx in (-1, 1):
         _shuttered(p, sx * hw, 0, base + 0.8, 1.0, 1.5, "x+" if sx > 0 else "x-")
         _shuttered(p, sx * (hw + 0.37), 0, top + 0.7, 0.9, 1.3, "x+" if sx > 0 else "x-")
     # jack-o'-lanterns on the steps and the porch, a rocking chair, hanging baskets of autumn flowers
-    for x, y in ((-1.5, -hd - PD - 0.5), (1.5, -hd - PD - 0.5)):
-        p.cylinder((x, y, 0.0), 0.36, 0.55, PUMPKIN, segments=8)
-        p.box((x, y - 0.33, 0.3), (0.32, 0.06, 0.18), GLOW, glow=True)              # the carved face
-        p.box((x, y, 0.62), (0.08, 0.08, 0.14), (0.25, 0.35, 0.1))
+    jacks = [(-1.5, -hd - PD - 0.5, 0.36), (1.55, -hd - PD - 0.45, 0.3)]          # carved, by the steps (below)
     for x in (-2.3, 2.3):                                                             # pots of orange mums by the steps
         p.cylinder((x, -hd - PD - 0.35, 0.0), 0.28, 0.4, POT, segments=8)
         p.box((x, -hd - PD - 0.35, 0.55), (0.6, 0.6, 0.35), (0.85, 0.42, 0.08), jitter=0.2)
@@ -643,12 +673,17 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     for x in (-hw + 0.4, hw - 0.4):
         p.box((x, -hd - PD + 0.5, eave - 0.8), (0.55, 0.55, 0.45), LEAVES, jitter=0.2)
     obs = p.finish(col, name, pos, rot_z, scale)
+    # the course's own carved jack-o'-lanterns (props.jack), turned to look out from the porch
+    c, sn = math.cos(rot_z), math.sin(rot_z)
+    for k, (x, y, r) in enumerate(jacks):
+        wx, wy = pos[0] + (x * c - y * sn) * scale, pos[1] + (x * sn + y * c) * scale
+        props.jack(col, f"{name}_Jack{k}", (wx, wy, pos[2]), r=r * scale, rot_z=rot_z)
     return obs, [(hw + 0.6) * scale, (hd + PD + 1.2) * scale]
 
 
 KIND_OF = {
     CHAPEL_STONE: "stone", QUOIN: "stone", CHAPEL_ROOF: "slate", SLATE_LINE: "slate", OAK: "wood",
     HOUSE_SIDING: "clap", CLAP_LINE: "clap", HOUSE_ROOF: "slate", BRICK: "brick", RED_DOOR: "wood",
-    SHUTTER: "wood", POT: "brick", LEAVES: "leaf", (0.66, 0.24, 0.07): "leaf", (0.45, 0.1, 0.07): "leaf",
+    SHUTTER: "wood", POT: "brick", WARM_STONE: "stone", PORCH_LIT: "wood", LEAVES: "leaf", (0.66, 0.24, 0.07): "leaf", (0.45, 0.1, 0.07): "leaf",
     (0.85, 0.42, 0.08): "leaf",
 }

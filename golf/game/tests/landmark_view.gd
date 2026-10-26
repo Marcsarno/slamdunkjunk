@@ -59,6 +59,7 @@ func _initialize() -> void:
 		"LandmarkBody": _surface(),
 		"LandmarkGlow": _unshaded(Color(1.0, 0.72, 0.32)),
 		"LandmarkStained": _unshaded(Color(0.95, 0.2, 0.34)),
+		"LandmarkLeaded": _leaded(),
 	}
 	for node in scene.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
@@ -105,6 +106,14 @@ func _surface() -> ShaderMaterial:
 	m.shader = load("res://shaders/landmark.gdshader")
 	m.set_shader_parameter("tex_stone", load("res://assets/textures/stone.png"))
 	m.set_shader_parameter("tex_wood", load("res://assets/textures/wood.png"))
+	return m
+
+
+func _leaded() -> ShaderMaterial:
+	var sh := Shader.new()
+	sh.code = load("res://scripts/hole_view.gd").LAMP_LEADED % "disabled"
+	var m := ShaderMaterial.new()
+	m.shader = sh
 	return m
 
 

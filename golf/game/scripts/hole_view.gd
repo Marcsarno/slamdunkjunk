@@ -316,6 +316,16 @@ void fragment() {
 	ALBEDO = mix(vec3(0.04, 0.02, 0.03), vec3(0.95, 0.2, 0.34), lamp_on(v_world, TIME));
 }
 """
+## A chapel's leaded lancets: warm glass in a diamond lattice of lead, in the model's own metres.
+const LAMP_LEADED := """
+shader_type spatial;
+render_mode unshaded, cull_%s;
+#include "res://shaders/lamp_front.gdshaderinc"
+#include "res://shaders/leaded.gdshaderinc"
+void fragment() {
+	ALBEDO = mix(vec3(0.05, 0.03, 0.02), vec3(1.0, 0.78, 0.35) * leaded(v_local, v_local_n), lamp_on(v_world, TIME));
+}
+"""
 const LAMP_SHELL := """
 shader_type spatial;
 render_mode cull_%s;
@@ -450,6 +460,7 @@ func _apply_materials(root: Node) -> void:
 		"LandmarkGlow": _lamp_material(LAMP_FACE, true),
 		"LandmarkSurface": _landmark_material(),
 		"LandmarkStained": _lamp_material(LAMP_STAINED, true),
+		"LandmarkLeaded": _lamp_material(LAMP_LEADED, true),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
