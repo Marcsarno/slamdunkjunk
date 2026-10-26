@@ -278,13 +278,15 @@ def hedge(col, name, points, height_at, height=2.4, width=1.3):
 
 CHAPEL_STONE = (0.44, 0.43, 0.52)   # lavender-grey stone in the moonlight (concept: the Forgotten Chapel)
 QUOIN = (0.3, 0.3, 0.37)
-CHAPEL_ROOF = (0.33, 0.22, 0.46)    # purple slate
+CHAPEL_ROOF = (0.36, 0.2, 0.52)     # purple slate
+SLATE_LINE = (0.24, 0.13, 0.34)
 OAK = (0.36, 0.21, 0.1)
 LEAVES = (0.55, 0.16, 0.06)
 
 
-def _arch(p, x, y, z, w, h, facing, frame=QUOIN, glow=True):
-    """A pointed-arch opening on a wall: a lit pane (or a dark recess, glow=False) with a stone frame.
+def _arch(p, x, y, z, w, h, facing, frame=QUOIN, glow=True, tracery=False):
+    """A pointed-arch opening on a wall: a lit pane (or a dark recess, glow=False) with a stone frame,
+    and with tracery=True a stone mullion and transom across the glass.
     facing -1 / +1: on a wall at y (front / back); 'x-' / 'x+': on a side wall at x."""
     tip = w * 0.75
     d = 0.06
@@ -292,15 +294,36 @@ def _arch(p, x, y, z, w, h, facing, frame=QUOIN, glow=True):
         yy = y + facing * d
         pts = [(x - w / 2, yy, z), (x + w / 2, yy, z), (x + w / 2, yy, z + h), (x, yy, z + h + tip), (x - w / 2, yy, z + h)]
         p.box((x, y, z + (h + tip) / 2), (w + 0.4, 0.1, h + tip + 0.3), frame)
+        if tracery:
+            p.box((x, yy + facing * 0.04, z + (h + tip * 0.7) / 2), (0.09, 0.06, h + tip * 0.7), frame)
+            p.box((x, yy + facing * 0.04, z + h * 0.62), (w, 0.06, 0.09), frame)
     else:
         sx = 1 if facing == "x+" else -1
         xx = x + sx * d
         pts = [(xx, y - w / 2, z), (xx, y + w / 2, z), (xx, y + w / 2, z + h), (xx, y, z + h + tip), (xx, y - w / 2, z + h)]
         p.box((x, y, z + (h + tip) / 2), (0.1, w + 0.4, h + tip + 0.3), frame)
+        if tracery:
+            p.box((xx + sx * 0.04, y, z + (h + tip * 0.7) / 2), (0.06, 0.09, h + tip * 0.7), frame)
+            p.box((xx + sx * 0.04, y, z + h * 0.62), (0.06, w, 0.09), frame)
     if glow:
         p.quad(pts, GLOW, glow=True)
     else:
         p.quad(pts, (0.04, 0.03, 0.05))
+
+
+def _slope_strip(p, eave, ridge, ya, yb, u, du, color, lift=0.03):
+    """A strip across a roof slope from eave (x, z) toward ridge (x, z), from u to u + du of the way up,
+    standing `lift` off it (a course of slates, a missing patch)."""
+    (xe, ze), (xr, zr) = eave, ridge
+    nx, nz = (zr - ze), -(xr - xe)                       # outward normal of the slope (in x, z)
+    ln = (nx * nx + nz * nz) ** 0.5
+    if nz < 0:
+        nx, nz = -nx, -nz
+    nx, nz = nx / ln * lift, nz / ln * lift
+    a = (xe + (xr - xe) * u + nx, ze + (zr - ze) * u + nz)
+    b = (xe + (xr - xe) * (u + du) + nx, ze + (zr - ze) * (u + du) + nz)
+    corners = [(a[0], ya, a[1]), (a[0], yb, a[1]), (b[0], yb, b[1]), (b[0], ya, b[1])]
+    p.quad(corners if xe > xr else corners[::-1], color)
 
 
 def _gable_y(p, x0, x1, y0, y1, z, rise, color, caps_color=None):
@@ -331,6 +354,22 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
         n = 0.03 * sx
         p.quad([(xa + n, yy - 0.5, za + 0.03), (xa + n, yy + 0.5, za + 0.03), (xb + n, yy + 0.5, zb + 0.03),
                 (xb + n, yy - 0.5, zb + 0.03)][:: sx], (0.05, 0.03, 0.06))
+    for sx in (-1, 1):
+        eave, ridge = (sx * (hw + 0.5), top - 0.1), (0.0, top - 0.1 + 5.2)
+        for u in (0.1, 0.27, 0.44, 0.61, 0.78):
+            _slope_strip(p, eave, ridge, y0 - 0.25, y1 + 0.35, u, 0.035, SLATE_LINE, 0.02)
+    p.box((0, y1 + 0.2, top + 5.4), (0.1, 0.1, 0.9), IRON)                              # the back gable's cross
+    p.box((0, y1 + 0.2, top + 5.6), (0.5, 0.1, 0.1), IRON)
+    # stone blocks standing a little proud on the walls, lighter and darker, round the windows
+    for sx in (-1, 1):
+        for k in range(16):
+            yy = p.rng.uniform(y0 + 0.6, y1 - 0.6)
+            zz = p.rng.uniform(0.8, top - 0.5)
+            if min(abs(yy - c) for c in (-4.2, 0.2, 4.6)) < 1.0 and 1.2 < zz < 4.6:
+                continue
+            shade = p.rng.choice((0.85, 1.12))
+            p.box((sx * (hw + 0.02), yy, zz), (0.06, p.rng.uniform(0.6, 1.1), 0.36),
+                  tuple(c * shade for c in CHAPEL_STONE))
     # buttresses: darker stone piers between the windows and at the corners
     for yy in (y0 + 0.3, -2.0, 2.4, y1 - 0.3):
         for sx in (-1, 1):
@@ -338,7 +377,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     # tall lit lancets down each side, between the buttresses
     for yy in (-4.2, 0.2, 4.6):
         for sx in (-1, 1):
-            _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-")
+            _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-", tracery=True)
     # the tower on the front: square, a belfry with open arches, a bell, a slate spire and a cross
     T, ty, th = 4.0, y0 - 1.6, 11.0
     p.box((0, ty, 0.25), (T + 0.6, T + 0.6, 0.5), QUOIN)
@@ -353,9 +392,21 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
             p.box((sx * (T / 2 - 0.45), ty + sy * (T / 2 - 0.45), bz + 1.75), (0.9, 0.9, 3.2), CHAPEL_STONE)
     p.box((0, ty, bz + 3.5), (T + 0.2, T + 0.2, 0.5), CHAPEL_STONE)                 # the belfry's lintel
     p.box((0, ty, bz + 3.82), (T + 0.5, T + 0.5, 0.18), QUOIN)
-    p.cylinder((0, ty, bz + 1.0), 0.75, 1.3, IRON, segments=8)                       # the bell
-    p.cone((0, ty, bz + 2.3), 0.5, 0.5, IRON, segments=8)
-    p.box((0, ty, bz + 3.0), (0.12, 0.12, 0.9), IRON)
+    zt = bz + 3.25                                                                  # the openings' heads
+    o = T / 2 - 0.9
+    for side in (-1, 1):                                                             # front and back faces
+        for sx in (-1, 1):
+            p.prism([(sx * o, zt - 1.2), (sx * o, zt), (0.0, zt)][:: -sx], ty + side * (T / 2) - 0.25,
+                    ty + side * (T / 2) + 0.25, CHAPEL_STONE)
+    for side in (-1, 1):                                                             # the two sides
+        for sy in (-1, 1):
+            _prism_x(p, [(ty + sy * o, zt - 1.2), (ty + sy * o, zt), (ty, zt)][:: sy], side * (T / 2) - 0.25,
+                     side * (T / 2) + 0.25, CHAPEL_STONE)
+    p.box((0, ty, bz + 0.45), (T - 1.6, T - 1.6, 0.3), QUOIN)                          # the belfry floor
+    p.cylinder((0, ty, bz + 1.3), 0.58, 1.05, IRON, segments=8)                      # the bell
+    p.cone((0, ty, bz + 2.35), 0.4, 0.4, IRON, segments=8)
+    p.box((0, ty, bz + 2.85), (0.1, 0.1, 0.5), IRON)
+    p.box((0, ty, bz + 3.05), (T - 1.4, 0.16, 0.16), OAK)                             # the beam it hangs from
     sz = bz + 3.9
     q = math.pi / 4
     p.cone((0, ty, sz - 0.1), (T + 1.0) / math.sqrt(2), 1.3, CHAPEL_ROOF, segments=4, turn=q)  # the flared skirt
@@ -382,12 +433,27 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
         p._paint(p.body, p.lay, list({f for v in ret["verts"] for f in v.link_faces}), (0.12, 0.05, 0.1), 0.0)
     for sx in (-1, 1):
         _arch(p, sx * (hw - 1.1), y0, 1.6, 0.7, 1.9, -1)
-    # red ivy up the tower's left corner and round the door
-    for k in range(14):
-        z = 0.6 + k * 0.62
-        p.box((-T / 2 - 0.05 + 0.25 * math.sin(k * 1.7), fy - 0.12, z), (0.9 - 0.03 * k, 0.12, 0.7), LEAVES, jitter=0.25)
-    for k in range(6):
-        p.box((-1.2 + 0.1 * k, fy - 0.14, 2.6 + 0.25 * k), (0.5, 0.1, 0.45), LEAVES, jitter=0.25)
+    # red ivy: clumps grown up the tower's left corner, over the door, and up the nave's corners
+    ivy = (LEAVES, (0.66, 0.24, 0.07), (0.45, 0.1, 0.07))
+    for k in range(26):
+        z = 0.5 + (k / 26) ** 0.8 * 8.4
+        x = -T / 2 + 0.2 + p.rng.uniform(-0.45, 0.35) * (1.0 - z / 12)
+        sz = p.rng.uniform(0.35, 0.75) * (1.0 - z / 14)
+        p.box((x, fy - 0.12, z), (sz * 1.2, 0.12, sz), p.rng.choice(ivy), jitter=0.2)
+        if k % 3 == 0:                                                               # round the corner, onto the side
+            p.box((-T / 2 - 0.08, fy + 0.35 + p.rng.uniform(0, 0.6), z), (0.12, sz, sz), p.rng.choice(ivy), jitter=0.2)
+    for k in range(7):
+        p.box((-0.9 + 0.3 * k, fy - 0.15, 3.0 + 0.35 * math.sin(k * 0.9)), (0.4, 0.1, 0.35), p.rng.choice(ivy), jitter=0.2)
+    for sx, yy in ((1, y0 + 0.2), (-1, y1 - 0.2), (1, 2.4)):
+        for k in range(9):
+            z = 0.6 + k * 0.5
+            p.box((sx * (hw + 0.62), yy + p.rng.uniform(-0.4, 0.4), z), (0.1, p.rng.uniform(0.4, 0.8), 0.45),
+                  p.rng.choice(ivy), jitter=0.2)
+    # leaves drifted along the walls' feet
+    for sx in (-1, 1):
+        for k in range(10):
+            p.box((sx * (hw + 0.8 + p.rng.uniform(0, 0.6)), p.rng.uniform(y0, y1), 0.08),
+                  (p.rng.uniform(0.6, 1.1), p.rng.uniform(0.5, 0.9), 0.16), p.rng.choice(ivy), jitter=0.25)
     # low broken stone walls along both sides, with gaps
     for sx in (-1, 1):
         for ya, yb, h in ((y0 - 1.0, y0 + 3.5, 0.75), (y0 + 5.0, y0 + 8.6, 0.6), (y0 + 9.6, y1 + 0.6, 0.8)):
@@ -402,9 +468,16 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     for x, y, w, h in ((-5.6, y0 - 1.0, 2.6, 0.8), (-6.2, -1.5, 0.6, 0.6), (5.9, y0 + 0.5, 0.6, 0.9),
                        (6.0, 3.0, 0.6, 0.5), (3.2, y0 - 2.6, 1.8, 0.6), (-3.4, y0 - 2.8, 1.2, 0.5)):
         p.box((x, y, h / 2), (w if w > 1 else 0.6, w if w <= 1 else 0.6, h), QUOIN, jitter=0.12)
-    for x, y in ((-2.6, fy - 1.6), (2.4, fy - 1.9), (-5.0, 2.0), (5.2, -3.6)):
-        p.box((x, y, 0.55), (0.75, 0.22, 1.1), CHAPEL_STONE, jitter=0.1)                # headstones
-        p.box((x, y, 1.1), (0.75, 0.22, 0.3), CHAPEL_STONE)
+    for k, (x, y) in enumerate(((-2.6, fy - 1.6), (2.4, fy - 1.9), (-5.0, 2.0), (5.2, -3.6), (-5.4, 5.2))):
+        if k % 2 == 0:                                                               # a slab with a rounded top
+            p.box((x, y, 0.5), (0.75, 0.22, 1.0), CHAPEL_STONE, jitter=0.1)
+            p.box((x, y, 1.06), (0.58, 0.22, 0.13), CHAPEL_STONE)                       # its rounded shoulders
+            p.box((x, y, 1.15), (0.34, 0.22, 0.08), CHAPEL_STONE)
+            p.box((x, y - 0.13, 0.75), (0.07, 0.04, 0.5), QUOIN)                          # its carved cross
+            p.box((x, y - 0.13, 0.85), (0.32, 0.04, 0.07), QUOIN)
+        else:                                                                        # a stone cross
+            p.box((x, y, 0.65), (0.22, 0.22, 1.3), CHAPEL_STONE, jitter=0.1)
+            p.box((x, y, 1.0), (0.75, 0.22, 0.22), CHAPEL_STONE)
     for k in range(18):
         a = k * 2.4
         r = 4.6 + (k % 4) * 0.9
@@ -413,7 +486,9 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     return obs, [(hw + 1.0) * scale, (L / 2 + T + 0.5) * scale]
 
 
-HOUSE_SIDING = (0.8, 0.76, 0.68)     # cream clapboard (concept: the Homecoming House)
+HOUSE_SIDING = (0.86, 0.8, 0.67)     # warm cream clapboard (concept: the Homecoming House)
+CLAP_LINE = (0.62, 0.57, 0.5)
+POT = (0.5, 0.24, 0.13)
 HOUSE_ROOF = (0.3, 0.2, 0.4)         # dusky plum shingles
 SHUTTER = (0.1, 0.22, 0.2)
 RED_DOOR = (0.55, 0.07, 0.06)
@@ -423,15 +498,19 @@ BLACK = (0.04, 0.035, 0.05)
 
 
 def _shuttered(p, x, y, z, w, h, facing):
-    """A lit window with dark green shutters either side."""
+    """A lit window with white glazing bars and dark green shutters either side."""
     _window(p, x, y, z, w, h, facing)
     if facing in (-1, 1):
         for sx in (-1, 1):
             p.box((x + sx * (w / 2 + 0.32), y + facing * 0.06, z + h / 2), (0.42, 0.08, h + 0.1), SHUTTER)
+        p.box((x, y + facing * 0.1, z + h / 2), (0.06, 0.04, h), TRIM)
+        p.box((x, y + facing * 0.1, z + h * 0.52), (w, 0.04, 0.06), TRIM)
     else:
         sx = 1 if facing == "x+" else -1
         for sy in (-1, 1):
             p.box((x + sx * 0.06, y + sy * (w / 2 + 0.32), z + h / 2), (0.08, 0.42, h + 0.1), SHUTTER)
+        p.box((x + sx * 0.1, y, z + h / 2), (0.04, 0.06, h), TRIM)
+        p.box((x + sx * 0.1, y, z + h * 0.52), (0.04, w, 0.06), TRIM)
 
 
 def house(col, name, pos, rot_z=0.0, scale=1.0):
@@ -451,6 +530,21 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     _prism_x(p, [(-hd - 0.6, top - 0.15), (hd + 0.6, top - 0.15), (0, top + 4.6)], -hw - 0.35, hw + 0.35,
              HOUSE_ROOF, HOUSE_SIDING)
     _prism_x(p, [(-hd + 0.05, top), (hd - 0.05, top), (0, top + 4.35)], -hw + 0.02, hw - 0.02, HOUSE_SIDING)
+    # clapboard lines on all four walls
+    for k in range(1, 8):
+        z = base + k * H / 8
+        p.box((0, -hd - 0.025, z), (W, 0.03, 0.05), CLAP_LINE, jitter=0.0)
+        p.box((0, hd + 0.025, z), (W, 0.03, 0.05), CLAP_LINE, jitter=0.0)
+        for sx in (-1, 1):
+            p.box((sx * (hw + 0.025), 0, z), (0.03, D, 0.05), CLAP_LINE, jitter=0.0)
+    # white trim: rake boards up both gable ends, fascia along the eaves
+    for sx in (-1, 1):
+        x = sx * (hw + 0.37)
+        for ye in (-hd - 0.6, hd + 0.6):
+            _prism_x(p, [(ye, top - 0.15), (0.0, top + 4.6), (0.0, top + 4.25), (ye, top - 0.5)][:: 1 if ye < 0 else -1],
+                     x - 0.06, x + 0.06, TRIM)
+    for ye in (-hd - 0.62, hd + 0.62):
+        p.box((0, ye, top - 0.3), (W + 0.8, 0.1, 0.3), TRIM)
     # two dormers on the front slope
     for dx in (-2.6, 2.6):
         p.box((dx, -hd + 1.5, top + 1.25), (2.0, 2.0, 1.9), HOUSE_SIDING)
@@ -511,6 +605,9 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
         p.cylinder((x, y, 0.0), 0.36, 0.55, PUMPKIN, segments=8)
         p.box((x, y - 0.33, 0.3), (0.32, 0.06, 0.18), GLOW, glow=True)              # the carved face
         p.box((x, y, 0.62), (0.08, 0.08, 0.14), (0.25, 0.35, 0.1))
+    for x in (-2.3, 2.3):                                                             # pots of orange mums by the steps
+        p.cylinder((x, -hd - PD - 0.35, 0.0), 0.28, 0.4, POT, segments=8)
+        p.box((x, -hd - PD - 0.35, 0.55), (0.6, 0.6, 0.35), (0.85, 0.42, 0.08), jitter=0.2)
     p.box((3.6, -hd - 1.2, base + 0.45), (0.7, 0.7, 0.12), OAK)                         # rocking chair
     p.box((3.6, -hd - 0.9, base + 0.95), (0.7, 0.1, 1.0), OAK)
     for x in (-hw + 0.4, hw - 0.4):
