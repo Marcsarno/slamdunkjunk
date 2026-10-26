@@ -60,6 +60,9 @@ func _initialize() -> void:
 		"LandmarkGlow": _unshaded(Color(1.0, 0.72, 0.32)),
 		"LandmarkStained": _unshaded(Color(0.95, 0.2, 0.34)),
 		"LandmarkLeaded": _leaded(),
+		"pumpkin_vc": _lamp("LAMP_SHELL", false),
+		"glow": _lamp("LAMP_FACE", true),
+		"stone_vc": _textured("stone", 0.9, 2.1, 0.9),
 	}
 	for node in scene.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
@@ -110,10 +113,28 @@ func _surface() -> ShaderMaterial:
 
 
 func _leaded() -> ShaderMaterial:
+	return _lamp("LAMP_LEADED", true)
+
+
+## One of hole_view's lamp shaders (lit, as after the opening).
+func _lamp(code: String, two_sided: bool) -> ShaderMaterial:
 	var sh := Shader.new()
-	sh.code = load("res://scripts/hole_view.gd").LAMP_LEADED % "disabled"
+	sh.code = load("res://scripts/hole_view.gd").get_script_constant_map()[code] % ("disabled" if two_sided else "back")
 	var m := ShaderMaterial.new()
 	m.shader = sh
+	return m
+
+
+## As hole_view's _textured_vc: the vertex colour over a texture, mapped in world space.
+func _textured(tex_name: String, scale: float, boost: float, rough: float) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.albedo_color = Color(boost, boost, boost)
+	m.roughness = rough
+	m.albedo_texture = load("res://assets/textures/%s.png" % tex_name)
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * scale
 	return m
 
 
