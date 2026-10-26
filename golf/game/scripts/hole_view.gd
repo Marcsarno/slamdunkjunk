@@ -451,16 +451,18 @@ func _apply_materials(root: Node) -> void:
 		"skirt_vc": terrain_mat,
 		"glow": glow,
 		"water": water,
-		"stone_vc": _textured_vc("stone", 0.9, 2.1, 0.9),
-		"dirt_vc": _textured_vc("dirt", 0.8, 2.4, 1.0),
+		# the textured ones are made (and their texture loaded) only if this hole has something in them,
+		# so a texture one hole uses (the hedges') isn't downloaded for every hole
+		"stone_vc": _textured_vc.bind("stone", 0.9, 2.1, 0.9),
+		"dirt_vc": _textured_vc.bind("dirt", 0.8, 2.4, 1.0),
 		"pumpkin_vc": _pumpkin_material(),
 		"bone_vc": _textured_vc("", 1.0, 1.0, 0.7),
 		"iron_vc": _textured_vc("", 1.0, 1.0, 0.45),
-		"wood_vc": _textured_vc("wood", 0.7, 1.6, 0.85),
-		"LandmarkBody": _textured_vc("wood", 0.5, 2.0, 0.95),
-		"hedge_vc": _textured_vc("hedge", 0.45, 2.2, 0.95),
+		"wood_vc": _textured_vc.bind("wood", 0.7, 1.6, 0.85),
+		"LandmarkBody": _textured_vc.bind("wood", 0.5, 2.0, 0.95),
+		"hedge_vc": _textured_vc.bind("hedge", 0.45, 2.2, 0.95),
 		"LandmarkGlow": _lamp_material(LAMP_FACE, true),
-		"LandmarkSurface": _landmark_material(),
+		"LandmarkSurface": _landmark_material,
 		"LandmarkStained": _lamp_material(LAMP_STAINED, true),
 		"LandmarkLeaded": _lamp_material(LAMP_LEADED, true),
 	}
@@ -477,6 +479,8 @@ func _apply_materials(root: Node) -> void:
 			var name := src.resource_name if src else ""
 			if not by_name.has(name):
 				continue
+			if by_name[name] is Callable:
+				by_name[name] = by_name[name].call()
 			if name in ["terrain", "skirt_vc", "water"]:
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			if name in ["terrain", "skirt_vc"]:
