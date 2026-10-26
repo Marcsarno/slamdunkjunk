@@ -24,10 +24,19 @@ GLOW = (1.0, 0.68, 0.28)
 STAINED = (0.95, 0.18, 0.32)     # a chapel's rose window: red-violet glass lit from inside
 
 
-class Parts:
-    """One bmesh for the painted body and one for the glowing bits, built up part by part."""
+# Surface kinds for the patterned landmark material (game/shaders/landmark.gdshader): the vertex colour's
+# alpha says what a face is made of, and the shader draws it there (stone blocks, slates, clapboards,
+# brick, wood planks) over textures every hole already loads. No image of its own to download.
+SURFACE = {"stone": 0.9, "slate": 0.8, "clap": 0.7, "brick": 0.6, "wood": 0.5, "plain": 0.4}
 
-    def __init__(self, seed=1):
+
+class Parts:
+    """One bmesh for the painted body and one for the glowing bits, built up part by part. With
+    surfaces=True each face carries what it's made of (SURFACE, from the colour's kind in KIND_OF or a
+    part's own kind=) for the patterned material."""
+
+    def __init__(self, seed=1, surfaces=False):
+        self.surfaces = surfaces
         self.body = bmesh.new()
         self.glow = bmesh.new()
         self.rng = random.Random(seed)
@@ -36,20 +45,23 @@ class Parts:
         self.stain = bmesh.new()
         self.slay = props.vcol_layer(self.stain)
 
-    def _paint(self, bm, lay, faces, color, jitter=0.06):
+    def _paint(self, bm, lay, faces, color, jitter=0.06, kind=None):
+        a = 1.0
+        if self.surfaces and bm is self.body:
+            a = SURFACE[kind or KIND_OF.get(tuple(color), "plain")]
         for f in faces:
             k = 1.0 + self.rng.uniform(-jitter, jitter)
             c = tuple(min(1.0, v * k) for v in color)
             for lp in f.loops:
-                lp[lay] = (*c, 1.0)
+                lp[lay] = (*c, a)
 
-    def box(self, center, size, color, glow=False, jitter=0.06):
+    def box(self, center, size, color, glow=False, jitter=0.06, kind=None):
         bm = self.glow if glow else self.body
         ret = bmesh.ops.create_cube(bm, size=1.0)
         bmesh.ops.scale(bm, vec=Vector(size), verts=ret["verts"])
         bmesh.ops.translate(bm, vec=Vector(center), verts=ret["verts"])
         faces = list({f for v in ret["verts"] for f in v.link_faces})
-        self._paint(bm, self.glay if glow else self.lay, faces, color, jitter)
+        self._paint(bm, self.glay if glow else self.lay, faces, color, jitter, kind)
 
     def prism(self, profile, y0, y1, color, caps_color=None):
         """A shape extruded along y from y0 to y1; profile: [(x, z), ...] counter-clockwise seen from -y."""
@@ -86,7 +98,8 @@ class Parts:
     def finish(self, col, name, pos, rot_z, scale):
         m = Matrix.Translation(Vector(pos)) @ Matrix.Rotation(rot_z, 4, "Z") @ Matrix.Scale(scale, 4)
         obs = []
-        for bm, mat, suffix in ((self.body, props.material("LandmarkBody", 0.85), ""),
+        body = props.material("LandmarkSurface" if self.surfaces else "LandmarkBody", 0.85)
+        for bm, mat, suffix in ((self.body, body, ""),
                                 (self.glow, props.material("LandmarkGlow", 0.6, emit=GLOW, strength=3.0), "_Glow"),
                                 (self.stain, props.material("LandmarkStained", 0.6, emit=STAINED, strength=2.5), "_Stained")):
             if not bm.faces:
@@ -276,9 +289,9 @@ def hedge(col, name, points, height_at, height=2.4, width=1.3):
     return boxes
 
 
-CHAPEL_STONE = (0.44, 0.43, 0.52)   # lavender-grey stone in the moonlight (concept: the Forgotten Chapel)
-QUOIN = (0.3, 0.3, 0.37)
-CHAPEL_ROOF = (0.36, 0.2, 0.52)     # purple slate
+CHAPEL_STONE = (0.58, 0.57, 0.68)   # lavender-grey stone in the moonlight (concept: the Forgotten Chapel)
+QUOIN = (0.42, 0.41, 0.5)
+CHAPEL_ROOF = (0.44, 0.26, 0.62)     # purple slate
 SLATE_LINE = (0.24, 0.13, 0.34)
 OAK = (0.36, 0.21, 0.1)
 LEAVES = (0.55, 0.16, 0.06)
@@ -337,7 +350,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     tower on the front with an open belfry, a bell and a slate spire with an iron cross; a red rose
     window over the pointed door (ajar, candlelit), tall lit lancet windows, a broken wall and stones
     at its foot. ~8 m wide, 15 m long, 17 m to the cross; the front faces -y."""
-    p = Parts(seed=303)
+    p = Parts(seed=303, surfaces=True)
     W, L, H = 8.0, 13.0, 5.6
     hw = W / 2
     y0, y1 = -L / 2, L / 2
@@ -369,7 +382,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
                 continue
             shade = p.rng.choice((0.85, 1.12))
             p.box((sx * (hw + 0.02), yy, zz), (0.06, p.rng.uniform(0.6, 1.1), 0.36),
-                  tuple(c * shade for c in CHAPEL_STONE))
+                  tuple(c * shade for c in CHAPEL_STONE), kind="stone")
     # buttresses: darker stone piers between the windows and at the corners
     for yy in (y0 + 0.3, -2.0, 2.4, y1 - 0.3):
         for sx in (-1, 1):
@@ -489,7 +502,7 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
 HOUSE_SIDING = (0.86, 0.8, 0.67)     # warm cream clapboard (concept: the Homecoming House)
 CLAP_LINE = (0.62, 0.57, 0.5)
 POT = (0.5, 0.24, 0.13)
-HOUSE_ROOF = (0.3, 0.2, 0.4)         # dusky plum shingles
+HOUSE_ROOF = (0.4, 0.27, 0.54)         # dusky plum shingles
 SHUTTER = (0.1, 0.22, 0.2)
 RED_DOOR = (0.55, 0.07, 0.06)
 BRICK = (0.48, 0.2, 0.13)
@@ -519,7 +532,7 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
     porch across the front (white posts and rails, a string of lights, a lamp, a red door with a wreath,
     a jack-o'-lantern on each side of the steps, a rocking chair) and green-shuttered lit windows.
     ~12 m wide, 9 m deep, 10 m to the ridge; the front faces -y."""
-    p = Parts(seed=909)
+    p = Parts(seed=909, surfaces=True)
     W, D, H = 11.0, 7.5, 3.6
     hw, hd = W / 2, D / 2
     base = 0.7
@@ -614,3 +627,10 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
         p.box((x, -hd - PD + 0.5, eave - 0.8), (0.55, 0.55, 0.45), LEAVES, jitter=0.2)
     obs = p.finish(col, name, pos, rot_z, scale)
     return obs, [(hw + 0.6) * scale, (hd + PD + 1.2) * scale]
+
+
+KIND_OF = {
+    CHAPEL_STONE: "stone", QUOIN: "stone", CHAPEL_ROOF: "slate", SLATE_LINE: "slate", OAK: "wood",
+    HOUSE_SIDING: "clap", CLAP_LINE: "clap", HOUSE_ROOF: "slate", BRICK: "brick", RED_DOOR: "wood",
+    SHUTTER: "wood", POT: "brick",
+}

@@ -281,6 +281,16 @@ func _textured_vc(tex_name: String, scale: float, boost: float, rough: float) ->
 	return m
 
 
+## The chapel's and the house's surfaces (stone, slate, clapboard, brick), drawn by the shader over the
+## stone and wood textures every hole loads (shaders/landmark.gdshader).
+func _landmark_material() -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://shaders/landmark.gdshader")
+	m.set_shader_parameter("tex_stone", _texture("stone"))
+	m.set_shader_parameter("tex_wood", _texture("wood"))
+	return m
+
+
 ## Pumpkin shells glow faintly from the candle inside, which keeps them orange under blue moonlight.
 func _pumpkin_material() -> ShaderMaterial:
 	return _lamp_material(LAMP_SHELL)
@@ -295,6 +305,15 @@ render_mode unshaded, cull_%s;
 #include "res://shaders/lamp_front.gdshaderinc"
 void fragment() {
 	ALBEDO = mix(vec3(0.05, 0.03, 0.02), vec3(1.0, 0.78, 0.35), lamp_on(v_world, TIME));
+}
+"""
+## A chapel's stained glass: red-violet when its light is on.
+const LAMP_STAINED := """
+shader_type spatial;
+render_mode unshaded, cull_%s;
+#include "res://shaders/lamp_front.gdshaderinc"
+void fragment() {
+	ALBEDO = mix(vec3(0.04, 0.02, 0.03), vec3(0.95, 0.2, 0.34), lamp_on(v_world, TIME));
 }
 """
 const LAMP_SHELL := """
@@ -429,6 +448,8 @@ func _apply_materials(root: Node) -> void:
 		"LandmarkBody": _textured_vc("wood", 0.5, 2.0, 0.95),
 		"hedge_vc": _textured_vc("hedge", 0.45, 2.2, 0.95),
 		"LandmarkGlow": _lamp_material(LAMP_FACE, true),
+		"LandmarkSurface": _landmark_material(),
+		"LandmarkStained": _lamp_material(LAMP_STAINED, true),
 	}
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
