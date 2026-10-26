@@ -347,9 +347,10 @@ def _gable_y(p, x0, x1, y0, y1, z, rise, color, caps_color=None):
 def chapel(col, name, pos, rot_z=0.0, scale=1.0):
     """The Forgotten Chapel (Marc's concept, art_src/landmarks/chapel_concept.png): a small stone chapel,
     a steep purple slate roof with slates missing, darker quoin buttresses down its sides, a square bell
-    tower on the front with an open belfry, a bell and a slate spire with an iron cross; a red rose
+    tower on the front rising past the ridge, its open belfry dark inside round a bronze bell, a slate
+    spire with an iron cross; a red rose
     window over the pointed door (ajar, candlelit), tall lit lancet windows, a broken wall and stones
-    at its foot. ~8 m wide, 15 m long, 17 m to the cross; the front faces -y."""
+    at its foot. ~8 m wide, 15 m long, 24 m to the cross; the front faces -y."""
     p = Parts(seed=303, surfaces=True)
     W, L, H = 8.0, 13.0, 5.6
     hw = W / 2
@@ -392,35 +393,51 @@ def chapel(col, name, pos, rot_z=0.0, scale=1.0):
         for sx in (-1, 1):
             _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-", tracery=True)
     # the tower on the front: square, a belfry with open arches, a bell, a slate spire and a cross
-    T, ty, th = 4.0, y0 - 1.6, 11.0
+    # the tower rises just past the nave's ridge, so its belfry and spire stand clear above the roof
+    T, ty = 4.0, y0 - 1.6
+    SH = 10.6                                                                        # the shaft, footing to belfry
     p.box((0, ty, 0.25), (T + 0.6, T + 0.6, 0.5), QUOIN)
-    p.box((0, ty, 0.5 + 6.3 / 2), (T, T, 6.3), CHAPEL_STONE, jitter=0.1)
-    for sx in (-1, 1):                                                             # corner quoins
+    p.box((0, ty, 0.5 + SH / 2), (T, T, SH), CHAPEL_STONE, jitter=0.1)
+    for sx in (-1, 1):                                                             # corner quoins, full height
         for sy in (-1, 1):
-            p.box((sx * (T / 2 - 0.15), ty + sy * (T / 2 - 0.15), 0.5 + 6.3 / 2), (0.42, 0.42, 6.35), QUOIN)
-    bz = 0.5 + 6.3
-    p.box((0, ty, bz + 0.15), (T + 0.4, T + 0.4, 0.3), QUOIN)                       # the ledge under the belfry
-    for sx in (-1, 1):                                                             # belfry corner piers
+            p.box((sx * (T / 2 - 0.15), ty + sy * (T / 2 - 0.15), 0.5 + SH / 2), (0.42, 0.42, SH + 0.05), QUOIN)
+    p.box((0, ty, 6.5), (T + 0.25, T + 0.25, 0.22), QUOIN)                           # a string course
+    _arch(p, 0, ty - T / 2, 7.4, 0.5, 1.3, -1, glow=False)                           # a slit window above the rose
+    bz = 0.5 + SH
+    BH = 3.4                                                                         # the openings' height
+    p.box((0, ty, bz + 0.15), (T + 0.5, T + 0.5, 0.3), QUOIN)                        # the ledge under the belfry
+    pw = 0.7                                                                         # slim corner piers: big openings
+    for sx in (-1, 1):
         for sy in (-1, 1):
-            p.box((sx * (T / 2 - 0.45), ty + sy * (T / 2 - 0.45), bz + 1.75), (0.9, 0.9, 3.2), CHAPEL_STONE)
-    p.box((0, ty, bz + 3.5), (T + 0.2, T + 0.2, 0.5), CHAPEL_STONE)                 # the belfry's lintel
-    p.box((0, ty, bz + 3.82), (T + 0.5, T + 0.5, 0.18), QUOIN)
-    zt = bz + 3.25                                                                  # the openings' heads
-    o = T / 2 - 0.9
-    for side in (-1, 1):                                                             # front and back faces
+            p.box((sx * (T / 2 - pw / 2), ty + sy * (T / 2 - pw / 2), bz + 0.3 + BH / 2), (pw, pw, BH), CHAPEL_STONE)
+    zt = bz + 0.3 + BH                                                               # the openings' tops
+    p.box((0, ty, zt + 0.25), (T + 0.2, T + 0.2, 0.5), CHAPEL_STONE)                 # the lintel
+    p.box((0, ty, zt + 0.58), (T + 0.55, T + 0.55, 0.18), QUOIN)                     # the cornice
+    o = T / 2 - pw
+    for side in (-1, 1):                                                             # pointed arch heads, front and back
         for sx in (-1, 1):
-            p.prism([(sx * o, zt - 1.2), (sx * o, zt), (0.0, zt)][:: -sx], ty + side * (T / 2) - 0.25,
-                    ty + side * (T / 2) + 0.25, CHAPEL_STONE)
-    for side in (-1, 1):                                                             # the two sides
+            p.prism([(sx * o, zt - 1.3), (sx * o, zt), (0.0, zt)][:: -sx], ty + side * (T / 2) - 0.2,
+                    ty + side * (T / 2) + 0.2, CHAPEL_STONE)
+    for side in (-1, 1):                                                             # and on the two sides
         for sy in (-1, 1):
-            _prism_x(p, [(ty + sy * o, zt - 1.2), (ty + sy * o, zt), (ty, zt)][:: sy], side * (T / 2) - 0.25,
-                     side * (T / 2) + 0.25, CHAPEL_STONE)
-    p.box((0, ty, bz + 0.45), (T - 1.6, T - 1.6, 0.3), QUOIN)                          # the belfry floor
-    p.cylinder((0, ty, bz + 1.3), 0.58, 1.05, IRON, segments=8)                      # the bell
-    p.cone((0, ty, bz + 2.35), 0.4, 0.4, IRON, segments=8)
-    p.box((0, ty, bz + 2.85), (0.1, 0.1, 0.5), IRON)
-    p.box((0, ty, bz + 3.05), (T - 1.4, 0.16, 0.16), OAK)                             # the beam it hangs from
-    sz = bz + 3.9
+            _prism_x(p, [(ty + sy * o, zt - 1.3), (ty + sy * o, zt), (ty, zt)][:: sy], side * (T / 2) - 0.2,
+                     side * (T / 2) + 0.2, CHAPEL_STONE)
+    # the chamber is dark inside (its back and side walls), so the openings read and the bell shows
+    DARK = (0.05, 0.04, 0.07)
+    inset = T / 2 - 0.55
+    p.box((0, ty + inset, bz + 0.3 + BH / 2), (2 * inset, 0.1, BH), DARK)
+    for sx in (-1, 1):
+        p.box((sx * inset, ty, bz + 0.3 + BH / 2), (0.1, 2 * inset, BH), DARK)
+    p.box((0, ty, zt - 0.05), (2 * inset, 2 * inset, 0.1), DARK)                     # its ceiling
+    p.box((0, ty, bz + 0.35), (2 * inset, 2 * inset, 0.1), DARK)                     # its floor
+    BRONZE = (0.52, 0.36, 0.16)
+    bb = bz + 1.1
+    p.cylinder((0, ty, bb), 0.78, 0.18, BRONZE, segments=12)                         # the bell: its lip,
+    p.cylinder((0, ty, bb + 0.18), 0.62, 0.8, BRONZE, segments=12)                   # waist,
+    p.cone((0, ty, bb + 0.98), 0.62, 0.45, BRONZE, segments=12)                      # crown
+    p.box((0, ty, bb + 1.55), (0.1, 0.1, 0.5), IRON)                                 # the yoke's strap
+    p.box((0, ty, bb + 1.85), (2 * inset, 0.2, 0.2), OAK)                            # the beam it hangs from
+    sz = zt + 0.65
     q = math.pi / 4
     p.cone((0, ty, sz - 0.1), (T + 1.0) / math.sqrt(2), 1.3, CHAPEL_ROOF, segments=4, turn=q)  # the flared skirt
     p.cone((0, ty, sz + 0.4), (T - 0.6) / math.sqrt(2), 6.2, CHAPEL_ROOF, segments=4, turn=q)  # the spire
