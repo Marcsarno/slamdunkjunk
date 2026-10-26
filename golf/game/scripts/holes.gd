@@ -91,15 +91,31 @@ func downloaded(id: String) -> int:
 func is_ready(id: String) -> bool:
 	if OS.has_feature("web"):
 		return _mounted.has(id)
+	if id.begins_with("art_"):
+		return true
 	match id:
 		"core", "course": return true
 		"music": return ResourceLoader.exists(Music.SONGS[-1])
 	return ResourceLoader.exists("res://assets/holes/%s/hole.glb" % id)
 
 
-## The packs a hole needs, in the order they're fetched: what every hole needs, the shared art, its own.
+## The packs a hole needs, in the order they're fetched: what every hole needs, the art all holes
+## share, the art it shares with a few others (each downloaded once, for the first of them), its own.
 func needs(id: String) -> Array:
-	return ["core", "course", id]
+	return ["core", "course"] + _art_deps().get(id, []) + [id]
+
+
+var _deps: Variant = null
+
+
+## Which "art_" packs each hole needs (tools/web_split.py writes it with the web build).
+func _art_deps() -> Dictionary:
+	if _deps == null:
+		var f := "res://assets/pack_deps.json"
+		_deps = JSON.parse_string(FileAccess.get_file_as_string(f)) if FileAccess.file_exists(f) else {}
+		if not _deps is Dictionary:
+			_deps = {}
+	return _deps
 
 
 ## True once a hole can be built.
@@ -111,6 +127,11 @@ func hole_ready(id: String) -> bool:
 ## when it's ready.
 func fetch(id: String) -> bool:
 	if id.begins_with("h"):
+		# its shared art comes in several small packs: start them all at once, so a phone waits for
+		# one round trip, not one each
+		for dep: String in needs(id):
+			if dep.begins_with("art_") and OS.has_feature("web") and not is_ready(dep) and not _loading.has(dep):
+				_download(dep)
 		for dep: String in needs(id):
 			if dep != id and not await fetch(dep):
 				return false
@@ -130,7 +151,11 @@ func fetch(id: String) -> bool:
 ## Fetch these in the background, one after another in this order (replacing what was still to come),
 ## so a slow connection spends itself on the next hole first and never on several at once.
 func queue(ids: Array) -> void:
-	_queue = ids.duplicate()
+	_queue = []
+	for id: String in ids:                   # a hole with the packs it needs first (its shared art)
+		for p: String in (needs(id) if id.begins_with("h") else [id]):
+			if not p in _queue:
+				_queue.append(p)
 	if not _queue_running and OS.has_feature("web"):
 		_run_queue()
 

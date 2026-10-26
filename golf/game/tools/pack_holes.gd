@@ -7,7 +7,7 @@ extends SceneTree
 ## imported ones (the scene, the textures), the .import file and the imported data it points to; plus
 ## the hole's art left out of the main download (tools/web_split.py). "music" is the songs that come
 ## after the first, "core" what every hole needs (her frames, the bag, the lanterns, the first song)
-## and "course" the art all holes share. Textures are kept in one format (--format: etc2 for phones,
+## "course" the art all holes share, and "art_<n>" art a few holes share (tools/web_split.py). Textures are kept in one format (--format: etc2 for phones,
 ## s3tc for desktops),
 ## each .import cut down to point at that one, so a device downloads only what it reads; the packs
 ## are named hole_<id>.<format>.pck.
@@ -41,7 +41,7 @@ func _initialize() -> void:
 		var path := out.path_join("hole_%s.%s.pck" % [id, _fmt])
 		pck.pck_start(path)
 		var count := 0
-		if not id in ["music", "core", "course"]:
+		if id.begins_with("h"):
 			var dir := "res://assets/holes/%s/" % id
 			for f in DirAccess.get_files_at(dir):
 				if f.ends_with(".import") or f.get_basename() in SKIP or f in SKIP or f.ends_with(".uid"):
