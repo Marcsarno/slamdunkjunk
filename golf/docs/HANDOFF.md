@@ -150,6 +150,15 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Hole packs on the web** load via the page's own fetch into the engine's memory file system
   (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
   download is the fallback.
+- **First load** is only what the clubhouse and hole 1 need (~41 MB on a phone, was 59): each later
+  hole's own trees, skies, ground art and flags ride in its pack (`hole_<id>.<etc2|s3tc>.pck`, gzipped,
+  in the device's texture format, the page's `window.__texfmt`), songs 2 and 3 in `hole_music`.
+  `tools/hole_art.sh` records what each hole opens (strace over `tests/light_set.gd`) into
+  `tools/hole_art.json`; `tools/web_split.py` turns it into what the main export leaves out and what
+  each pack carries (a picture shared by holes rides in each, so Pick a Hole works). `build_web.sh`
+  reruns the recorder when a hole's files change. While a hole is played `Holes.queue()` fetches the
+  next hole, then the songs, then the rest, one at a time; `music.gd` skips a song not yet arrived.
+  Her old (pre-video) swing frames and art no hole uses are left out of the build (still in the project).
 - **Opening** (`main._intro_shots`, `_shot_pose`): one camera move, starting dark. Close on the tee's
   lantern while the lightning cracks (`intro_fx.gd`, `Ambience.strike()` and its thunder) and the
   lantern catches; back until she, her bag and the lantern share the frame; up behind the tee turning
