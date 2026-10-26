@@ -361,7 +361,6 @@
   "h09": [
    "assets/cards/bat_down.png",
    "assets/cards/bat_up.png",
-   "assets/cards/birch.png",
    "assets/cards/bush_heather.png",
    "assets/cards/crow_post.png",
    "assets/cards/grass_tuft.png",
@@ -380,6 +379,7 @@
    "assets/cards/maple_orange.png",
    "assets/cards/mushrooms.png",
    "assets/cards/pumpkin_pile.png",
+   "assets/cards/scarecrow.png",
    "assets/cards/tall_grass.png",
    "assets/cards/tree_copper_oak.png",
    "assets/cards/tree_golden_aspen.png",
