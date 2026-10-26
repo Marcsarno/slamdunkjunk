@@ -47,6 +47,25 @@ graphics memory and is slower to draw on phones). Tangents (6 KB). Library/groun
 Fix: a byte-level audit (this one) should run with every web build, printing the biggest items and any
 repeats, so the next one shows up the day it happens.
 
+## Phase 1 done (A, B, D, E)
+
+Measured on the web build, phone format, every pack:
+
+| | Before | After |
+|---|---|---|
+| First download (game data; engine 9.2 MB unchanged) | 3.3 MB | 2.0 MB |
+| Core (PLAY waits) | 10.9 MB | 10.6 MB |
+| Course (before hole 1) | 7.7 MB | 6.0 MB |
+| Holes, shared art, music | 60.8 MB | 33.0 MB |
+| All packs | 82.5 MB | 51.6 MB |
+
+B saved more than estimated (hole models 28.4 -> 12.3 MB). Checks: same-spot screenshots (ground,
+hedges, chapel, house, ball picker unchanged), physics tests, the bot round, and the web build in
+Chromium on a throttled connection (title to hole 1; hole 7 picked straight from the list; every pack
+requested once). One change in drawing: on hole 5, ~3 s of the opening flyover now draws ~165k
+triangles instead of ~75k (the ground's far-detail copy had been used there), under the game's existing
+peak of ~230k.
+
 ## Proposed order
 
 1. No visible change, biggest: A, B, D, E. About 25-30 MB off the round; first download -1.4 MB,
