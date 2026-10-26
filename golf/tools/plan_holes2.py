@@ -2,6 +2,7 @@
 now, and the proposal (irregular hazards at real sizes, the band where a good drive finishes, the risky
 carries), with a side view of its ground from tee to green and the measured facts.
 usage: python3 -I plan_holes2.py <golf dir> <out dir>"""
+import json
 import math
 import os
 import random
@@ -13,7 +14,7 @@ sys_argv = list(sys.argv)
 sys.argv = ["x"]
 import plan_holes as P  # noqa: E402
 import check_plan as C  # noqa: E402,F401  (club helpers)
-GOLF, OUT = sys_argv[1], sys_argv[2]
+GOLF, OUT = (sys_argv[1], sys_argv[2]) if len(sys_argv) > 2 else (None, None)
 P.GOLF = GOLF
 
 YD = 1.0936
@@ -67,15 +68,15 @@ POND, PURPLE, BLOOD, MARSH, WEB, CORN, PATCH, GRAVE, HEDGE, RAVINE = P.POND, P.P
 # Greenside bunkers ~20-26 yd x 8-10 yd, fairway bunkers ~30-38 yd x 12 yd (real sizes).
 PLAN = {
     1: {"par": 4, "turn": "right (concept flipped)",
-        "path": [[0, 0], [0, 90], [3, 175], [14, 214], [48, 250], [95, 268], [122, 272]],
+        "path": [[0, 0], [0, 90], [3, 175], [14, 214], [46, 244], [84, 258], [104, 262]],
         "widths": [26, 32, 40, 40, 34, 28, 24], "fairway_start": 40,
-        "green": g([124, 273], [13, 10], 0.4),
-        "bunkers": [g([-22, 214], [6, 16], 0.15), g([108, 286], [10, 4], 0.35), g([139, 258], [9, 4], -0.9)],
+        "green": g([106, 263], [12, 10], 0.4),
+        "bunkers": [g([-11, 211], [6, 16], 0.15), g([90, 276], [10, 4], 0.35), g([121, 249], [9, 4], -0.9)],
         "hazards": [g([54, 166], [26, 15], 1.1, color=POND, label="pond"),
                     g([-48, 112], [14, 26], 0.1, color=PATCH, label="pumpkin patch")],
         "pads": [{"center": [66, 216], "radius": [17, 12], "rotation": 0.5}],
-        "risk": [[0, 0], [66, 216], [124, 273]],
-        "elev": [[0, 8.0], [80, 6.0], [200, 2.5], [285, 4.0], [340, 5.0]],
+        "risk": [[0, 0], [66, 216], [106, 263]],
+        "elev": [[0, 8.0], [80, 6.0], [200, 2.5], [270, 4.0], [320, 5.0]],
         "note": "Elevated tee looking down to the pond in the corner; the drive finishes right at the corner. "
                 "Cutting it carries the pond to a small landing past it."},
     2: {"par": 3, "turn": "none (tee to green)",
@@ -88,11 +89,11 @@ PLAN = {
         "elev": [[0, 11.0], [40, 9.0], [100, 4.0], [133, 3.5]],
         "note": "Downhill into the hollow (plays about 8 yd shorter): carry the pool to a wide, shallow green; "
                 "the apron right is the bail-out."},
-    3: {"par": 5, "turn": "left (loop round the graveyard)",
+    3: {"par": 5, "turn": "left (a long sweep round the graveyard)",
         "path": [[0, 0], [100, 4], [198, 26], [250, 78], [276, 150], [284, 230], [282, 280]],
         "widths": [24, 34, 40, 38, 40, 32, 24], "fairway_start": 38,
         "green": g([282, 282], [13, 10], 1.4),
-        "bunkers": [g([214, 2], [16, 6], 0.25), g([306, 186], [6, 16], 0.05), g([266, 292], [4, 10], 0.1),
+        "bunkers": [g([211, 7], [16, 6], 0.25), g([301, 187], [6, 16], 0.05), g([266, 292], [4, 10], 0.1),
                     g([298, 270], [4, 9], -0.2)],
         "hazards": [g([124, 96], [54, 34], 0.55, color=GRAVE, label="graveyard")],
         "pads": [{"center": [150, 160], "radius": [18, 14], "rotation": 0.6}],
@@ -105,31 +106,31 @@ PLAN = {
         "path": [[0, 0], [-2, 80], [-2, 170], [12, 212], [52, 232], [112, 238], [150, 240]],
         "widths": [24, 32, 40, 40, 34, 28, 24], "fairway_start": 36,
         "green": g([152, 241], [12, 10], 0.2),
-        "bunkers": [g([-28, 204], [6, 16], 0.15), g([134, 228], [10, 4], 0.35), g([168, 254], [9, 4], -0.6)],
+        "bunkers": [g([-16, 200], [6, 16], 0.15), g([134, 228], [10, 4], 0.35), g([168, 254], [9, 4], -0.6)],
         "hazards": [g([66, 122], [42, 52], 0.35, color=WEB, label="the web")],
         "risk": [[0, 0], [104, 226], [152, 241]],
         "elev": [[0, 3.0], [200, 7.0], [357, 10.5]],
         "note": "The L from the concept with the corner where a drive finishes; flying the web's corner is a "
                 "full carry."},
     5: {"par": 5, "turn": "right, then a little left (S)",
-        "path": [[0, 0], [12, 100], [40, 196], [95, 246], [132, 306], [142, 372], [168, 436]],
+        "path": [[0, 0], [12, 100], [40, 196], [95, 246], [132, 306], [142, 372], [160, 418]],
         "widths": [24, 34, 42, 38, 42, 32, 24], "fairway_start": 40,
-        "green": g([170, 437], [13, 10], -0.3),
-        "bunkers": [g([150, 428], [10, 4], 0.9), g([187, 450], [9, 4], -0.4), g([44, 232], [6, 16], -0.8),
-                    g([162, 330], [6, 15], 0.1)],
+        "green": g([162, 420], [12, 10], -0.3),
+        "bunkers": [g([144, 411], [10, 4], 0.9), g([180, 433], [9, 4], -0.4), g([44, 232], [6, 16], -0.8),
+                    g([158, 331], [6, 15], 0.1)],
         "hazards": [g([88, 330], [22, 46], -0.3, color=CORN, label="corn maze")],
-        "features": [{"pos": [192, 476], "label": "barn"}],
-        "elev": [[0, 8.0], [100, 6.0], [240, 2.0], [360, 4.0], [476, 6.5]],
+        "features": [{"pos": [186, 458], "label": "barn"}],
+        "elev": [[0, 8.0], [100, 6.0], [240, 2.0], [360, 4.0], [462, 6.5]],
         "note": "Three shots down the long diagonal through the farm: a bend at the drive, then the corn "
                 "maze all down the left of the second shot and the barn behind the green."},
     6: {"par": 3, "turn": "none (tee to green)",
         "path": [[0, 0], [-18, 158]], "widths": [24, 24], "fairway_start": 138,
-        "green": g([-18, 159], [13, 10], 0.3),
+        "green": g([-18, 159], [10, 14], 0.1),
         "bunkers": [g([-36, 170], [10, 4], 0.6), g([2, 172], [9, 4], -0.5)],
         "hazards": [{"line": [[-120, 70], [-80, 104], [-40, 118], [-6, 124], [16, 134]], "width": 18,
                      "color": MARSH, "label": "marsh"}],
-        "pads": [{"center": [34, 146], "radius": [12, 9], "rotation": -0.4}],
-        "risk": [[0, 0], [-18, 159]], "safe": [[0, 0], [36, 126], [32, 144]],
+        "pads": [{"center": [12, 160], "radius": [10, 8], "rotation": 0.2}],
+        "risk": [[0, 0], [-18, 159]], "safe": [[0, 0], [30, 126], [12, 158]],
         "elev": [[0, 7.0], [60, 4.0], [110, 2.2], [158, 2.6]],
         "note": "Downhill over the marsh, which crosses in front of the green from the left (hole 2's water is "
                 "on the right); a long iron to a bail-out apron right."},
@@ -137,7 +138,7 @@ PLAN = {
         "path": [[0, 0], [5, 80], [10, 160], [-6, 220], [-52, 262], [-100, 278]],
         "widths": [24, 32, 40, 38, 30, 24], "fairway_start": 34,
         "green": g([-102, 280], [13, 10], 0.4),
-        "bunkers": [g([-86, 296], [10, 4], -0.4), g([-120, 264], [9, 4], 0.9), g([30, 196], [6, 16], -0.2)],
+        "bunkers": [g([-86, 296], [10, 4], -0.4), g([-120, 264], [9, 4], 0.9), g([24, 195], [6, 16], -0.2)],
         "hazards": [g([-38, 180], [18, 26], 0.35, color=BLOOD, label="blood pond"),
                     g([80, 170], [24, 80], 0.0, color=HEDGE, label="hedge maze")],
         "features": [{"pos": [-120, 324], "label": "mansion"}],
@@ -146,31 +147,72 @@ PLAN = {
         "note": "Uphill dogleg left to the mansion; the blood pond fills the corner, so cutting it is a near-"
                 "full carry; the hedge maze lines the right."},
     8: {"par": 4, "turn": "straight, split fairway",
-        "path": [[0, 0], [8, 90], [22, 175], [34, 240], [40, 300], [30, 372]],
+        "path": [[0, 0], [8, 90], [22, 175], [34, 240], [40, 300], [34, 394]],
         "widths": [24, 34, 42, 34, 32, 24], "fairway_start": 36,
-        "extra_fairways": [[[[6, 110], [-26, 190], [-30, 270], [16, 362]], [28, 30, 28, 24]]],
-        "green": g([30, 374], [12, 10], -0.2),
-        "bunkers": [g([14, 386], [10, 4], 0.4), g([46, 362], [9, 4], -0.6), g([60, 200], [6, 15], 0.1)],
+        "extra_fairways": [[[[6, 110], [-26, 190], [-30, 270], [18, 384]], [28, 30, 28, 24]]],
+        "green": g([34, 396], [11, 15], -0.1),
+        "bunkers": [g([16, 404], [4, 10], 0.1), g([52, 388], [4, 10], -0.2), g([49, 202], [6, 15], 0.1)],
         "hazards": [{"line": [[-150, 322], [-60, 296], [0, 280], [60, 262], [160, 232]], "width": 22,
                      "color": RAVINE, "label": "ravine"}],
         "features": [{"pos": [-92, 326], "label": "Horseman"}],
-        "risk": [[0, 0], [-24, 190], [-28, 270], [30, 374]],
-        "elev": [[0, 9.0], [200, 6.0], [262, 3.5], [300, 6.0], [379, 10.0]],
-        "note": "The ravine crosses beyond a drive's reach (~295 yd), so you lay up and carry it with the "
-                "second; the left fairway is shorter but narrower, past the Horseman."},
+        "risk": [[0, 0], [-24, 190], [-28, 270], [34, 396]],
+        "elev": [[0, 9.0], [200, 6.5], [255, 4.5], [275, 3.5], [300, 6.0], [400, 10.0]],
+        "note": "The long par 4. The ravine crosses beyond a drive's reach (~300 yd), so you lay up and carry it "
+                "with a long iron to the biggest green; the left fairway is narrower, past the Horseman."},
     9: {"par": 4, "turn": "hard left (horseshoe)",
         "path": [[0, 0], [45, 65], [88, 128], [104, 182], [86, 226], [46, 246], [8, 242]],
         "widths": [24, 32, 40, 38, 32, 28, 24], "fairway_start": 34,
         "green": g([6, 243], [13, 10], 0.1),
-        "bunkers": [g([-10, 232], [9, 4], 0.9), g([18, 258], [10, 4], -0.2), g([126, 150], [6, 16], 0.2)],
-        "hazards": [g([28, 150], [24, 42], -0.2, color=PATCH, label="pumpkin patch")],
-        "pads": [{"center": [14, 204], "radius": [15, 11], "rotation": 0.1}],
+        "bunkers": [g([-10, 232], [9, 4], 0.9), g([18, 258], [10, 4], -0.2), g([119, 152], [6, 16], 0.2)],
+        "hazards": [g([28, 158], [24, 44], -0.2, color=PATCH, label="pumpkin patch")],
+        "pads": [{"center": [16, 212], "radius": [12, 9], "rotation": 0.1}],
         "features": [{"pos": [-4, 284], "label": "home"}],
-        "risk": [[0, 0], [14, 204], [6, 243]],
+        "risk": [[0, 0], [16, 212], [6, 243]],
         "elev": [[0, 12.0], [120, 8.0], [210, 5.0], [342, 7.5]],
         "note": "From a high tee the safe drive goes right round the patch, then a short iron back left to "
                 "the green by the house. The brave drive flies the patch to a landing just short of the green."},
 }
+
+
+# Trees: the dominant kind sets the hole's look (about 6 in 10, standing in groves), a second kind
+# about 1 in 4, accents for the rest; the far woods follow the same mix with a conifer behind.
+TREES = {
+    1: ("tree_scarlet_maple", "tree_copper_oak", ["lantern_tree", "haunted_tree", "tree_golden_aspen"]),
+    2: ("tree_bent_willow", "tree_hollow_sentinel", ["haunted_tree", "tree_crooked_plum", "tree_raven_perch"]),
+    3: ("tree_silver_snag", "tree_ancient_yew", ["tree_raven_perch", "tree_hollow_sentinel", "dead_tree"]),
+    4: ("tree_moonlit_pine", "pine_blue", ["tree_ghost_birch", "dead_tree", "tree_hollow_sentinel"]),
+    5: ("tree_harvest_pear", "apple_tree", ["tree_copper_oak", "maple_orange", "tree_golden_aspen"]),
+    6: ("tree_twisted_cypress", "tree_bent_willow", ["dead_tree", "tree_raven_perch", "tree_ghost_birch"]),
+    7: ("tree_crooked_plum", "tree_ancient_yew", ["tree_twisted_cypress", "tree_hollow_sentinel", "tree_scarlet_maple"]),
+    8: ("tree_lightning_oak", "tree_windbent_fir", ["dead_tree", "tree_raven_perch", "tree_silver_snag"]),
+    9: ("tree_golden_aspen", "maple_orange", ["lantern_tree", "birch", "tree_copper_oak"]),
+}
+CARDS = None
+_COL = {}
+
+
+def tree_colour(name):
+    """The average colour of a tree card's crown (its top two thirds), for the map."""
+    if name not in _COL:
+        im = Image.open(os.path.join(CARDS, name + ".png")).convert("RGBA")
+        im = im.crop((0, 0, im.width, im.height * 2 // 3)).resize((40, 40))
+        px = [p[:3] for p in im.get_flattened_data() if p[3] > 200]
+        _COL[name] = tuple(int(sum(c[k] for c in px) / len(px) * 0.8) for k in range(3))
+    return _COL[name]
+
+
+def now_trees(i):
+    th = json.load(open(os.path.join(GOLF, "courses", "holes", P.FILES[i])))["theme"]
+    return th["trees_near"]
+
+
+def grove_pick(i, x, y, rnd):
+    """Which tree stands at (x, y) on the proposed hole: groves (about 25 m across) of one kind."""
+    dom, sec, acc = TREES[i]
+    gx, gy = math.floor(x / 25.0), math.floor(y / 25.0)
+    r = random.Random(gx * 7919 + gy * 104729 + i).random()
+    kind = dom if r < 0.6 else (sec if r < 0.85 else acc[int(r * 1000) % len(acc)])
+    return kind if rnd.random() < 0.85 else dom
 
 
 def carry_over(line, hazard):
@@ -234,7 +276,7 @@ def facts(p):
     return ", ".join(out)
 
 
-def draw(spec, title, proposal):
+def draw(spec, title, proposal, hole=None):
     pts = list(spec["path"])
     for h in spec.get("hazards", []):
         pts += P.ellipse_pts(h["center"], h["radius"], h.get("rotation", 0)) if "center" in h else h["line"]
@@ -252,10 +294,16 @@ def draw(spec, title, proposal):
     img = Image.new("RGB", (S, S), (22, 12, 32))
     d = ImageDraw.Draw(img, "RGBA")
     rnd = random.Random(hash(title) & 0xffff)
-    for _ in range(int(S * S / 900)):
+    pool = now_trees(hole) if hole and not proposal else None
+    for _ in range(int(S * S / 700)):
         x, y = rnd.uniform(0, S), rnd.uniform(0, S)
-        r = rnd.uniform(5, 14) * SS
-        d.ellipse([x - r, y - r, x + r, y + r], fill=rnd.choice([(48, 26, 70), (60, 30, 82), (40, 22, 58), (90, 40, 30), (70, 34, 52)]))
+        r = rnd.uniform(5, 12) * SS
+        if hole is None:
+            col = rnd.choice([(48, 26, 70), (60, 30, 82), (40, 22, 58), (90, 40, 30), (70, 34, 52)])
+        else:
+            wx, wy = (x - S / 2) / k + cx, (S / 2 - y) / k + cy
+            col = tree_colour(grove_pick(hole, wx, wy, rnd) if proposal else rnd.choice(pool))
+        d.ellipse([x - r, y - r, x + r, y + r], fill=col)
     rough = spec.get("rough", 13)
     fairways = [(spec["path"], spec["widths"], spec.get("fairway_start", 34), True)] + \
         [(fp, fw, 0, False) for fp, fw in spec.get("extra_fairways", [])]
@@ -380,6 +428,8 @@ def profile(p, w, h):
 
 
 def main():
+    global CARDS
+    CARDS = os.path.join(GOLF, "game", "assets", "cards")
     P.main.__globals__["GOLF"] = GOLF
     A = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_2_4_6_9_Concepts_v1.png")).convert("RGB")
     B = Image.open(os.path.join(GOLF, "art_src/redesign/08_Course_Layout_Concepts/Revised_Holes_1_3_5_7_Concepts_v1.png")).convert("RGB")
@@ -392,8 +442,8 @@ def main():
     for i in range(1, 10):
         now = P.current(P.FILES[i])
         p = PLAN[i]
-        img_now = draw(now, "now%d" % i, False)
-        img_new = draw(p, "new%d" % i, True)
+        img_now = draw(now, "now%d" % i, False, i)
+        img_new = draw(p, "new%d" % i, True, i)
         gap, head, prof_h, foot = 14, 46, 110, 100
         row = Image.new("RGB", (3 * PX + 4 * gap, PX + head + prof_h + foot), (23, 13, 36))
         d = ImageDraw.Draw(row)
@@ -406,6 +456,19 @@ def main():
         d.text((gap, head + PX + 8), "concept", fill=(205, 195, 225), font=font(17))
         d.text((2 * gap + PX, head + PX + 8), "now: par %d, %d yd" % (now["par"], P.length(now["path"]) * YD),
                fill=(205, 195, 225), font=font(17))
+        dom, sec, acc = TREES[i]
+        x = gap
+        d.text((x, head + PX + 34), "proposed trees:", fill=(205, 195, 225), font=font(15))
+        x += 132
+        for n, (name, h, tag) in enumerate([(dom, 74, "mostly"), (sec, 58, "some")] + [(a, 44, "") for a in acc]):
+            im = Image.open(os.path.join(CARDS, name + ".png")).convert("RGBA")
+            im.thumbnail((h, h))
+            row.paste(im, (x, head + PX + prof_h - im.height - 2), im)
+            label = name.replace("tree_", "").replace("_", " ")
+            f = font(13 if n < 2 else 11)
+            d.text((x + im.width + 4, head + PX + prof_h - 34), (tag + " " if tag else "") + label,
+                   fill=(255, 225, 170) if n < 2 else (190, 180, 210), font=f)
+            x += im.width + 10 + int(d.textlength((tag + " " if tag else "") + label, font=f))
         y = head + PX + prof_h + 4
         for text, col, f in [("proposed: " + facts(p) + "; bends " + p["turn"], (255, 230, 160), font(16)),
                              (p["note"], (225, 215, 240), font(15))]:
@@ -434,7 +497,8 @@ def main():
         print(i, facts(PLAN[i]))
 
 
-main()
+if __name__ == "__main__":
+    main()
 
 
 def clashes():
@@ -453,4 +517,5 @@ def clashes():
                 print("  hole %d: bunker at %s sits %.0f m inside the fairway" % (i, h["center"], -worst))
 
 
-clashes()
+if __name__ == "__main__":
+    clashes()
