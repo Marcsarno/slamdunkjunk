@@ -14,7 +14,9 @@ const RADIUS := 0.0214
 const DRAG := 0.0045
 const SPIN_DECAY := 0.15
 const CUP_RADIUS := 0.054
-const CUP_CAPTURE_SPEED := 1.5
+const CUP_DRAWN := 1.8            # the cup is drawn this many times its real radius (so it reads) ...
+const CUP_CATCH := CUP_RADIUS * CUP_DRAWN   # ... and the ball drops anywhere in the hole as drawn
+const CUP_CAPTURE_SPEED := 1.8     # dead centre it drops this quick (the drawn hole is bigger than a real one)
 const DT := 1.0 / 120.0
 const ROLL_START_SPEED := 1.3     # bounces softer than this settle into a roll
 const MAX_TIME := 25.0
@@ -251,6 +253,7 @@ func _roll(dt: float) -> void:
 	if speed < STOP_SPEED and holds:
 		vel = Vector3.ZERO
 		state = State.STOPPED
+		_check_cup()                             # come to rest on the drawn rim: it drops
 		return
 	var dir := vel / speed if speed > 0.0001 else Vector3.ZERO
 	var drag := resist * lerpf(ROLL_TAIL, 1.0, clampf(speed / ROLL_TAIL_SPEED, 0.0, 1.0))
@@ -271,21 +274,26 @@ func _roll(dt: float) -> void:
 
 func _check_cup() -> void:
 	var d := Vector2(pos.x - pin.x, pos.y - pin.y)
-	if d.length() > CUP_RADIUS:
+	var speed := vel.length()
+	# hanging on the rim as drawn when it stops: it drops (what you see is what counts)
+	if speed < 0.08 and d.length() < CUP_CATCH + RADIUS * 0.6:
+		_drop()
+		return
+	if d.length() > CUP_CATCH:
 		_over_cup = false
 		return
 	if _over_cup:
-		return                                   # already judged as it came over the rim
+		# rolling on across the hole: once slow enough anywhere over it, it falls in
+		if speed < CUP_CAPTURE_SPEED * 0.4:
+			_drop()
+		return
 	_over_cup = true
-	var speed := vel.length()
 	var dir := Vector2(vel.x, vel.y).normalized() if speed > 0.0001 else Vector2.ZERO
 	# how far off the cup's centre its line passes: dead centre it drops up to CUP_CAPTURE_SPEED,
 	# nearer the rim it needs to be slower (it has less hole to fall into)
-	var off := clampf(absf(dir.cross(-d)) / CUP_RADIUS, 0.0, 1.0)
+	var off := clampf(absf(dir.cross(-d)) / CUP_CATCH, 0.0, 1.0)
 	if speed < CUP_CAPTURE_SPEED * sqrt(1.0 - off * off * 0.85):
-		state = State.HOLED
-		pos = Vector3(pin.x, pin.y, pin.z - 0.05)
-		vel = Vector3.ZERO
+		_drop()
 		return
 	# too quick: it hops the hole and rolls on, a little slower, a rim catch turning it aside
 	var side := signf(dir.cross(-d))
@@ -295,6 +303,12 @@ func _check_cup() -> void:
 
 
 var _over_cup := false
+
+
+func _drop() -> void:
+	state = State.HOLED
+	pos = Vector3(pin.x, pin.y, pin.z - 0.05)
+	vel = Vector3.ZERO
 
 
 func _collide_obstacles(prev: Vector3) -> void:

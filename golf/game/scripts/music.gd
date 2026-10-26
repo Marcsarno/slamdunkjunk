@@ -18,6 +18,7 @@ var on := true
 var _song := 0
 var _target_db := MENU_DB
 var _tween: Tween
+var _waiting := false         # asked to start before the first song had arrived
 
 
 func _ready() -> void:
@@ -25,7 +26,8 @@ func _ready() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS) == OK:
 		on = bool(cfg.get_value("audio", "music", true))
-	player.stream = _load(0)
+	if ResourceLoader.exists(SONGS[0]):
+		player.stream = _load(0)
 	player.volume_db = MENU_DB
 	player.finished.connect(_next)
 	add_child(player)
@@ -52,8 +54,14 @@ func _next() -> void:
 	player.play()
 
 
-## Start the song (if it isn't already playing and music is on).
+## Start the song (if it isn't already playing and music is on). On the web the first song comes with
+## what every hole needs (Holes, "core"), behind the title: until then this waits for it.
 func start() -> void:
+	if on and not player.playing and player.stream == null:
+		if not ResourceLoader.exists(SONGS[0]):
+			_waiting = true
+			return
+		player.stream = _load(0)
 	if on and not player.playing:
 		player.volume_db = -40.0
 		player.play()
@@ -78,6 +86,12 @@ func toggle() -> bool:
 	else:
 		player.stop()
 	return on
+
+
+func _process(_delta: float) -> void:
+	if _waiting and Engine.get_process_frames() % 15 == 0 and ResourceLoader.exists(SONGS[0]):
+		_waiting = false
+		start()
 
 
 func _fade_to(db: float, seconds: float) -> void:

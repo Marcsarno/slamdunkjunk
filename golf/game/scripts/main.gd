@@ -148,23 +148,25 @@ var _landed_fx := false         # the first landing's puff and thud have been sh
 func _ready() -> void:
 	randomize()
 	var id: String = Round.current().id
-	if not Holes.is_ready(id):
+	if not Holes.hole_ready(id):
 		set_process(false)            # nothing runs until the hole is built
 		set_process_unhandled_input(false)
-		# on the web, holes past the first arrive when the round reaches them (scripts/holes.gd)
-		var note := "Fog is lifting over %s..." % Round.current().name
+		# on the web the holes arrive in the background (scripts/holes.gd): if this one isn't here yet
+		# (or what every hole needs, "core"), wait for it
+		var note := "Loading..."
 		var wait := _waiting_note(note)
 		var bar := _waiting_bar(wait)
 		var t0 := Time.get_ticks_msec()
 		var show := func():
-			var f := Holes.progress(id)
+			var waiting: Array = Holes.needs(id).filter(func(p: String): return not Holes.is_ready(p))
+			var f := Holes.progress(waiting[0] if not waiting.is_empty() else id)
 			if f >= 0.0:
 				bar.value = f
 				wait.text = note + "\n%d%%" % roundi(f * 100.0)
 			else:
 				# size unknown: creep along (most holes take a few seconds), with what's arrived if known
 				bar.value = 0.92 * (1.0 - exp(-float(Time.get_ticks_msec() - t0) / 5000.0))
-				var mb := Holes.downloaded(id) / 1048576.0
+				var mb := Holes.downloaded(waiting[0] if not waiting.is_empty() else id) / 1048576.0
 				wait.text = note + ("\n%.1f MB" % mb if mb > 0.05 else "")
 		var ticker := Timer.new()
 		ticker.wait_time = 0.2
@@ -183,7 +185,9 @@ func _ready() -> void:
 		set_process(true)
 		set_process_unhandled_input(true)
 	terrain = Terrain.load_hole(Round.dir())
-	tree_exiting.connect(func(): Quality.watching = false)
+	tree_exiting.connect(func():
+		Quality.watching = false
+		Holes.hold = false)
 	view.build(Round.dir(), terrain)
 	add_child(view)
 	obstacles = ObstacleGrid.new(view.props.obstacles)
@@ -257,7 +261,7 @@ func _flyover(on: bool) -> void:
 func _prewarm() -> void:
 	set_process(false)
 	set_process_unhandled_input(false)
-	var card := _waiting_note("Hole %d\n%s" % [int(terrain.meta.number), terrain.meta.name])
+	var card := _waiting_note("Loading...")
 	var cover := card.get_parent().get_parent() as CanvasLayer
 	cover.layer = 100
 	golfer.preload_frames()
@@ -379,7 +383,7 @@ func _waiting_note(text: String) -> Label:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var bg := ColorRect.new()
-	bg.color = Color(0.05, 0.02, 0.08)
+	bg.color = Color(0.09, 0.05, 0.14)          # the loading screen's dark purple
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(bg)
 	var l := Label.new()
@@ -389,8 +393,8 @@ func _waiting_note(text: String) -> Label:
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.add_theme_font_override("font", Chalk.hand_font())
-	l.add_theme_font_size_override("font_size", 40)
-	l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.6))
+	l.add_theme_font_size_override("font_size", 34)
+	l.add_theme_color_override("font_color", Color(1.0, 0.9, 0.78, 0.7))     # light, quiet
 	bg.add_child(l)
 	return l
 
@@ -1181,6 +1185,9 @@ func _release() -> void:
 # ---------------------------------------------------------------- per frame
 func _process(delta: float) -> void:
 	phase_t += delta
+	# a finished background download is unpacked only while she stands lining up a shot, never through
+	# the opening, the pull, the swing or the ball's flight (scripts/holes.gd)
+	Holes.hold = phase in [Phase.INTRO, Phase.PULL, Phase.SWING, Phase.FLIGHT] or _celebrating
 	match phase:
 		Phase.INTRO:
 			_intro_cam()

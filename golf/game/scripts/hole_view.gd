@@ -739,7 +739,7 @@ func _lantern_post(scene: PackedScene, at: Vector2, face: Vector2, size: float) 
 
 
 const FLAG_SIZE := Vector2(0.8, 0.5)
-const CUP_DRAWN := 1.8           # the cup is drawn this many times its real radius (so it reads)
+const CUP_DRAWN := BallSim.CUP_DRAWN   # the cup is drawn this many times its real radius (so it reads)
 const FLAG_TURN := deg_to_rad(20.0)   # the flag faces the player but this much off square, so it looks solid
 var _flag_pivot: Node3D
 var _cup_glows: Array = []

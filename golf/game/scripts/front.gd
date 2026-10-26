@@ -48,6 +48,9 @@ var _ball_name := Label.new()
 var _ball_i := maxi(0, Balls.BALLS.find(Balls.chosen()))
 var _spin := float(_ball_i)                 # where the turntable is, easing toward _ball_i
 var _press_x := 0.0
+var _load_bar := ProgressBar.new()          # under PLAY while what every hole needs downloads (web)
+var _load_t := 0.0
+var _warmed := false                          # hole 1's course loaded behind the clubhouse
 
 
 func _ready() -> void:
@@ -56,6 +59,15 @@ func _ready() -> void:
 			get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 			return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	Holes.hold = false
+	# on the web the first download is only this screen: what every hole needs downloads behind the
+	# title (PLAY waits for it), then the shared course art and hole 1 behind the clubhouse, then the
+	# rest of the course
+	var ids: Array = ["core", "course"]
+	for h: Dictionary in Round.HOLES:
+		ids.append(h.id)
+	ids.insert(mini(4, ids.size()), "music")          # after hole 2
+	Holes.queue(ids)
 	Music.set_in_play(false)
 	Music.start()
 	chalk = Chalk.material()
@@ -77,8 +89,29 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	play_art.scale = Vector2.ONE * (1.0 + 0.025 * sin(_t * 3.0)) if not _busy else play_art.scale
+	var ready := Holes.is_ready("core")
+	play_art.scale = Vector2.ONE * (1.0 + 0.025 * sin(_t * 3.0)) if not _busy and ready else play_art.scale
 	_turn_balls(delta)
+	_loading(delta, ready)
+
+
+## While what every hole needs downloads, PLAY waits, dimmed, over a bar; then the bar goes and PLAY
+## lights up. In the clubhouse, once hole 1 has arrived its course is loaded in the background, so
+## teeing off is quicker.
+func _loading(delta: float, ready: bool) -> void:
+	if not ready:
+		_load_t += delta
+		var f := Holes.progress("core")
+		# size unknown: creep along
+		_load_bar.value = f if f >= 0.0 else 0.9 * (1.0 - exp(-_load_t / 6.0))
+		play_art.modulate.a = 0.45
+	elif _load_bar.visible:
+		_load_bar.value = 1.0
+		_load_bar.visible = false
+		create_tween().tween_property(play_art, "modulate:a", 1.0, 0.3)
+	if clubhouse.visible and not _warmed and Holes.hole_ready(Round.HOLES[0].id):
+		_warmed = true
+		Holes.warm(Round.HOLES[0].id)
 
 
 func _fit() -> void:
@@ -109,10 +142,28 @@ func _build_splash() -> void:
 	var hit := _invisible_button(PLAY_RECT.grow(20))
 	hit.pressed.connect(_on_play)
 	splash.add_child(hit)
+	# the bar under PLAY, in the loading screen's colours
+	_load_bar.show_percentage = false
+	_load_bar.max_value = 1.0
+	_load_bar.position = Vector2(PLAY_RECT.position.x + 70, PLAY_RECT.end.y + 18)
+	_load_bar.size = Vector2(PLAY_RECT.size.x - 140, 22)
+	_load_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var track := StyleBoxFlat.new()
+	track.bg_color = Color(0.09, 0.05, 0.14, 0.85)
+	track.border_color = Color(1.0, 0.62, 0.24)
+	track.set_border_width_all(3)
+	track.set_corner_radius_all(11)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(1.0, 0.55, 0.15)
+	fill.set_corner_radius_all(11)
+	_load_bar.add_theme_stylebox_override("background", track)
+	_load_bar.add_theme_stylebox_override("fill", fill)
+	_load_bar.visible = not Holes.is_ready("core")
+	splash.add_child(_load_bar)
 
 
 func _on_play() -> void:
-	if _busy:
+	if _busy or not Holes.is_ready("core"):
 		return
 	_busy = true
 	var tw := create_tween()
@@ -169,7 +220,7 @@ func _build_clubhouse() -> void:
 	_rule(m, top + 92, 0.16, 0.84)
 	_write(m, "Play Now", head_font, 80, CHALK_ORANGE, Rect2(x0, top + 140, w, 104))
 	_write(m, "nine holes, from the first tee", hand_font, 30, CHALK_DIM, Rect2(x0, top + 244, w, 44))
-	_tap(m, Rect2(x0, top + 132, w, 160), _play_round)
+	_tap(m, Rect2(x0, top + 132, w, 160), _go.bind("balls"))     # by way of picking a ball
 	_rule(m, top + 318, 0.3, 0.7)
 	var y := top + 360.0
 	for row: Array in [["Pick a Hole", "holes"], ["Pick your Ball", "balls"], ["Options", "options"], ["How to Play", "help"]]:
@@ -219,6 +270,8 @@ func _build_clubhouse() -> void:
 	_ball_ring = _rule(bp, 0.0, 0.0, 0.0)
 	_board_ball_name = _write(bp, "", head_font, 58, CHALK_ORANGE, Rect2(x0, top + 470, w, 80))
 	_write(bp, "or turn them on the bar", hand_font, 30, CHALK_DIM, Rect2(x0, top + 560, w, 44))
+	_write(bp, "Tee off", head_font, 76, CHALK_ORANGE, Rect2(x0, top + 650, w, 100))
+	_tap(bp, Rect2(x0, top + 640, w, 120), _play_round)
 	_back(bp)
 
 	# options

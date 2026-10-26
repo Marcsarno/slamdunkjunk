@@ -29,7 +29,7 @@ set_formats false true
 (cd $G && godot --headless --export-release "Web" ../build/web/index.html 2>&1 | grep -E "^(ERROR|SCRIPT)" | grep -v leaked || true)
 for fmt in etc2 s3tc; do
 	(cd $G && godot --headless -s res://tools/pack_holes.gd -- --out=../build/web --format=$fmt --split=../build/split.json \
-		h02 h03 h04 h05 h06 h07 h08 h09 music)
+		core course h01 h02 h03 h04 h05 h06 h07 h08 h09 music)
 done
 python3 -I tools/web_pack.py build/web build/web_host build/web_desktop | tail -1
 python3 -I tools/web_pack.py build/web dist/web build/web_desktop > /dev/null

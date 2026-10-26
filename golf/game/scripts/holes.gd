@@ -1,6 +1,7 @@
 extends Node
-## Holes past the first come in their own resource packs on the web (tools/pack_holes.gd makes them,
-## with each hole's own trees, skies and ground art, and "music", the songs after the first;
+## On the web the game's first download is only the title and the clubhouse: what every hole needs
+## ("core") and each hole come in their own resource packs (tools/pack_holes.gd makes them, with each
+## hole's own trees, skies and ground art, and "music", the songs after the first;
 ## tools/web_pack.py hosts them gzipped as hole_<id>.<format>.pck.wasm beside the page), so the game
 ## starts without downloading the whole course. An autoload: `await Holes.fetch("h04")` before
 ## building a hole, and Holes.queue([...]) while one is played to fetch the rest one after another
@@ -12,8 +13,13 @@ signal done(id: String, ok: bool)
 var _loading := {}       # id -> true while its download runs
 var _req := {}           # id -> its HTTPRequest while one runs (the fallback download)
 var _got := {}           # id -> [bytes received, bytes in all (0: not known)] while the page fetches it
+var _mounted := {}       # id -> true once its pack is in (the web)
 var _queue: Array = []   # what's still to fetch in the background, in order
 var _queue_running := false
+## While true a finished download waits before it's unpacked and mounted (both stall the game for a
+## moment): main.gd holds it through the opening, the swing and the ball's flight, so the hitch lands
+## while she stands lining up a shot or in the menus, never mid-swing.
+var hold := false
 
 ## The page fetches the pack itself, the way it fetches the game's own files, and hands the bytes to
 ## the engine's in-memory file system: no browser storage involved (a page shown inside another, like
@@ -44,11 +50,20 @@ const PAGE_FETCH := """(function (id) {
       const buf = new Uint8Array(size);
       let o = 0;
       for (const p of parts) { buf.set(p, o); o += p.length; }
-      engine.copyToFS('/tmp/hole_' + id + '.pck', buf);
+      // kept apart from the status (which the game reads as text) until a calm moment (see MOUNT)
+      window.__holebufs = window.__holebufs || {};
+      window.__holebufs[id] = buf;
       st.ok = true;
       st.done = true;
     });
   }).catch((e) => { st.err = String((e && e.message) || e); st.done = true; });
+})('%s');"""
+
+
+## A downloaded pack into the engine's memory file system (a short freeze on a phone for a big one).
+const MOUNT := """(function (id) {
+  const bufs = window.__holebufs || {};
+  if (bufs[id]) { engine.copyToFS('/tmp/hole_' + id + '.pck', bufs[id]); delete bufs[id]; }
 })('%s');"""
 
 
@@ -71,15 +86,34 @@ func downloaded(id: String) -> int:
 	return r.get_downloaded_bytes() if r != null else 0
 
 
-## True once the hole's files (or for "music", the songs) can be loaded.
+## True once a pack's files can be loaded: on the web once it's downloaded and mounted; anywhere else
+## everything is part of the game already.
 func is_ready(id: String) -> bool:
-	if id == "music":
-		return ResourceLoader.exists(Music.SONGS[-1])
+	if OS.has_feature("web"):
+		return _mounted.has(id)
+	match id:
+		"core", "course": return true
+		"music": return ResourceLoader.exists(Music.SONGS[-1])
 	return ResourceLoader.exists("res://assets/holes/%s/hole.glb" % id)
 
 
-## Download and mount the hole's pack if it isn't here yet; true when it's ready.
+## The packs a hole needs, in the order they're fetched: what every hole needs, the shared art, its own.
+func needs(id: String) -> Array:
+	return ["core", "course", id]
+
+
+## True once a hole can be built.
+func hole_ready(id: String) -> bool:
+	return needs(id).all(is_ready)
+
+
+## Download and mount the hole's pack if it isn't here yet (and the core one first, for a hole); true
+## when it's ready.
 func fetch(id: String) -> bool:
+	if id.begins_with("h"):
+		for dep: String in needs(id):
+			if dep != id and not await fetch(dep):
+				return false
 	if is_ready(id):
 		return true
 	if not OS.has_feature("web"):
@@ -125,12 +159,15 @@ func _download(id: String) -> void:
 		if got == "noengine":
 			break                        # not our page: the engine's own download below
 		if got == "":
-			ok = ProjectSettings.load_resource_pack("/tmp/hole_%s.pck" % id) and is_ready(id)
+			await _calm()
+			JavaScriptBridge.eval(MOUNT % id, true)
+			ok = ProjectSettings.load_resource_pack("/tmp/hole_%s.pck" % id)
 			if ok:
 				break
 		await get_tree().create_timer(1.0 + attempt).timeout
 	_got.erase(id)
 	if ok:
+		_mounted[id] = true
 		_loading.erase(id)
 		done.emit(id, true)
 		return
@@ -147,6 +184,7 @@ func _download(id: String) -> void:
 		_req.erase(id)
 		req.queue_free()
 		if ok:
+			await _calm()
 			# hosted gzipped: unzip it in place before mounting
 			var raw := FileAccess.get_file_as_bytes(file).decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
 			var w := FileAccess.open(file, FileAccess.WRITE)
@@ -155,12 +193,39 @@ func _download(id: String) -> void:
 				w.store_buffer(raw)
 				w.close()
 		if ok:
-			ok = ProjectSettings.load_resource_pack(file) and is_ready(id)
+			ok = ProjectSettings.load_resource_pack(file)
 			if ok:
 				break
 		await get_tree().create_timer(1.0 + attempt).timeout
+	if ok:
+		_mounted[id] = true
 	_loading.erase(id)
 	done.emit(id, ok)
+
+
+var _kept := {}          # resources loaded ahead (warm), held so they stay loaded until the hole is built
+
+
+## Load a hole's course ahead, in the background, while the player is in the clubhouse: building the
+## hole then finds it already loaded.
+func warm(id: String) -> void:
+	var path := "res://assets/holes/%s/hole.glb" % id
+	if _kept.has(path) or not hole_ready(id):
+		return
+	_kept[path] = null
+	if ResourceLoader.load_threaded_request(path) != OK:
+		_kept.erase(path)
+		return
+	while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		await get_tree().process_frame
+	if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_LOADED:
+		_kept[path] = ResourceLoader.load_threaded_get(path)
+
+
+## Wait until nothing on screen would stutter (see hold).
+func _calm() -> void:
+	while hold:
+		await get_tree().process_frame
 
 
 ## Have the page fetch the pack into the engine's memory; "" when it's there, else what went wrong.
