@@ -21,6 +21,7 @@ ROOF = (0.22, 0.27, 0.31)
 SILO = (0.62, 0.58, 0.5)
 IRON = (0.3, 0.3, 0.32)
 GLOW = (1.0, 0.68, 0.28)
+STAINED = (0.95, 0.18, 0.32)     # a chapel's rose window: red-violet glass lit from inside
 
 
 class Parts:
@@ -32,6 +33,8 @@ class Parts:
         self.rng = random.Random(seed)
         self.lay = props.vcol_layer(self.body)
         self.glay = props.vcol_layer(self.glow)
+        self.stain = bmesh.new()
+        self.slay = props.vcol_layer(self.stain)
 
     def _paint(self, bm, lay, faces, color, jitter=0.06):
         for f in faces:
@@ -67,8 +70,10 @@ class Parts:
         faces = list({f for v in ret["verts"] for f in v.link_faces})
         self._paint(bm, self.glay if glow else self.lay, faces, color)
 
-    def cone(self, base, r, h, color, segments=12):
+    def cone(self, base, r, h, color, segments=12, turn=0.0):
         ret = bmesh.ops.create_cone(self.body, cap_ends=True, segments=segments, radius1=r, radius2=0.0, depth=h)
+        if turn:
+            bmesh.ops.rotate(self.body, cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(turn, 3, "Z"), verts=ret["verts"])
         bmesh.ops.translate(self.body, vec=Vector(base) + Vector((0, 0, h / 2)), verts=ret["verts"])
         faces = list({f for v in ret["verts"] for f in v.link_faces})
         self._paint(self.body, self.lay, faces, color)
@@ -82,7 +87,8 @@ class Parts:
         m = Matrix.Translation(Vector(pos)) @ Matrix.Rotation(rot_z, 4, "Z") @ Matrix.Scale(scale, 4)
         obs = []
         for bm, mat, suffix in ((self.body, props.material("LandmarkBody", 0.85), ""),
-                                (self.glow, props.material("LandmarkGlow", 0.6, emit=GLOW, strength=3.0), "_Glow")):
+                                (self.glow, props.material("LandmarkGlow", 0.6, emit=GLOW, strength=3.0), "_Glow"),
+                                (self.stain, props.material("LandmarkStained", 0.6, emit=STAINED, strength=2.5), "_Stained")):
             if not bm.faces:
                 bm.free()
                 continue
@@ -268,3 +274,246 @@ def hedge(col, name, points, height_at, height=2.4, width=1.3):
     bm.normal_update()
     props.link(name, bm, [props.material("hedge_vc", 0.9)], col)
     return boxes
+
+
+CHAPEL_STONE = (0.44, 0.43, 0.52)   # lavender-grey stone in the moonlight (concept: the Forgotten Chapel)
+QUOIN = (0.3, 0.3, 0.37)
+CHAPEL_ROOF = (0.33, 0.22, 0.46)    # purple slate
+OAK = (0.36, 0.21, 0.1)
+LEAVES = (0.55, 0.16, 0.06)
+
+
+def _arch(p, x, y, z, w, h, facing, frame=QUOIN, glow=True):
+    """A pointed-arch opening on a wall: a lit pane (or a dark recess, glow=False) with a stone frame.
+    facing -1 / +1: on a wall at y (front / back); 'x-' / 'x+': on a side wall at x."""
+    tip = w * 0.75
+    d = 0.06
+    if facing in (-1, 1):
+        yy = y + facing * d
+        pts = [(x - w / 2, yy, z), (x + w / 2, yy, z), (x + w / 2, yy, z + h), (x, yy, z + h + tip), (x - w / 2, yy, z + h)]
+        p.box((x, y, z + (h + tip) / 2), (w + 0.4, 0.1, h + tip + 0.3), frame)
+    else:
+        sx = 1 if facing == "x+" else -1
+        xx = x + sx * d
+        pts = [(xx, y - w / 2, z), (xx, y + w / 2, z), (xx, y + w / 2, z + h), (xx, y, z + h + tip), (xx, y - w / 2, z + h)]
+        p.box((x, y, z + (h + tip) / 2), (0.1, w + 0.4, h + tip + 0.3), frame)
+    if glow:
+        p.quad(pts, GLOW, glow=True)
+    else:
+        p.quad(pts, (0.04, 0.03, 0.05))
+
+
+def _gable_y(p, x0, x1, y0, y1, z, rise, color, caps_color=None):
+    """A gable roof whose ridge runs along y, eaves at x0 and x1."""
+    return p.prism([(x0, z), (x1, z), ((x0 + x1) / 2, z + rise)], y0, y1, color, caps_color)
+
+
+def chapel(col, name, pos, rot_z=0.0, scale=1.0):
+    """The Forgotten Chapel (Marc's concept, art_src/landmarks/chapel_concept.png): a small stone chapel,
+    a steep purple slate roof with slates missing, darker quoin buttresses down its sides, a square bell
+    tower on the front with an open belfry, a bell and a slate spire with an iron cross; a red rose
+    window over the pointed door (ajar, candlelit), tall lit lancet windows, a broken wall and stones
+    at its foot. ~8 m wide, 15 m long, 17 m to the cross; the front faces -y."""
+    p = Parts(seed=303)
+    W, L, H = 8.0, 13.0, 5.6
+    hw = W / 2
+    y0, y1 = -L / 2, L / 2
+    p.box((0, 0, 0.25), (W + 0.6, L + 0.6, 0.5), QUOIN)                           # footing
+    p.box((0, 0, 0.5 + H / 2), (W, L, H), CHAPEL_STONE, jitter=0.1)
+    top = 0.5 + H
+    _gable_y(p, -hw - 0.5, hw + 0.5, y0 - 0.3, y1 + 0.4, top - 0.1, 5.2, CHAPEL_ROOF, CHAPEL_STONE)
+    _gable_y(p, -hw + 0.05, hw - 0.05, y0 + 0.02, y1 - 0.02, top, 4.9, CHAPEL_STONE)  # the gable walls under it
+    # missing slates: dark gaps on both slopes
+    k = 5.2 / (hw + 0.5)
+    for sx, yy, u in ((1, -1.5, 0.45), (1, 2.8, 0.7), (-1, 0.6, 0.35), (-1, 4.2, 0.6)):
+        xa, xb = sx * (hw + 0.5) * (1 - u), sx * (hw + 0.5) * (1 - u - 0.14)
+        za, zb = top - 0.08 + (hw + 0.5 - abs(xa)) * k, top - 0.08 + (hw + 0.5 - abs(xb)) * k
+        n = 0.03 * sx
+        p.quad([(xa + n, yy - 0.5, za + 0.03), (xa + n, yy + 0.5, za + 0.03), (xb + n, yy + 0.5, zb + 0.03),
+                (xb + n, yy - 0.5, zb + 0.03)][:: sx], (0.05, 0.03, 0.06))
+    # buttresses: darker stone piers between the windows and at the corners
+    for yy in (y0 + 0.3, -2.0, 2.4, y1 - 0.3):
+        for sx in (-1, 1):
+            p.box((sx * (hw + 0.25), yy, 0.5 + H * 0.45), (0.7, 0.9, H * 0.9), QUOIN, jitter=0.1)
+    # tall lit lancets down each side, between the buttresses
+    for yy in (-4.2, 0.2, 4.6):
+        for sx in (-1, 1):
+            _arch(p, sx * hw, yy, 1.6, 1.0, 2.2, "x+" if sx > 0 else "x-")
+    # the tower on the front: square, a belfry with open arches, a bell, a slate spire and a cross
+    T, ty, th = 4.0, y0 - 1.6, 11.0
+    p.box((0, ty, 0.25), (T + 0.6, T + 0.6, 0.5), QUOIN)
+    p.box((0, ty, 0.5 + 6.3 / 2), (T, T, 6.3), CHAPEL_STONE, jitter=0.1)
+    for sx in (-1, 1):                                                             # corner quoins
+        for sy in (-1, 1):
+            p.box((sx * (T / 2 - 0.15), ty + sy * (T / 2 - 0.15), 0.5 + 6.3 / 2), (0.42, 0.42, 6.35), QUOIN)
+    bz = 0.5 + 6.3
+    p.box((0, ty, bz + 0.15), (T + 0.4, T + 0.4, 0.3), QUOIN)                       # the ledge under the belfry
+    for sx in (-1, 1):                                                             # belfry corner piers
+        for sy in (-1, 1):
+            p.box((sx * (T / 2 - 0.45), ty + sy * (T / 2 - 0.45), bz + 1.75), (0.9, 0.9, 3.2), CHAPEL_STONE)
+    p.box((0, ty, bz + 3.5), (T + 0.2, T + 0.2, 0.5), CHAPEL_STONE)                 # the belfry's lintel
+    p.box((0, ty, bz + 3.82), (T + 0.5, T + 0.5, 0.18), QUOIN)
+    p.cylinder((0, ty, bz + 1.0), 0.75, 1.3, IRON, segments=8)                       # the bell
+    p.cone((0, ty, bz + 2.3), 0.5, 0.5, IRON, segments=8)
+    p.box((0, ty, bz + 3.0), (0.12, 0.12, 0.9), IRON)
+    sz = bz + 3.9
+    q = math.pi / 4
+    p.cone((0, ty, sz - 0.1), (T + 1.0) / math.sqrt(2), 1.3, CHAPEL_ROOF, segments=4, turn=q)  # the flared skirt
+    p.cone((0, ty, sz + 0.4), (T - 0.6) / math.sqrt(2), 6.2, CHAPEL_ROOF, segments=4, turn=q)  # the spire
+    p.box((0, ty, sz + 7.1), (0.14, 0.14, 1.7), IRON)                                # the cross
+    p.box((0, ty, sz + 7.5), (0.9, 0.14, 0.14), IRON)
+    # the front: a pointed door ajar in candlelight, the rose window above it
+    fy = ty - T / 2
+    p.box((0, fy - 0.05, 1.7), (2.0, 0.12, 2.5), QUOIN)                              # door surround
+    _arch(p, 0, fy - 0.08, 0.5, 1.5, 1.7, -1)                                        # the open doorway's light
+    p.box((-0.55, fy - 0.35, 1.55), (0.12, 0.7, 2.1), OAK)                           # the door, swung half open
+    rz = 4.5
+    bm = p.stain
+    ret = bmesh.ops.create_circle(bm, cap_ends=True, segments=16, radius=0.95)
+    bmesh.ops.rotate(bm, cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(math.pi / 2, 3, "X"), verts=ret["verts"])
+    bmesh.ops.translate(bm, vec=Vector((0, fy - 0.16, rz)), verts=ret["verts"])
+    p._paint(bm, p.slay, list({f for v in ret["verts"] for f in v.link_faces}), STAINED, 0.0)
+    p.box((0, fy - 0.06, rz), (2.4, 0.1, 2.4), QUOIN)                                # its frame
+    for ang in (0.0, math.pi / 4, math.pi / 2, 3 * math.pi / 4):     # its tracery: four spokes
+        ret = bmesh.ops.create_cube(p.body, size=1.0)
+        bmesh.ops.scale(p.body, vec=Vector((0.08, 0.04, 1.9)), verts=ret["verts"])
+        bmesh.ops.rotate(p.body, cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(ang, 3, "Y"), verts=ret["verts"])
+        bmesh.ops.translate(p.body, vec=Vector((0, fy - 0.2, rz)), verts=ret["verts"])
+        p._paint(p.body, p.lay, list({f for v in ret["verts"] for f in v.link_faces}), (0.12, 0.05, 0.1), 0.0)
+    for sx in (-1, 1):
+        _arch(p, sx * (hw - 1.1), y0, 1.6, 0.7, 1.9, -1)
+    # red ivy up the tower's left corner and round the door
+    for k in range(14):
+        z = 0.6 + k * 0.62
+        p.box((-T / 2 - 0.05 + 0.25 * math.sin(k * 1.7), fy - 0.12, z), (0.9 - 0.03 * k, 0.12, 0.7), LEAVES, jitter=0.25)
+    for k in range(6):
+        p.box((-1.2 + 0.1 * k, fy - 0.14, 2.6 + 0.25 * k), (0.5, 0.1, 0.45), LEAVES, jitter=0.25)
+    # low broken stone walls along both sides, with gaps
+    for sx in (-1, 1):
+        for ya, yb, h in ((y0 - 1.0, y0 + 3.5, 0.75), (y0 + 5.0, y0 + 8.6, 0.6), (y0 + 9.6, y1 + 0.6, 0.8)):
+            p.box((sx * (hw + 2.2), (ya + yb) / 2, h / 2), (0.7, yb - ya, h), QUOIN, jitter=0.12)
+    # steps and candles at the door
+    p.box((0, fy - 0.7, 0.12), (2.6, 1.2, 0.24), QUOIN)
+    p.box((0, fy - 1.3, 0.06), (3.0, 0.8, 0.12), QUOIN)
+    for cx, cy in ((-0.9, fy - 0.6), (-0.65, fy - 0.85), (0.8, fy - 0.7), (1.0, fy - 0.45)):
+        p.box((cx, cy, 0.38), (0.09, 0.09, 0.28), (0.9, 0.85, 0.75))
+        p.box((cx, cy, 0.56), (0.07, 0.07, 0.09), GLOW, glow=True)
+    # the broken wall and a few stones at its foot, and fallen leaves
+    for x, y, w, h in ((-5.6, y0 - 1.0, 2.6, 0.8), (-6.2, -1.5, 0.6, 0.6), (5.9, y0 + 0.5, 0.6, 0.9),
+                       (6.0, 3.0, 0.6, 0.5), (3.2, y0 - 2.6, 1.8, 0.6), (-3.4, y0 - 2.8, 1.2, 0.5)):
+        p.box((x, y, h / 2), (w if w > 1 else 0.6, w if w <= 1 else 0.6, h), QUOIN, jitter=0.12)
+    for x, y in ((-2.6, fy - 1.6), (2.4, fy - 1.9), (-5.0, 2.0), (5.2, -3.6)):
+        p.box((x, y, 0.55), (0.75, 0.22, 1.1), CHAPEL_STONE, jitter=0.1)                # headstones
+        p.box((x, y, 1.1), (0.75, 0.22, 0.3), CHAPEL_STONE)
+    for k in range(18):
+        a = k * 2.4
+        r = 4.6 + (k % 4) * 0.9
+        p.box((math.cos(a) * r, math.sin(a) * r * 1.4, 0.06), (0.9, 0.7, 0.12), LEAVES, jitter=0.25)
+    obs = p.finish(col, name, pos, rot_z, scale)
+    return obs, [(hw + 1.0) * scale, (L / 2 + T + 0.5) * scale]
+
+
+HOUSE_SIDING = (0.8, 0.76, 0.68)     # cream clapboard (concept: the Homecoming House)
+HOUSE_ROOF = (0.3, 0.2, 0.4)         # dusky plum shingles
+SHUTTER = (0.1, 0.22, 0.2)
+RED_DOOR = (0.55, 0.07, 0.06)
+BRICK = (0.48, 0.2, 0.13)
+PUMPKIN = (0.85, 0.36, 0.06)
+BLACK = (0.04, 0.035, 0.05)
+
+
+def _shuttered(p, x, y, z, w, h, facing):
+    """A lit window with dark green shutters either side."""
+    _window(p, x, y, z, w, h, facing)
+    if facing in (-1, 1):
+        for sx in (-1, 1):
+            p.box((x + sx * (w / 2 + 0.32), y + facing * 0.06, z + h / 2), (0.42, 0.08, h + 0.1), SHUTTER)
+    else:
+        sx = 1 if facing == "x+" else -1
+        for sy in (-1, 1):
+            p.box((x + sx * 0.06, y + sy * (w / 2 + 0.32), z + h / 2), (0.08, 0.42, h + 0.1), SHUTTER)
+
+
+def house(col, name, pos, rot_z=0.0, scale=1.0):
+    """The Homecoming House (Marc's concept, art_src/landmarks/homecoming_house_concept.png): a cream
+    clapboard cape with a steep plum roof, two dormers, a brick chimney, a black-cat weathervane, a
+    porch across the front (white posts and rails, a string of lights, a lamp, a red door with a wreath,
+    a jack-o'-lantern on each side of the steps, a rocking chair) and green-shuttered lit windows.
+    ~12 m wide, 9 m deep, 10 m to the ridge; the front faces -y."""
+    p = Parts(seed=909)
+    W, D, H = 11.0, 7.5, 3.6
+    hw, hd = W / 2, D / 2
+    base = 0.7
+    p.box((0, 0, base / 2), (W + 0.2, D + 0.2, base), TRIM)                           # the white skirt
+    p.box((0, 0, base + H / 2), (W, D, H), HOUSE_SIDING, jitter=0.05)
+    top = base + H
+    # the main roof: ridge across (along x), gable ends on the sides, steep
+    _prism_x(p, [(-hd - 0.6, top - 0.15), (hd + 0.6, top - 0.15), (0, top + 4.6)], -hw - 0.35, hw + 0.35,
+             HOUSE_ROOF, HOUSE_SIDING)
+    _prism_x(p, [(-hd + 0.05, top), (hd - 0.05, top), (0, top + 4.35)], -hw + 0.02, hw - 0.02, HOUSE_SIDING)
+    # two dormers on the front slope
+    for dx in (-2.6, 2.6):
+        p.box((dx, -hd + 1.5, top + 1.25), (2.0, 2.0, 1.9), HOUSE_SIDING)
+        p.prism([(dx - 1.3, top + 2.1), (dx + 1.3, top + 2.1), (dx, top + 3.3)], -hd + 0.25, -hd + 2.9, HOUSE_ROOF, TRIM)
+        _shuttered(p, dx, -hd + 0.5, top + 0.65, 0.85, 1.1, -1)
+    # the chimney on the right, through the back slope, and the weathervane with its cat on the ridge
+    p.box((3.4, 0.9, top + 3.6), (1.2, 1.2, 4.6), BRICK, jitter=0.08)
+    p.box((3.4, 0.9, top + 5.95), (1.4, 1.4, 0.2), (0.62, 0.6, 0.58))
+    vx = -1.6
+    p.box((vx, 0, top + 4.95), (0.07, 0.07, 1.3), BLACK)
+    p.box((vx, 0, top + 5.25), (1.4, 0.05, 0.05), BLACK)                              # the arrow
+    p.box((vx, 0, top + 5.05), (0.05, 0.9, 0.05), BLACK)
+    p.box((vx + 0.1, 0, top + 5.62), (0.62, 0.16, 0.3), BLACK)                       # the cat: body, head, ears, tail
+    p.box((vx + 0.45, 0, top + 5.88), (0.24, 0.16, 0.22), BLACK)
+    p.box((vx + 0.4, 0, top + 6.03), (0.06, 0.1, 0.1), BLACK)
+    p.box((vx + 0.52, 0, top + 6.03), (0.06, 0.1, 0.1), BLACK)
+    p.box((vx - 0.3, 0, top + 5.95), (0.06, 0.06, 0.55), BLACK)
+    p.box((vx + 0.49, -0.09, top + 5.9), (0.12, 0.02, 0.05), GLOW, glow=True)        # yellow eyes
+    # a lower wing on the back left (concept side view)
+    p.box((-hw + 1.6, hd + 1.4, base + 1.5), (3.2, 2.8, 3.0), HOUSE_SIDING)
+    _prism_x(p, [(hd - 0.1, base + 2.9), (hd + 3.1, base + 2.9), (hd + 1.5, base + 4.2)], -hw - 0.1, -hw + 3.3, HOUSE_ROOF, HOUSE_SIDING)
+    # the porch across the front: deck, steps, posts, rails, a shed roof, lights
+    PD = 2.6
+    py = -hd - PD / 2
+    p.box((0, py, base - 0.1), (W + 0.4, PD, 0.2), TRIM)
+    for k, (h, dy) in enumerate(((0.45, 0.55), (0.22, 1.05))):
+        p.box((0, -hd - PD - dy + 0.3, h / 2), (2.4, 0.5, h), TRIM)
+    for x in (-hw - 0.05, -hw / 2 - 0.3, -1.4, 1.4, hw / 2 + 0.3, hw + 0.05):
+        p.box((x, -hd - PD + 0.15, base + 1.45), (0.22, 0.22, 2.9), TRIM)
+    for x0, x1 in ((-hw - 0.05, -1.4), (1.4, hw + 0.05)):                             # rails and balusters
+        p.box(((x0 + x1) / 2, -hd - PD + 0.15, base + 0.9), (x1 - x0, 0.12, 0.1), TRIM)
+        p.box(((x0 + x1) / 2, -hd - PD + 0.15, base + 0.1), (x1 - x0, 0.12, 0.08), TRIM)
+        n = int((x1 - x0) / 0.3)
+        for i in range(1, n):
+            p.box((x0 + (x1 - x0) * i / n, -hd - PD + 0.15, base + 0.5), (0.05, 0.05, 0.8), TRIM)
+    eave = base + 3.0
+    _prism_x(p, [(-hd - PD - 0.4, eave), (-hd + 0.02, top - 0.6), (-hd + 0.02, top - 0.4), (-hd - PD - 0.4, eave + 0.2)],
+             -hw - 0.4, hw + 0.4, HOUSE_ROOF, HOUSE_ROOF)
+    p.box((0, -hd - PD + 0.15, eave - 0.12), (W + 0.6, 0.22, 0.25), TRIM)             # the porch beam
+    for i in range(23):                                                              # the string of lights
+        x = -hw + i * W / 22
+        sag = 0.12 * math.sin(math.pi * ((i * 2) % 22) / 22)
+        p.box((x, -hd - PD + 0.02, eave - 0.32 - sag), (0.1, 0.1, 0.1), GLOW, glow=True)
+    # the front: a red door with a wreath and a lamp, big lit windows either side
+    p.box((0, -hd - 0.06, base + 1.1), (1.1, 0.12, 2.2), RED_DOOR)
+    for k in range(8):                                                               # the wreath: a ring of leaves
+        a = k * math.pi / 4
+        p.box((0.27 * math.cos(a), -hd - 0.17, base + 1.6 + 0.27 * math.sin(a)), (0.2, 0.08, 0.2), LEAVES, jitter=0.2)
+    p.box((0.95, -hd - 0.15, base + 2.35), (0.22, 0.22, 0.32), GLOW, glow=True)       # porch lamp
+    for x in (-3.4, 3.4):
+        _shuttered(p, x, -hd, base + 0.7, 1.6, 1.7, -1)
+    # the sides: a window on each floor, in the gable
+    for sx in (-1, 1):
+        _shuttered(p, sx * hw, 0, base + 0.8, 1.0, 1.5, "x+" if sx > 0 else "x-")
+        _shuttered(p, sx * (hw + 0.37), 0, top + 0.7, 0.9, 1.3, "x+" if sx > 0 else "x-")
+    # jack-o'-lanterns on the steps and the porch, a rocking chair, hanging baskets of autumn flowers
+    for x, y in ((-1.5, -hd - PD - 0.5), (1.5, -hd - PD - 0.5)):
+        p.cylinder((x, y, 0.0), 0.36, 0.55, PUMPKIN, segments=8)
+        p.box((x, y - 0.33, 0.3), (0.32, 0.06, 0.18), GLOW, glow=True)              # the carved face
+        p.box((x, y, 0.62), (0.08, 0.08, 0.14), (0.25, 0.35, 0.1))
+    p.box((3.6, -hd - 1.2, base + 0.45), (0.7, 0.7, 0.12), OAK)                         # rocking chair
+    p.box((3.6, -hd - 0.9, base + 0.95), (0.7, 0.1, 1.0), OAK)
+    for x in (-hw + 0.4, hw - 0.4):
+        p.box((x, -hd - PD + 0.5, eave - 0.8), (0.55, 0.55, 0.45), LEAVES, jitter=0.2)
+    obs = p.finish(col, name, pos, rot_z, scale)
+    return obs, [(hw + 0.6) * scale, (hd + PD + 1.2) * scale]
