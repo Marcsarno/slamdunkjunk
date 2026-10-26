@@ -55,9 +55,12 @@ if desktop:
                                              for n in plan['index.pck@desktop']['parts'])
 for f in os.listdir(src):
     if f.startswith('hole_') and f.endswith('.pck'):
-        # a hole's own pack (tools/pack_holes.gd), fetched by the game when the round reaches it;
+        # a hole's own pack (tools/pack_holes.gd: hole_<id>.<format>.pck, or the later songs), fetched
+        # by the game in the background or when the round reaches it; gzipped (the page unzips it) and
         # hosted as .wasm like the parts above
-        shutil.copy(os.path.join(src, f), os.path.join(out, f + '.wasm'))
+        data = gzip.compress(open(os.path.join(src, f), 'rb').read(), 6)
+        assert len(data) < 15 * 1024 * 1024, f + ' is over the host\'s 15 MB a file'
+        open(os.path.join(out, f + '.wasm'), 'wb').write(data)
     elif f not in ('index.html', 'index.wasm', 'index.pck'):
         shutil.copy(os.path.join(src, f), out)
 
@@ -109,25 +112,30 @@ shim = """<script>
     etc2 = !gl || !!gl.getExtension('WEBGL_compressed_texture_etc');
   } catch (e) {}
   if (!etc2 && PLAN['index.pck@desktop']) PLAN['index.pck'] = PLAN['index.pck@desktop'];
+  else etc2 = true;
+  window.__texfmt = etc2 ? 'etc2' : 's3tc';     // the hole packs come in the same format (scripts/holes.gd)
   const realFetch = window.fetch.bind(window);
   // what's been downloaded, for the loading bar (window.__loaded of window.__total bytes)
   window.__loaded = 0;
   window.__total = PLAN['index.wasm'].bytes + PLAN['index.pck'].bytes;
+  // the parts all download at once (not one after another), then go on in order
   function joined(urls) {
+    const got = urls.map((u) => realFetch(u).then(async (r) => {
+      if (!r.ok) throw new Error(u + ': ' + r.status);
+      const chunks = [];
+      const rd = r.body.getReader();
+      for (;;) {
+        const { done, value } = await rd.read();
+        if (done) return chunks;
+        window.__loaded += value.length;
+        chunks.push(value);
+      }
+    }));
+    got.forEach((g) => g.catch(() => {}));      // a failure is reported once, below, in order
     return new ReadableStream({
       async start(ctrl) {
         try {
-          for (const u of urls) {
-            const r = await realFetch(u);
-            if (!r.ok) throw new Error(u + ': ' + r.status);
-            const rd = r.body.getReader();
-            for (;;) {
-              const { done, value } = await rd.read();
-              if (done) break;
-              window.__loaded += value.length;
-              ctrl.enqueue(value);
-            }
-          }
+          for (const g of got) for (const c of await g) ctrl.enqueue(c);
           ctrl.close();
         } catch (e) { ctrl.error(e); }
       },

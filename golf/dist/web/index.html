@@ -163,7 +163,7 @@ body {
 }());
 // Godot asks for index.wasm and index.pck; they are hosted gzipped / in parts (see golf/tools/web_pack.py)
 (function () {
-  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm", "bytes": 9239552}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm", "index.pck.etc2.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 49740004}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm", "index.pck.s3tc.gz.3.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 48038639}};
+  const PLAN = {"index.wasm": {"parts": ["index.wasm.gz.0.wasm"], "gzip": true, "type": "application/wasm", "bytes": 9239552}, "index.pck": {"parts": ["index.pck.etc2.gz.0.wasm", "index.pck.etc2.gz.1.wasm", "index.pck.etc2.gz.2.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 31428748}, "index.pck@desktop": {"parts": ["index.pck.s3tc.gz.0.wasm", "index.pck.s3tc.gz.1.wasm", "index.pck.s3tc.gz.2.wasm"], "gzip": true, "type": "application/octet-stream", "bytes": 30586074}};
   // the game data with textures in the format this device's graphics chip reads: phones (and Macs with
   // Apple chips) ETC2, other desktops S3TC
   let etc2 = true;
@@ -172,25 +172,30 @@ body {
     etc2 = !gl || !!gl.getExtension('WEBGL_compressed_texture_etc');
   } catch (e) {}
   if (!etc2 && PLAN['index.pck@desktop']) PLAN['index.pck'] = PLAN['index.pck@desktop'];
+  else etc2 = true;
+  window.__texfmt = etc2 ? 'etc2' : 's3tc';     // the hole packs come in the same format (scripts/holes.gd)
   const realFetch = window.fetch.bind(window);
   // what's been downloaded, for the loading bar (window.__loaded of window.__total bytes)
   window.__loaded = 0;
   window.__total = PLAN['index.wasm'].bytes + PLAN['index.pck'].bytes;
+  // the parts all download at once (not one after another), then go on in order
   function joined(urls) {
+    const got = urls.map((u) => realFetch(u).then(async (r) => {
+      if (!r.ok) throw new Error(u + ': ' + r.status);
+      const chunks = [];
+      const rd = r.body.getReader();
+      for (;;) {
+        const { done, value } = await rd.read();
+        if (done) return chunks;
+        window.__loaded += value.length;
+        chunks.push(value);
+      }
+    }));
+    got.forEach((g) => g.catch(() => {}));      // a failure is reported once, below, in order
     return new ReadableStream({
       async start(ctrl) {
         try {
-          for (const u of urls) {
-            const r = await realFetch(u);
-            if (!r.ok) throw new Error(u + ': ' + r.status);
-            const rd = r.body.getReader();
-            for (;;) {
-              const { done, value } = await rd.read();
-              if (done) break;
-              window.__loaded += value.length;
-              ctrl.enqueue(value);
-            }
-          }
+          for (const g of got) for (const c of await g) ctrl.enqueue(c);
           ctrl.close();
         } catch (e) { ctrl.error(e); }
       },
@@ -209,7 +214,7 @@ body {
 </script>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":96224176,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":61337500,"index.wasm":38057390},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

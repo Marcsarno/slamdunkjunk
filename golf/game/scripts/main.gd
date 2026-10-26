@@ -219,8 +219,13 @@ func _ready() -> void:
 	wind = Vector2.from_angle(randf() * TAU) * randf_range(float(w.min), float(w.max))
 	_start_hole()
 	await _prewarm()
-	if Round.has_next():
-		Holes.prefetch(Round.HOLES[Round.index + 1].id)     # fetched while this hole is played
+	# while this hole is played, the rest of the round arrives one at a time: the next hole, then the
+	# other songs, then the holes after it, in order
+	var later: Array = []
+	for i in range(Round.index + 1, Round.HOLES.size()):
+		later.append(Round.HOLES[i].id)
+	later.insert(mini(1, later.size()), "music")
+	Holes.queue(later)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--capture="):
 			add_child(load("res://tests/capture.gd").new())

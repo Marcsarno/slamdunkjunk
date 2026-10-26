@@ -39,11 +39,15 @@ func _load(i: int) -> AudioStream:
 	return st
 
 
-## One song ends: the next one starts, at whatever volume the menus or the round have set.
+## One song ends: the next one starts, at whatever volume the menus or the round have set. On the web
+## the songs after the first arrive while the first hole is played (Holes, "music"); one that hasn't
+## yet is skipped.
 func _next() -> void:
 	if not on:
 		return
 	_song = (_song + 1) % SONGS.size()
+	while _song != 0 and not ResourceLoader.exists(SONGS[_song]):
+		_song = (_song + 1) % SONGS.size()
 	player.stream = _load(_song)
 	player.play()
 

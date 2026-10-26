@@ -1,15 +1,19 @@
 extends Node
 ## Holes past the first come in their own resource packs on the web (tools/pack_holes.gd makes them,
-## tools/web_pack.py hosts them as hole_<id>.pck.wasm beside the page), so the game starts without
-## downloading the whole course. An autoload: `await Holes.fetch("h04")` before building a hole, and
-## Holes.prefetch(next_id) while one is played so the next is usually there already. Anywhere the
-## holes are part of the project (desktop, the editor, the tests) every hole is simply ready.
+## with each hole's own trees, skies and ground art, and "music", the songs after the first;
+## tools/web_pack.py hosts them gzipped as hole_<id>.<format>.pck.wasm beside the page), so the game
+## starts without downloading the whole course. An autoload: `await Holes.fetch("h04")` before
+## building a hole, and Holes.queue([...]) while one is played to fetch the rest one after another
+## in the background. Anywhere the holes are part of the project (desktop, the editor, the tests)
+## every hole is simply ready.
 
 signal done(id: String, ok: bool)
 
 var _loading := {}       # id -> true while its download runs
 var _req := {}           # id -> its HTTPRequest while one runs (the fallback download)
 var _got := {}           # id -> [bytes received, bytes in all (0: not known)] while the page fetches it
+var _queue: Array = []   # what's still to fetch in the background, in order
+var _queue_running := false
 
 ## The page fetches the pack itself, the way it fetches the game's own files, and hands the bytes to
 ## the engine's in-memory file system: no browser storage involved (a page shown inside another, like
@@ -19,19 +23,25 @@ const PAGE_FETCH := """(function (id) {
   const st = { done: false, ok: false, loaded: 0, total: 0, err: '' };
   window.__holes[id] = st;
   if (typeof engine === 'undefined' || !engine.copyToFS) { st.err = 'noengine'; st.done = true; return; }
-  fetch('hole_' + id + '.pck.wasm').then((r) => {
+  // in the texture format this device reads (the page's loader picked it for the game's own data);
+  // hosted gzipped: counted as it arrives (for the bar), unzipped on the way in
+  fetch('hole_' + id + '.' + (window.__texfmt || 'etc2') + '.pck.wasm').then((r) => {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     st.total = +(r.headers.get('content-length') || 0);
-    const rd = r.body.getReader();
+    const counted = r.body.pipeThrough(new TransformStream({
+      transform(chunk, ctrl) { st.loaded += chunk.length; ctrl.enqueue(chunk); },
+    }));
+    const rd = counted.pipeThrough(new DecompressionStream('gzip')).getReader();
     const parts = [];
+    let size = 0;
     const pump = () => rd.read().then(({ done, value }) => {
       if (done) return;
       parts.push(value);
-      st.loaded += value.length;
+      size += value.length;
       return pump();
     });
     return pump().then(() => {
-      const buf = new Uint8Array(st.loaded);
+      const buf = new Uint8Array(size);
       let o = 0;
       for (const p of parts) { buf.set(p, o); o += p.length; }
       engine.copyToFS('/tmp/hole_' + id + '.pck', buf);
@@ -61,8 +71,10 @@ func downloaded(id: String) -> int:
 	return r.get_downloaded_bytes() if r != null else 0
 
 
-## True once the hole's files can be loaded.
+## True once the hole's files (or for "music", the songs) can be loaded.
 func is_ready(id: String) -> bool:
+	if id == "music":
+		return ResourceLoader.exists(Music.SONGS[-1])
 	return ResourceLoader.exists("res://assets/holes/%s/hole.glb" % id)
 
 
@@ -81,10 +93,28 @@ func fetch(id: String) -> bool:
 	return false
 
 
-## Start fetching a hole in the background (nothing to wait for).
-func prefetch(id: String) -> void:
-	if not is_ready(id) and OS.has_feature("web") and not _loading.has(id):
-		_download(id)
+## Fetch these in the background, one after another in this order (replacing what was still to come),
+## so a slow connection spends itself on the next hole first and never on several at once.
+func queue(ids: Array) -> void:
+	_queue = ids.duplicate()
+	if not _queue_running and OS.has_feature("web"):
+		_run_queue()
+
+
+func _run_queue() -> void:
+	_queue_running = true
+	while not _queue.is_empty():
+		var id: String = _queue.pop_front()
+		if is_ready(id):
+			continue
+		if _loading.has(id):
+			while true:                 # already on its way (the round got there first): wait for it
+				var r: Array = await done
+				if r[0] == id:
+					break
+		else:
+			await _download(id)
+	_queue_running = false
 
 
 func _download(id: String) -> void:
@@ -110,12 +140,20 @@ func _download(id: String) -> void:
 		add_child(req)
 		_req[id] = req
 		req.download_file = file
-		var url := str(JavaScriptBridge.eval("new URL('hole_%s.pck.wasm', document.baseURI).href" % id, true))
+		var url := str(JavaScriptBridge.eval("new URL('hole_%s.' + (window.__texfmt || 'etc2') + '.pck.wasm', document.baseURI).href" % id, true))
 		if req.request(url) == OK:
 			var res: Array = await req.request_completed
 			ok = res[0] == HTTPRequest.RESULT_SUCCESS and res[1] == 200
 		_req.erase(id)
 		req.queue_free()
+		if ok:
+			# hosted gzipped: unzip it in place before mounting
+			var raw := FileAccess.get_file_as_bytes(file).decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
+			var w := FileAccess.open(file, FileAccess.WRITE)
+			ok = raw.size() > 0 and w != null
+			if ok:
+				w.store_buffer(raw)
+				w.close()
 		if ok:
 			ok = ProjectSettings.load_resource_pack(file) and is_ready(id)
 			if ok:
