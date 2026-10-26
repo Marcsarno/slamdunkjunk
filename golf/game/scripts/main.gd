@@ -532,7 +532,15 @@ func _default_target() -> Vector2:
 		return _read_putt(pin2)
 	var reach: float = club.carry_m
 	if b.distance_to(pin2) <= reach:
-		return _landing_to_stop_at(pin2)
+		var land := _landing_to_stop_at(pin2)
+		if par == 3 and strokes == 0:
+			# a par 3's tee shot is aimed at the green: a club that runs out (a wood into the wind)
+			# would land short of it, over the water, so the mark goes forward onto the green
+			var dir := (pin2 - b).normalized()
+			while land.distance_to(pin2) > 1.0 and terrain.surface_at(land.x, land.y) != Terrain.Surface.GREEN \
+					and (land - b).dot(dir) < (pin2 - b).dot(dir):
+				land += dir
+		return land
 	var best := (pin2 - b).normalized() * reach
 	var best_err := INF
 	var start_i := 0
