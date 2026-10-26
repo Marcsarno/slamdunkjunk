@@ -18,6 +18,7 @@ set_formats() {   # desktop mobile
 if [ -n "$(find $G/assets/holes -newer tools/hole_art.json -name '*.json' -print -quit)" ]; then
 	bash tools/hole_art.sh
 fi
+python3 -I tools/ground_import.py
 python3 -I tools/web_split.py build/split.json
 cp $PRESET build/export_presets.cfg.orig
 trap 'cp build/export_presets.cfg.orig $PRESET' EXIT
