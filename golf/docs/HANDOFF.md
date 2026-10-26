@@ -150,15 +150,19 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Hole packs on the web** load via the page's own fetch into the engine's memory file system
   (`holes.gd` PAGE_FETCH, `engine.copyToFS`), so they work inside the Claude preview; the HTTPRequest
   download is the fallback.
-- **First load** is only what the clubhouse and hole 1 need (~41 MB on a phone, was 59): each later
-  hole's own trees, skies, ground art and flags ride in its pack (`hole_<id>.<etc2|s3tc>.pck`, gzipped,
-  in the device's texture format, the page's `window.__texfmt`), songs 2 and 3 in `hole_music`.
-  `tools/hole_art.sh` records what each hole opens (strace over `tests/light_set.gd`) into
-  `tools/hole_art.json`; `tools/web_split.py` turns it into what the main export leaves out and what
-  each pack carries (a picture shared by holes rides in each, so Pick a Hole works). `build_web.sh`
-  reruns the recorder when a hole's files change. While a hole is played `Holes.queue()` fetches the
-  next hole, then the songs, then the rest, one at a time; `music.gd` skips a song not yet arrived.
-  Her old (pre-video) swing frames and art no hole uses are left out of the build (still in the project).
+- **Staged loading** (web): the first download is the engine, title and clubhouse (~12.6 MB). Then,
+  one at a time (`Holes.queue`, started in `front.gd`): "core" (her frames, bag, lanterns, song 1;
+  a bar under PLAY, which waits for it), "course" (art every hole uses) and hole 1 behind the
+  clubhouse (its course loaded ahead, `Holes.warm`), then hole 2, "music" (songs 2-3), holes 3-9.
+  Each hole pack (`hole_<id>.<etc2|s3tc>.pck`, gzipped, the page's `window.__texfmt`) carries its own
+  art beyond course, so Pick a Hole works; `Holes.fetch` gets core and course first. A finished
+  download waits in the page (`window.__holebufs`, never in the status the game reads as text) and is
+  unpacked only when `Holes.hold` is off: `main.gd` holds it through the opening, pull, swing, flight
+  and celebration. `tools/hole_art.sh` records what each hole opens (strace over
+  `tests/light_set.gd`) into `tools/hole_art.json`; `tools/web_split.py` splits it; `build_web.sh`
+  reruns the recorder when a hole's files change. Play Now goes by way of Pick your Ball (Tee off).
+  Hole screens say a light "Loading..." on the dark purple, the background colour everywhere.
+  Test taps with `local.html` (index.html has no viewport meta: the artifact host adds one).
 - **Opening** (`main._intro_shots`, `_shot_pose`): one camera move, starting dark. Close on the tee's
   lantern while the lightning cracks (`intro_fx.gd`, `Ambience.strike()` and its thunder) and the
   lantern catches; back until she, her bag and the lantern share the frame; up behind the tee turning
@@ -173,7 +177,9 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Thunder**: a real CC0 recording (rubberduck, OpenGameArt "100 CC0 SFX #2", via the
   Legerdo/open-game-sfx-index GitHub mirror) in `art_src/sfx/`, turned into `assets/sfx/thunder.wav`
   by `tools/make_sfx.py`; played 0.9-2 s after each flash, louder the brighter.
-- **Cup and flag**: the cup drawn 1.8x real size (CUP_DRAWN) with a bright rim, a faint glow rising
+- **Cup and flag**: the cup drawn 1.8x real size (`BallSim.CUP_DRAWN`) and the ball drops anywhere in
+  it as drawn (`CUP_CATCH`; up to 1.8 m/s dead centre, a slow roll over it falls in, a ball stopping on
+  the drawn rim drops), with a bright rim, a faint glow rising
   out of it and a ring of light on the grass; the flag (on `_flag_pivot`) turns to face her
   (FLAG_TURN off square) when each shot is set up, under the fade, and stays put after that
   (`HoleView.face_flag`). Lanterns: faces at HeroLantern.LANTERN_GLOW 7 (carved jacks 8) with a
