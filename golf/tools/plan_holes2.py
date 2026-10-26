@@ -178,15 +178,20 @@ PLAN = {
 # about 1 in 4, accents for the rest; the far woods follow the same mix with a conifer behind.
 TREES = {
     1: ("tree_scarlet_maple", "tree_copper_oak", ["lantern_tree", "haunted_tree", "tree_golden_aspen"]),
-    2: ("tree_bent_willow", "tree_hollow_sentinel", ["haunted_tree", "tree_crooked_plum", "tree_raven_perch"]),
+    2: ("tree_witchwood_purple", "tree_bent_willow", ["haunted_tree", "tree_hollow_sentinel", "tree_raven_perch"]),
     3: ("tree_silver_snag", "tree_ancient_yew", ["tree_raven_perch", "tree_hollow_sentinel", "dead_tree"]),
-    4: ("tree_moonlit_pine", "pine_blue", ["tree_ghost_birch", "dead_tree", "tree_hollow_sentinel"]),
+    4: ("tree_dark_blue_spruce", "tree_moonlit_pine", ["tree_ghost_birch", "dead_tree", "tree_hollow_sentinel"]),
     5: ("tree_harvest_pear", "apple_tree", ["tree_copper_oak", "maple_orange", "tree_golden_aspen"]),
     6: ("tree_twisted_cypress", "tree_bent_willow", ["dead_tree", "tree_raven_perch", "tree_ghost_birch"]),
-    7: ("tree_crooked_plum", "tree_ancient_yew", ["tree_twisted_cypress", "tree_hollow_sentinel", "tree_scarlet_maple"]),
+    7: ("tree_crooked_plum", "tree_formal_yew", ["tree_ancient_yew", "tree_hollow_sentinel", "tree_scarlet_maple"]),
     8: ("tree_lightning_oak", "tree_windbent_fir", ["dead_tree", "tree_raven_perch", "tree_silver_snag"]),
     9: ("tree_golden_aspen", "maple_orange", ["lantern_tree", "birch", "tree_copper_oak"]),
 }
+# Undergrowth under each hole's trees and along its rough (the new ground plants); one landmark tree.
+UNDER = {1: ["ground_brambles", "ground_ferns"], 2: ["ground_heather", "ground_ferns"], 3: ["ground_ferns", "ground_brambles"],
+         4: ["ground_ferns"], 5: ["ground_brambles", "ground_heather"], 6: ["ground_marsh_reeds", "ground_ferns"],
+         7: ["ground_brambles"], 8: ["ground_ferns", "ground_brambles"], 9: ["ground_heather", "ground_brambles"]}
+LANDMARK = {9: "tree_homecoming_swing_oak"}
 CARDS = None
 _COL = {}
 
@@ -444,7 +449,7 @@ def main():
         p = PLAN[i]
         img_now = draw(now, "now%d" % i, False, i)
         img_new = draw(p, "new%d" % i, True, i)
-        gap, head, prof_h, foot = 14, 46, 110, 100
+        gap, head, prof_h, foot = 14, 46, 110, 146
         row = Image.new("RGB", (3 * PX + 4 * gap, PX + head + prof_h + foot), (23, 13, 36))
         d = ImageDraw.Draw(row)
         con = concept[i].resize((PX, int(PX * concept[i].height / concept[i].width))).crop((0, 0, PX, PX))
@@ -460,16 +465,23 @@ def main():
         x = gap
         d.text((x, head + PX + 34), "proposed trees:", fill=(205, 195, 225), font=font(15))
         x += 132
-        for n, (name, h, tag) in enumerate([(dom, 74, "mostly"), (sec, 58, "some")] + [(a, 44, "") for a in acc]):
+        items = [(dom, 74, "mostly"), (sec, 58, "some")] + [(a, 44, "") for a in acc]
+        items += [(u, 34, "under:" if n == 0 else "") for n, u in enumerate(UNDER[i])]
+        if i in LANDMARK:
+            items.append((LANDMARK[i], 60, "by the house:"))
+        base = head + PX + prof_h
+        for n, (name, h, tag) in enumerate(items):
+            if tag == "under:":                      # undergrowth (and the landmark) on a line of their own
+                x, base = gap + 132, base + 46
             im = Image.open(os.path.join(CARDS, name + ".png")).convert("RGBA")
             im.thumbnail((h, h))
-            row.paste(im, (x, head + PX + prof_h - im.height - 2), im)
-            label = name.replace("tree_", "").replace("_", " ")
+            row.paste(im, (x, base - im.height - 2), im)
+            label = name.replace("tree_", "").replace("ground_", "").replace("_", " ")
             f = font(13 if n < 2 else 11)
-            d.text((x + im.width + 4, head + PX + prof_h - 34), (tag + " " if tag else "") + label,
+            d.text((x + im.width + 4, base - 34), (tag + " " if tag else "") + label,
                    fill=(255, 225, 170) if n < 2 else (190, 180, 210), font=f)
-            x += im.width + 10 + int(d.textlength((tag + " " if tag else "") + label, font=f))
-        y = head + PX + prof_h + 4
+            x += im.width + 8 + int(d.textlength((tag + " " if tag else "") + label, font=f))
+        y = head + PX + prof_h + 50
         for text, col, f in [("proposed: " + facts(p) + "; bends " + p["turn"], (255, 230, 160), font(16)),
                              (p["note"], (225, 215, 240), font(15))]:
             line = ""
