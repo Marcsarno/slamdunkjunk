@@ -253,11 +253,11 @@
   },
   {
    "center": [
-    -299.04,
-    330.22
+    -265.71,
+    362.91
    ],
-   "radius": 8,
-   "count": 9,
+   "radius": 7,
+   "count": 8,
    "fence": true
   }
  ],
@@ -439,12 +439,16 @@
  },
  "features": [
   {
-   "image": "light_grave_candles",
+   "model": "chapel",
    "pos": [
-    -287.29,
-    323.74
+    -292.65,
+    339.97
    ],
-   "scale": 2.0
+   "face": [
+    -270.5,
+    293.05
+   ],
+   "clear": 18
   }
  ],
  "patches": [

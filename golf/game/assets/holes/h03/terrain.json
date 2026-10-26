@@ -9,18 +9,18 @@
  ],
  "extent": [
   57,
-  349
+  364
  ],
  "phys": {
   "cell": 1.0,
   "nx": 382,
-  "ny": 405,
+  "ny": 420,
   "file": "heights.bin"
  },
  "surf": {
   "cell": 0.5,
   "nx": 763,
-  "ny": 809,
+  "ny": 839,
   "file": "surface.bin",
   "names": [
    "oob",
@@ -41,14 +41,14 @@
   "path": "path.png",
   "size": [
    1525,
-   1617
+   1677
   ]
  },
  "ground": {
   "file": "ground.jpg",
   "size": [
-   1906,
-   2021
+   1862,
+   2048
   ]
  },
  "theme": {

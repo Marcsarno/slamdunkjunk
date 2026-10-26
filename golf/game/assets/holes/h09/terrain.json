@@ -4,7 +4,7 @@
  "number": 9,
  "par": 4,
  "origin": [
-  -195,
+  -213,
   -55
  ],
  "extent": [
@@ -13,13 +13,13 @@
  ],
  "phys": {
   "cell": 1.0,
-  "nx": 252,
+  "nx": 270,
   "ny": 347,
   "file": "heights.bin"
  },
  "surf": {
   "cell": 0.5,
-  "nx": 503,
+  "nx": 539,
   "ny": 693,
   "file": "surface.bin",
   "names": [
@@ -40,14 +40,14 @@
   "detail": "detail.png",
   "path": "path.png",
   "size": [
-   1005,
+   1077,
    1385
   ]
  },
  "ground": {
   "file": "ground.jpg",
   "size": [
-   1256,
+   1346,
    1731
   ]
  },
@@ -168,7 +168,7 @@
  "pin": [
   -130.03,
   201.88,
-  8.385436386829042
+  8.385328508059658
  ],
  "green": {
   "center": [

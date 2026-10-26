@@ -161,8 +161,10 @@ def extras(i, p):
         for s in (-1, 1):                     # two walled plots fill the long graveyard
             e["graveyards"].append({"center": [round(gy["center"][0] + s * ax * 24, 1), round(gy["center"][1] + s * ay * 24, 1)],
                                     "radius": 28, "count": 44, "fence": True})
-        e["graveyards"].append({"center": [318, 312], "radius": 8, "count": 9, "fence": True})   # by the chapel's spot
-        e["features"].append({"image": "light_grave_candles", "pos": [312, 300], "scale": 2.0})
+        # the Forgotten Chapel (landmarks.chapel, Marc's concept) behind the green on the right, its door
+        # toward the green, a few graves beside it
+        e["features"].append({"model": "chapel", "pos": [328, 306], "face": [282, 282], "clear": 18})
+        e["graveyards"].append({"center": [352, 280], "radius": 7, "count": 8, "fence": True})
         e["pumpkin_clusters"].append({"center": [150, 132], "carved": 2, "plain": 1})
         e["cart"] = {"side": 1, "offset": 6.0}
         e["pin"] = [-2, 3]
@@ -225,7 +227,11 @@ def extras(i, p):
         e["patches"].append(dict(pt, kind="pumpkins"))
         e["fences"].append({"points": ring(pt, 3.0, 18)})
         e["pumpkin_clusters"] += patch_pumpkins(pt)
-        e["features"].append({"tree": Q.LANDMARK[9], "pos": [-22, 268], "height": 10.0})
+        # the Homecoming House (landmarks.house, Marc's concept) past the green, its porch toward it, and the
+        # swing oak in its yard
+        e["features"].append({"model": "house", "pos": [-40, 274], "face": [6, 243], "clear": 14})
+        e["features"].append({"tree": Q.LANDMARK[9], "pos": [-16, 274], "height": 10.0})
+        e["zones"].append(ell([-18, 260], [32, 18], -0.59, surface="rough"))           # its yard, open to the green
         e["graveyards"].append({"center": [-70, 230], "radius": 7, "count": 8, "fence": True})
         e["cart"] = {"side": 1, "offset": 6.0}
         e["pin"] = [2, -3]

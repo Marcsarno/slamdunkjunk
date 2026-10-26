@@ -146,6 +146,18 @@
    ],
    "rotation": 0.4055,
    "surface": "deep_rough"
+  },
+  {
+   "center": [
+    -162.79,
+    203.52
+   ],
+   "radius": [
+    32,
+    18
+   ],
+   "rotation": 0.0155,
+   "surface": "rough"
   }
  ],
  "pads": [
@@ -815,10 +827,22 @@
  ],
  "features": [
   {
+   "model": "house",
+   "pos": [
+    -188.85,
+    202.51
+   ],
+   "face": [
+    -133.38,
+    203.21
+   ],
+   "clear": 14
+  },
+  {
    "tree": "tree_homecoming_swing_oak",
    "pos": [
-    -170.64,
-    207.82
+    -169.12,
+    216.17
    ],
    "height": 10.0
   }
