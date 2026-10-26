@@ -1,457 +1,471 @@
 {
-  "id": "h05_haunted_harvest",
-  "name": "Haunted Harvest",
-  "number": 5,
-  "par": 5,
-  "seed": 505,
-  "note": "Haunted Harvest: a long S out to the right round a fenced cornfield, to a green under the old barn and its silo. Three shots round it, or two over the corn: lay up on the pad beside the field and fly its corner. Anything in the corn is lost in it, and comes out short. Course coords in meters: x right, y down-range, z up.",
-  "path": [
-    [
-      0,
-      0
-    ],
-    [
-      55,
-      70
-    ],
-    [
-      115,
-      125
-    ],
-    [
-      140,
-      190
-    ],
-    [
-      125,
-      260
-    ],
-    [
-      85,
-      315
-    ],
-    [
-      35,
-      345
-    ]
+ "id": "h05_haunted_harvest",
+ "name": "Haunted Harvest",
+ "number": 5,
+ "par": 5,
+ "seed": 505,
+ "note": "Three shots down the long diagonal through the farm: a bend at the drive, then the corn maze all down the left of the second shot and the barn behind the green.",
+ "path": [
+  [
+   0.0,
+   0.0
   ],
-  "fairway_start": 38,
-  "fairway_width": [
-    24,
-    28,
-    30,
-    30,
-    28,
-    26,
-    22
+  [
+   0.0,
+   100.7
   ],
-  "rough_width": 13,
-  "deep_rough_width": 14,
-  "tee": {
-    "center": [
-      0,
-      0
-    ],
-    "size": [
-      8,
-      10
-    ]
+  [
+   16.4,
+   199.4
+  ],
+  [
+   65.0,
+   255.6
+  ],
+  [
+   94.6,
+   319.6
+  ],
+  [
+   96.7,
+   386.3
+  ],
+  [
+   109.1,
+   434.1
+  ]
+ ],
+ "fairway_start": 40,
+ "fairway_width": [
+  24,
+  34,
+  42,
+  38,
+  42,
+  32,
+  24
+ ],
+ "rough_width": 13,
+ "deep_rough_width": 14,
+ "tee": {
+  "center": [
+   0,
+   0
+  ],
+  "size": [
+   8,
+   10
+  ]
+ },
+ "green": {
+  "center": [
+   110.81,
+   436.31
+  ],
+  "radius": [
+   12,
+   10
+  ],
+  "rotation": -0.1806,
+  "slope": [
+   -0.0,
+   0.02
+  ]
+ },
+ "pin": [
+  112.43,
+  439.53
+ ],
+ "bunkers_real": true,
+ "bunkers": [
+  {
+   "center": [
+    94.01,
+    425.23
+   ],
+   "radius": [
+    10,
+    4
+   ],
+   "rotation": 1.0194,
+   "depth": 0.5,
+   "lobes": [
+    0.1,
+    2.4,
+    0.11,
+    0.9
+   ]
   },
-  "green": {
-    "center": [
-      35,
-      346
-    ],
-    "radius": [
-      13,
-      11
-    ],
-    "rotation": -0.3,
-    "slope": [
-      -0.012,
-      0.018
-    ]
+  {
+   "center": [
+    127.13,
+    451.36
+   ],
+   "radius": [
+    9,
+    4
+   ],
+   "rotation": -0.2806,
+   "depth": 0.5,
+   "lobes": [
+    0.14,
+    1.3,
+    0.07,
+    2.8
+   ]
   },
-  "pin": [
-    32,
-    348
-  ],
-  "bunkers": [
-    {
-      "center": [
-        52,
-        352
-      ],
-      "radius": [
-        5,
-        3
-      ],
-      "rotation": 1.0,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        20,
-        334
-      ],
-      "radius": [
-        4.4,
-        2.6
-      ],
-      "rotation": -0.5,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        156,
-        205
-      ],
-      "radius": [
-        3,
-        7
-      ],
-      "rotation": 0.2,
-      "depth": 0.45
-    }
-  ],
-  "water": [],
-  "pads": [
-    {
-      "center": [
-        24,
-        178
-      ],
-      "radius": [
-        15,
-        13
-      ],
-      "rotation": 0.2
-    }
-  ],
-  "cornfields": [
-    {
-      "center": [
-        52,
-        262
-      ],
-      "radius": [
-        26,
-        44
-      ],
-      "rotation": -0.35,
-      "gap": 4.2
-    }
-  ],
-  "zones": [
-    {
-      "center": [
-        52,
-        262
-      ],
-      "radius": [
-        34,
-        54
-      ],
-      "rotation": -0.35,
-      "surface": "deep_rough"
-    },
-    {
-      "center": [
-        62,
-        190
-      ],
-      "radius": [
-        30,
-        40
-      ],
-      "rotation": 0.4,
-      "surface": "rough"
-    },
-    {
-      "center": [
-        56,
-        380
-      ],
-      "radius": [
-        34,
-        26
-      ],
-      "rotation": 0.6,
-      "surface": "rough"
-    }
-  ],
-  "features": [
-    {
-      "model": "barn",
-      "pos": [
-        62,
-        392
-      ],
-      "face": [
-        35,
-        346
-      ],
-      "clear": 18
-    }
-  ],
-  "elevation": {
-    "tee": 8.0,
-    "green": 6.5,
-    "cross_tilt": 0.008,
-    "roll_height": 0.35,
-    "bank_height": 2.5,
-    "mounds": [
-      {
-        "center": [
-          -40,
-          120
-        ],
-        "radius": 24,
-        "height": 2.4
-      },
-      {
-        "center": [
-          190,
-          260
-        ],
-        "radius": 22,
-        "height": 2.2
-      },
-      {
-        "center": [
-          -10,
-          380
-        ],
-        "radius": 24,
-        "height": 2.6
-      }
-    ],
-    "profile": [
-      [
-        0,
-        8.0
-      ],
-      [
-        90,
-        6.0
-      ],
-      [
-        220,
-        2.0
-      ],
-      [
-        330,
-        4.0
-      ],
-      [
-        445,
-        6.5
-      ]
-    ]
+  {
+   "center": [
+    16.04,
+    235.59
+   ],
+   "radius": [
+    6,
+    16
+   ],
+   "rotation": -0.6806,
+   "depth": 0.5,
+   "lobes": [
+    0.09,
+    3.0,
+    0.1,
+    1.6
+   ]
   },
-  "wind": {
-    "min": 1,
-    "max": 5
-  },
-  "graveyards": [
-    {
-      "center": [
-        180,
-        120
-      ],
-      "radius": 6,
-      "count": 6,
-      "fence": true
-    }
-  ],
-  "plan": {
-    "safe": [
-      [
-        98,
-        116
-      ],
-      [
-        140,
-        230
-      ],
-      [
-        32,
-        348
-      ]
-    ],
-    "risk": [
-      [
-        24,
-        178
-      ],
-      [
-        32,
-        348
-      ]
-    ]
-  },
-  "lantern_spacing": 18,
-  "trees_spacing": 8.5,
-  "pumpkin_clusters": [
-    {
-      "center": [
-        4.9,
-        3.4
-      ],
-      "carved": 2,
-      "plain": 1,
-      "radius": 1.1
-    },
-    {
-      "center": [
-        -5.2,
-        6.2
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 1.0
-    },
-    {
-      "center": [
-        12,
-        34
-      ],
-      "carved": 2,
-      "plain": 3
-    },
-    {
-      "center": [
-        10,
-        228
-      ],
-      "carved": 1,
-      "plain": 3
-    },
-    {
-      "center": [
-        22,
-        368
-      ],
-      "carved": 2,
-      "plain": 3
-    },
-    {
-      "center": [
-        90,
-        372
-      ],
-      "carved": 2,
-      "plain": 2
-    },
-    {
-      "center": [
-        84,
-        236
-      ],
-      "carved": 1,
-      "plain": 3
-    }
-  ],
-  "cart_path": {
-    "side": 1,
-    "offset": 7.0
-  },
-  "theme": {
-    "light_props_spacing": 26,
-    "light_props": [
-      "light_classic_jack",
-      "light_pumpkin_totem",
-      "light_hanging_harvest",
-      "light_pumpkin_path_lights",
-      "light_skeleton_groundskeeper",
-      "light_hollow_heart_tree"
-    ],
-    "trees_near": [
-      "tree_harvest_pear",
-      "tree_crooked_plum",
-      "tree_copper_oak",
-      "apple_tree",
-      "tree_scarlet_maple",
-      "tree_golden_aspen",
-      "tree_harvest_pear"
-    ],
-    "trees_far": [
-      "tree_copper_oak",
-      "tree_scarlet_maple",
-      "maple_orange",
-      "tree_golden_aspen",
-      "tree_moonlit_pine"
-    ],
-    "backdrop": {
-      "hole": "05-haunted-harvest",
-      "variant": "a",
-      "span": 95,
-      "yaw": -8,
-      "horizon_v": 0.8
-    },
-    "rings": [
-      {
-        "image": "horizon_pines",
-        "radius": 440,
-        "height": 44,
-        "base": -6,
-        "repeats": 9,
-        "haze": 0.5
-      }
-    ],
-    "sky_style": "night",
-    "sky_top": [
-      0.004,
-      0.006,
-      0.025
-    ],
-    "sky_horizon": [
-      0.04,
-      0.05,
-      0.13
-    ],
-    "fog": [
-      0.14,
-      0.07,
-      0.12
-    ],
-    "fog_density": 0.0034,
-    "backdrop_haze": 0.16,
-    "moon": "harvest",
-    "moon_azimuth": 18,
-    "moon_elevation": 12,
-    "moon_size": 0.04,
-    "light_azimuth": 160,
-    "light_elevation": 28,
-    "moon_light": [
-      0.9,
-      0.7,
-      0.85
-    ],
-    "water_deep": [
-      0.04,
-      0.015,
-      0.03
-    ],
-    "water_glow": [
-      1.0,
-      0.45,
-      0.12
-    ],
-    "wisp_color": [
-      1.0,
-      0.6,
-      0.25
-    ],
-    "ghosts": 2,
-    "lightning": 0,
-    "mist": 20,
-    "clouds": 0.55,
-    "cloud_tint": [
-      0.65,
-      0.45,
-      0.6
-    ],
-    "leaf_amount": 0.45
+  {
+   "center": [
+    117.44,
+    347.47
+   ],
+   "radius": [
+    6,
+    15
+   ],
+   "rotation": 0.2194,
+   "depth": 0.5,
+   "lobes": [
+    0.12,
+    0.6,
+    0.09,
+    2.1
+   ]
   }
+ ],
+ "water": [],
+ "zones": [
+  {
+   "center": [
+    48.06,
+    338.13
+   ],
+   "radius": [
+    30,
+    54
+   ],
+   "rotation": -0.1806,
+   "surface": "deep_rough"
+  }
+ ],
+ "pads": [],
+ "elevation": {
+  "cross_tilt": 0.008,
+  "roll_height": 0.35,
+  "bank_height": 2.5,
+  "mounds": [
+   {
+    "center": [
+     67.4,
+     127.8
+    ],
+    "radius": 22,
+    "height": 2.2
+   },
+   {
+    "center": [
+     158.0,
+     364.5
+    ],
+    "radius": 22,
+    "height": 2.2
+   }
+  ],
+  "profile": [
+   [
+    0,
+    8.0
+   ],
+   [
+    100,
+    6.2
+   ],
+   [
+    200,
+    4.6
+   ],
+   [
+    270,
+    3.2
+   ],
+   [
+    360,
+    4.0
+   ],
+   [
+    462,
+    6.5
+   ]
+  ]
+ },
+ "wind": {
+  "min": 1,
+  "max": 5
+ },
+ "graveyards": [
+  {
+   "center": [
+    -57.59,
+    144.17
+   ],
+   "radius": 6,
+   "count": 6,
+   "fence": true
+  }
+ ],
+ "lantern_spacing": 18,
+ "trees_spacing": 8.5,
+ "theme": {
+  "light_props_spacing": 26,
+  "light_props": [
+   "light_classic_jack",
+   "light_pumpkin_totem",
+   "light_hanging_harvest",
+   "light_pumpkin_path_lights",
+   "light_skeleton_groundskeeper",
+   "light_hollow_heart_tree"
+  ],
+  "trees_near": [
+   "tree_harvest_pear",
+   "tree_crooked_plum",
+   "tree_copper_oak",
+   "apple_tree",
+   "tree_scarlet_maple",
+   "tree_golden_aspen",
+   "tree_harvest_pear"
+  ],
+  "trees_far": [
+   "tree_copper_oak",
+   "tree_scarlet_maple",
+   "maple_orange",
+   "tree_golden_aspen",
+   "tree_moonlit_pine"
+  ],
+  "backdrop": {
+   "hole": "05-haunted-harvest",
+   "variant": "a",
+   "span": 95,
+   "yaw": -8,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 440,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.5
+   }
+  ],
+  "sky_style": "night",
+  "sky_top": [
+   0.004,
+   0.006,
+   0.025
+  ],
+  "sky_horizon": [
+   0.04,
+   0.05,
+   0.13
+  ],
+  "fog": [
+   0.14,
+   0.07,
+   0.12
+  ],
+  "fog_density": 0.0034,
+  "backdrop_haze": 0.16,
+  "moon": "harvest",
+  "moon_azimuth": 18,
+  "moon_elevation": 12,
+  "moon_size": 0.04,
+  "light_azimuth": 160,
+  "light_elevation": 28,
+  "moon_light": [
+   0.9,
+   0.7,
+   0.85
+  ],
+  "water_deep": [
+   0.04,
+   0.015,
+   0.03
+  ],
+  "water_glow": [
+   1.0,
+   0.45,
+   0.12
+  ],
+  "wisp_color": [
+   1.0,
+   0.6,
+   0.25
+  ],
+  "ghosts": 2,
+  "lightning": 0,
+  "mist": 20,
+  "clouds": 0.55,
+  "cloud_tint": [
+   0.65,
+   0.45,
+   0.6
+  ],
+  "leaf_amount": 0.45,
+  "trees": {
+   "dominant": "tree_harvest_pear",
+   "secondary": "apple_tree",
+   "accents": [
+    "tree_copper_oak",
+    "maple_orange",
+    "tree_golden_aspen"
+   ],
+   "far": [
+    "apple_tree",
+    "tree_moonlit_pine"
+   ]
+  },
+  "under": [
+   "ground_brambles",
+   "ground_heather"
+  ],
+  "shore": [
+   "cattails"
+  ]
+ },
+ "pumpkin_clusters": [
+  {
+   "center": [
+    4.46,
+    3.96
+   ],
+   "carved": 2,
+   "plain": 1,
+   "radius": 1.1
+  },
+  {
+   "center": [
+    -5.9,
+    5.54
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 1.0
+  },
+  {
+   "center": [
+    -18.67,
+    38.05
+   ],
+   "carved": 2,
+   "plain": 3
+  },
+  {
+   "center": [
+    42.81,
+    230.74
+   ],
+   "carved": 1,
+   "plain": 3
+  },
+  {
+   "center": [
+    129.47,
+    398.26
+   ],
+   "carved": 2,
+   "plain": 2
+  },
+  {
+   "center": [
+    75.94,
+    307.24
+   ],
+   "carved": 1,
+   "plain": 3
+  }
+ ],
+ "cart_path": {
+  "side": 1,
+  "offset": 7.0
+ },
+ "plan": {
+  "safe": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    100.72
+   ],
+   [
+    16.36,
+    199.37
+   ],
+   [
+    65.01,
+    255.57
+   ],
+   [
+    94.6,
+    319.55
+   ],
+   [
+    96.67,
+    386.27
+   ],
+   [
+    109.06,
+    434.09
+   ]
+  ],
+  "risk": []
+ },
+ "features": [
+  {
+   "model": "barn",
+   "pos": [
+    130.11,
+    476.9
+   ],
+   "face": [
+    110.81,
+    436.31
+   ],
+   "clear": 18
+  }
+ ],
+ "cornfields": [
+  {
+   "center": [
+    48.06,
+    338.13
+   ],
+   "radius": [
+    22,
+    46
+   ],
+   "rotation": -0.1806,
+   "gap": 4.2
+  }
+ ]
 }

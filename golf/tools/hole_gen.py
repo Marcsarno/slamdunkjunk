@@ -72,14 +72,37 @@ class Noise:
 
 
 def ellipse_r(x, y, e):
-    """Normalized elliptical radius (1.0 on the rim) for {'center','radius','rotation'}."""
+    """Normalized elliptical radius (1.0 on the rim) for {'center','radius','rotation'}. With "lobes"
+    ([a2, phase2, a3, phase3, ...]: amplitude and phase of the 2nd, 3rd, ... harmonic) the rim swells and
+    tucks in, so a pond or a bunker isn't a clean oval."""
     cx, cy = e["center"]
     rx, ry = e["radius"]
     c, s = math.cos(e.get("rotation", 0.0)), math.sin(e.get("rotation", 0.0))
     dx, dy = x - cx, y - cy
     u = (dx * c + dy * s) / rx
     v = (-dx * s + dy * c) / ry
-    return np.sqrt(u * u + v * v), np.arctan2(v, u)
+    r, th = np.sqrt(u * u + v * v), np.arctan2(v, u)
+    lob = e.get("lobes")
+    if lob:
+        r = r / lobe_factor(th, lob)
+    return r, th
+
+
+def lobe_factor(th, lob):
+    """The rim's reach at angle th (1 = the plain ellipse) for "lobes" [a2, p2, a3, p3, a5, p5, ...]."""
+    f = 1.0
+    for k, (a, ph) in enumerate(zip(lob[0::2], lob[1::2])):
+        f = f + a * np.cos((2, 3, 5, 7)[k] * th + ph)
+    return f
+
+
+def rim_point(e, a, k=1.0):
+    """The point on an area's rim (lobes and all) at angle a, pushed out by k."""
+    rx, ry = e["radius"]
+    f = float(lobe_factor(a, e["lobes"])) if e.get("lobes") else 1.0
+    u, v = math.cos(a) * rx * f * k, math.sin(a) * ry * f * k
+    rot = e.get("rotation", 0.0)
+    return (e["center"][0] + u * math.cos(rot) - v * math.sin(rot), e["center"][1] + u * math.sin(rot) + v * math.cos(rot))
 
 
 def kidney_r(x, y, e):
@@ -99,7 +122,8 @@ def green_r(x, y, g):
 def realistic_bunkers(spec):
     """Greenside bunkers hug the green, a couple of metres off its edge, long and curved round it, at
     real sizes (8-12 m by 5-7 m); fairway bunkers grow to real sizes too (a layout's numbers were
-    drawn small). Bunkers set "fixed": true are left alone."""
+    drawn small). A layout with "bunkers_real": true is drawn at real size (greenside up to ~24 x 10 m,
+    fairway up to ~36 m long) and is only placed, not grown. Bunkers set "fixed": true are left alone."""
     g = spec["green"]
     gx, gy = g["center"]
     gmax = max(g["radius"])
@@ -117,8 +141,12 @@ def realistic_bunkers(spec):
             ux, uy = math.cos(ang), math.sin(ang)
             r1 = float(green_r(np.array([gx + ux]), np.array([gy + uy]), g)[0])
             edge = 1.0 / max(r1, 1e-3)
-            long_r = float(np.clip(max(b["radius"]) * 1.5, 4.5, 6.5))
-            short_r = float(np.clip(min(b["radius"]) * 1.25, 2.6, 3.6))
+            # real greenside bunkers run ~18-25 m long and 7-10 m across (a layout drawn small grows to
+            # the smallest real one)
+            long_r = float(np.clip(max(b["radius"]) * (1.0 if spec.get("bunkers_real") else 1.5), 4.5,
+                                   12.0 if spec.get("bunkers_real") else 6.5))
+            short_r = float(np.clip(min(b["radius"]) * (1.0 if spec.get("bunkers_real") else 1.25), 2.6,
+                                    5.0 if spec.get("bunkers_real") else 3.6))
             dist = edge + 2.2 + short_r
             b["center"] = [round(gx + ux * dist, 2), round(gy + uy * dist, 2)]
             b["radius"] = [round(long_r, 2), round(short_r, 2)]
@@ -126,7 +154,10 @@ def realistic_bunkers(spec):
             b["depth"] = max(b.get("depth", 0.45), 0.8)            # a face you can see from the fairway
             b["greenside"] = True
         else:
-            b["radius"] = [round(float(np.clip(r * 1.35, 3.0, 12.0)), 2) for r in b["radius"]]
+            if spec.get("bunkers_real"):            # drawn at real size: ~12 x 30 m fairway bunkers
+                b["radius"] = [round(float(np.clip(r, 3.0, 18.0)), 2) for r in b["radius"]]
+            else:
+                b["radius"] = [round(float(np.clip(r * 1.35, 3.0, 12.0)), 2) for r in b["radius"]]
             b["depth"] = max(b.get("depth", 0.45), 0.6)
         out.append(b)
     spec["bunkers"] = out
@@ -513,7 +544,7 @@ def paint_albedo(hole, out_path):
     return img.size
 
 
-GRADE_LIMITS = {  # percent; from golf architecture guidance (pin areas <=3%, surrounds <=17.5%)
+GRADE_LIMITS = {  # percent; from golf architecture guidance (pin areas <=3%, surrounds <=17.5%, pond banks ~3:1)
     "green": 4.0, "tee": 2.0, "fairway": 9.0, "fringe": 17.5, "rough": 17.5, "deep_rough": 20.0, "sand": 45.0,
 }
 
@@ -524,8 +555,15 @@ def slope_report(hole, px, py, heights, spec):
     surf = hole.surface(px, py, heights)
     print("grade report (percent)    p50    p95    max   limit")
     worst = []
+    # a pond's banks are built steeper than playing rough (about 3:1, 33%): reported on their own
+    bank = np.zeros(surf.shape, bool)
+    for w in spec.get("water", []):
+        wr, _ = ellipse_r(px, py, w)
+        bank |= wr < 1.6
     for k, name in enumerate(SURFACE_NAMES):
         m = ndimage.binary_erosion(surf == k, iterations=1)   # interior cells only
+        if name in ("rough", "deep_rough"):
+            m &= ~bank
         if name in ("oob", "water") or not m.any():
             continue
         p50, p95, mx = np.percentile(pct[m], 50), np.percentile(pct[m], 95), pct[m].max()
@@ -534,6 +572,13 @@ def slope_report(hole, px, py, heights, spec):
         if flag:
             worst.append(name)
         print(f"  {name:12s}          {p50:5.1f}  {p95:5.1f}  {mx:5.1f}  {lim}{flag}")
+    m = ndimage.binary_erosion(bank & ((surf == ROUGH) | (surf == DEEP)), iterations=1)
+    if m.any():
+        p50, p95, mx = np.percentile(pct[m], 50), np.percentile(pct[m], 95), pct[m].max()
+        flag = "  <-- over" if p95 > 33.0 else ""
+        if flag:
+            worst.append("water bank")
+        print(f"  {'water bank':12s}          {p50:5.1f}  {p95:5.1f}  {mx:5.1f}  33.0{flag}")
     pin = spec["pin"]
     near = np.hypot(px - pin[0], py - pin[1]) < 3.0
     print(f"  pin area (3 m)        max {pct[near].max():.1f}%  (limit 3.0)")
@@ -664,6 +709,8 @@ def build(spec_path, out_dir, preview_dir=None):
         "webs": spec.get("webs", []),
         "web_art": spec.get("web_art", spec.get("webs", [])),
         "corn": spec.get("cornfields", []),
+        # a walled graveyard or a pumpkin patch: open ground you carry, a bad lie if you land in it
+        "patches": spec.get("patches", []),
     }
     if hole.cart is not None:
         meta["cart_path"] = [[round(float(a), 2), round(float(b), 2)] for a, b in hole.cart[::4]]

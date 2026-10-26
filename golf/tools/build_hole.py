@@ -366,10 +366,49 @@ TREE_HEIGHT = {"pine_blue": (9.0, 13.0), "haunted_tree": (5.5, 7.5), "lantern_tr
                "tree_crooked_plum": (5.5, 7.5), "tree_harvest_pear": (6.0, 8.0), "tree_hollow_sentinel": (7.0, 9.0),
                "tree_bent_willow": (5.0, 6.5), "tree_lightning_oak": (7.0, 9.0), "tree_silver_snag": (7.0, 9.5),
                "tree_raven_perch": (4.5, 6.0), "tree_moonlit_pine": (10.0, 14.0), "tree_twisted_cypress": (8.0, 10.5),
-               "tree_ancient_yew": (5.0, 6.5), "tree_windbent_fir": (8.0, 10.0), "tree_ghost_birch": (8.0, 11.0)}
+               "tree_ancient_yew": (5.0, 6.5), "tree_windbent_fir": (8.0, 10.0), "tree_ghost_birch": (8.0, 11.0),
+               # the foliage expansion (19-22)
+               "tree_formal_yew": (6.0, 8.5), "tree_dark_blue_spruce": (12.0, 16.0),
+               "tree_witchwood_purple": (7.5, 10.0), "tree_homecoming_swing_oak": (8.5, 10.5)}
 # trees much wider than tall: their canopy (the ball's soft obstacle) spreads wider for their height
 TREE_SPREAD = {"tree_bent_willow": 0.5, "tree_ancient_yew": 0.5, "tree_raven_perch": 0.45, "tree_windbent_fir": 0.35,
-               "tree_lightning_oak": 0.35}
+               "tree_lightning_oak": 0.35, "tree_formal_yew": 0.2, "tree_dark_blue_spruce": 0.24,
+               "tree_homecoming_swing_oak": 0.33}
+
+
+def grove_tree(x, y, near):
+    """The theme's "trees" mix ({"dominant", "secondary", "accents", "far"}): woods stand in groves about
+    25 m across, each of one kind, so a hole reads as mostly its dominant tree (about 6 in 10), some of a
+    second (1 in 4) and a few accents. The far woods mix the dominant with their own backdrop kinds."""
+    mix = theme["trees"]
+    gx, gy = math.floor(x / 25.0), math.floor(y / 25.0)
+    r = random.Random(gx * 7919 + gy * 104729 + spec.get("seed", 1)).random()
+    if not near and mix.get("far") and r > 0.55:
+        return mix["far"][int(r * 997) % len(mix["far"])]
+    if r < 0.6 or rng.random() > 0.85:
+        return mix["dominant"]
+    if r < 0.85:
+        return mix["secondary"]
+    return mix["accents"][int(r * 1000) % len(mix["accents"])]
+
+
+def near_line(x, y, line, upto, m):
+    """Within m metres of the first `upto` metres of a polyline (a brave line's flight out of the tee)."""
+    s0 = 0.0
+    for (ax, ay), (bx, by) in zip(line, line[1:]):
+        L = math.hypot(bx - ax, by - ay)
+        t = max(0.0, min(1.0, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / (L * L)))
+        if s0 + t * L <= upto and math.hypot(x - ax - (bx - ax) * t, y - ay - (by - ay) * t) < m:
+            return True
+        s0 += L
+        if s0 > upto:
+            break
+    return False
+
+
+# real landing areas are framed wider: trees stand further back where drives come down (~185-255 m out)
+LANDING = (185.0, 255.0, theme.get("landing_clear", 6.0))
+BRAVE = [ln for ln in (spec.get("plan", {}).get("risk"),) if ln and len(ln) > 1 and list(ln[0]) == [0, 0]]
 sp = spec.get("trees_spacing", tree_cfg.get("spacing", 8.5))
 for yy in np.arange(y0 + 4, y1 - 4, sp):
     for xx in np.arange(x0 + 4, x1 - 4, sp):
@@ -380,16 +419,23 @@ for yy in np.arange(y0 + 4, y1 - 4, sp):
         if s < 6 and d < 25:
             continue                       # keep the view from the tee open
         edge = hole.half_width(s) + spec["rough_width"]
+        if LANDING[0] < s < LANDING[1]:
+            edge += LANDING[2]
         if d < edge - 4 or not free(x, y, 2.5) or in_cornfield(x, y):
             continue
+        if any(near_line(x, y, ln, 140.0, 9.0) for ln in BRAVE):
+            continue                       # the brave line's flight out of the tee stays clear
         su = surf_at(x, y)
         if su == hole_gen.WATER or in_open(x, y) or not off_green(x, y, 7.0):
             continue
         near_zone = d < edge + spec["deep_rough_width"] or in_open(x, y, 1.6)
         if rng.random() > (0.75 if near_zone else 0.4):
             continue
-        pool = tree_cfg.get("near" if near_zone else "far", ["maple_orange"])
-        img = pool[int(rng.integers(0, len(pool)))]
+        if theme.get("trees"):
+            img = grove_tree(x, y, near_zone)
+        else:
+            pool = tree_cfg.get("near" if near_zone else "far", ["maple_orange"])
+            img = pool[int(rng.integers(0, len(pool)))]
         height = float(rng.uniform(*TREE_HEIGHT.get(img, (7.0, 10.0))))
         z = h_at(x, y)
         cards.append({"image": img, "pos": [round(x, 2), round(y, 2), round(z - 0.15, 2)], "height": round(height, 2),
@@ -446,7 +492,12 @@ counts["grass_tuft"] = scatter("grass_tuft", 3.4, 0.18, (0.3, 0.5),
                                lambda x, y, d, s, su: su == hole_gen.ROUGH and d < hole.half_width(s) + rough_w * 0.8)
 counts["tall_grass"] = scatter("tall_grass", 3.2, 0.5, (0.9, 1.4), lambda x, y, d, s, su: su == hole_gen.DEEP)
 counts["leaf_pile"] = scatter("leaf_pile", 6.0, 0.35, (0.3, 0.5), lambda x, y, d, s, su: su in (hole_gen.ROUGH, hole_gen.DEEP))
-counts["fern"] = scatter("fern", 7.0, 0.35, (0.6, 0.95), lambda x, y, d, s, su: su in (hole_gen.DEEP, hole_gen.OOB) and d < hole.half_width(s) + rough_w + spec["deep_rough_width"] + 10)
+UNDER_HEIGHT = {"ground_ferns": (0.7, 1.1), "ground_brambles": (0.6, 1.0), "ground_heather": (0.45, 0.75),
+                "ground_marsh_reeds": (1.2, 1.8), "fern": (0.6, 0.95), "cattails": (1.2, 1.8)}
+# undergrowth along the woods' edge, under the near trees: the theme's "under" plants (the first the most)
+for k, img in enumerate(theme.get("under", ["fern"])):
+    counts[img] = scatter(img, 7.0 + 2.0 * k, 0.35 / (1 + k * 0.6), UNDER_HEIGHT.get(img, (0.6, 1.0)),
+                          lambda x, y, d, s, su: su in (hole_gen.DEEP, hole_gen.OOB) and d < hole.half_width(s) + rough_w + spec["deep_rough_width"] + 10)
 # glowing mushrooms in the graveyards and a crow keeping watch
 for g in spec.get("graveyards", []):
     for _ in range(5):
@@ -460,19 +511,15 @@ for g in spec.get("graveyards", []):
         card("crow_post", x, y, 1.6, shadow=True)
         taken.append((x, y, 0.6))
 # cattails around the ponds
+SHORE = theme.get("shore", ["cattails"])
 for w in spec.get("water", []):
-    cx, cy = w["center"]
-    rx, ry = w["radius"]
-    rot = w.get("rotation", 0.0)
     for a in np.arange(0, math.tau, 0.09):
         if rng.random() > 0.55:
             continue
-        k = rng.uniform(1.0, 1.18)
-        u, v = math.cos(a) * rx * k, math.sin(a) * ry * k
-        x = cx + u * math.cos(rot) - v * math.sin(rot)
-        y = cy + u * math.sin(rot) + v * math.cos(rot)
+        x, y = hole_gen.rim_point(w, a, rng.uniform(1.0, 1.18))        # the real (lobed) rim
         if surf_at(x, y) not in (hole_gen.FAIRWAY, hole_gen.TEE, hole_gen.GREEN, hole_gen.FRINGE):
-            card("cattails", x, y, rng.uniform(1.2, 1.8), sink=0.1)
+            img = SHORE[int(rng.integers(0, len(SHORE)))]
+            card(img, x, y, rng.uniform(*UNDER_HEIGHT.get(img, (1.2, 1.8))), sink=0.1)
 # a cornfield along one side of the hole (theme), with hay bales at its edge
 cf = theme.get("cornfield")
 if cf:
@@ -694,6 +741,15 @@ if pool:
 # the painted light props stood at a set spot, bigger ("image")
 for f in spec.get("features", []):
     x, y = f["pos"]
+    if "tree" in f:                         # one painted tree stood on its own, a landmark
+        z = h_at(x, y)
+        ht = f.get("height", 10.0)
+        cards.append({"image": f["tree"], "pos": [round(x, 2), round(y, 2), round(z - 0.15, 2)], "height": ht,
+                      "shadow": True})
+        obstacles.append({"type": "cylinder", "pos": [x, y, z], "r": 0.6, "h": ht * 0.45})
+        obstacles.append({"type": "sphere", "pos": [x, y, z + ht * 0.62], "r": ht * TREE_SPREAD.get(f["tree"], 0.28),
+                          "soft": True})
+        continue
     if "model" in f:
         z = h_at(x, y)
         if "face" in f:                     # turn its front (-y) toward that point

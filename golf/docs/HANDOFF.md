@@ -23,7 +23,9 @@ Notes to pick the work up from (last updated 2026-10-23, evening). Code lives on
 ```
 # a hole (headless Blender via the bpy module): layout JSON -> terrain, glb, props
 python3 golf/tools/build_hole.py golf/courses/holes/h04_spiderwood.json golf/game/assets/holes/h04
-python3 -I golf/tools/make_holes_4_9.py golf/courses/holes      # holes 4-9 layouts are written by this
+python3 -I golf/tools/make_course.py golf/courses/holes          # all nine layouts, from the plan (plan_holes2.PLAN)
+python3 golf/tools/plan_holes2.py golf golf/docs/img             # the plan sheets (concept | now | plan)
+python3 golf/tools/check_plan_ground.py                          # the plan on the builder's ground: plays-like, grades
 # Godot
 godot --headless --path golf/game --import
 godot --headless --path golf/game -s res://tests/test_physics.gd           # must say ALL PASSED
@@ -74,7 +76,8 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
   (`props.py` `headstone_rip`, `headstone_moon`, `headstone_broken`, ~130-250 tris each) with crosses and
   obelisks; the builder merges small props (stones, pumpkins) into one mesh per 40 m of ground.
 - **All nine holes are rebuilt from Marc's concepts** (`art_src/concepts/`, `art_src/redesign/`), each with a
-  safe and a risky route (layouts: `courses/holes/h01..h03`, h04-h09 written by `tools/make_holes_4_9.py`):
+  safe and a risky route (layouts written by `tools/make_course.py` from the course plan in
+  `tools/plan_holes2.py`; `make_holes_4_9.py` is the old writer, superseded 26 Oct):
   1 pond (carry its corner to a pad), 2 purple pool and giant cauldron, 3 walled graveyard loop, 4 giant
   spider web inside an L, 5 fenced cornfield and Marc's barn and silo, 6 ghost-lit marsh, 7 hedge maze,
   blood-red pond, the vampire's house and gargoyles on the tee's gate pillars, 8 rocky ravine and the
@@ -191,6 +194,22 @@ Textures drawn in 3D (golfer, cards, sky, textures, balls, flags, props) import 
 - **Backspin**: on greens irons/wedges hop, check and draw back (`ball_sim.gd` SPIN_BACK_MAX, BITE;
   `tests/spin_probe.gd` prints each club). Wind-up creak removed.
 - **Builder**: trees 7 m and everything else 1 m off a green's real edge (`build_hole.off_green`).
+
+## The course redesign (26 Oct)
+
+Marc's asks: wider landing areas, two real par 3s, varied bends (3 left, 3 right, hole 8 straight and
+split), hazards at real size and not round, a dominant tree per hole. The plan (`tools/plan_holes2.py`,
+sheets `docs/img/plan_v2_holes_*.png`) was checked against the clubs (`check_plan2.py`) and on the
+builder's own ground (`check_plan_ground.py`); `docs/REBUILD_CHECKLIST.md` lists what the rebuild had to
+keep. Builder additions: `lobes` on water / zones / pads / bunkers (irregular rims, `hole_gen.ellipse_r`,
+`rim_point`); `bunkers_real` (bunkers drawn at real size are placed, not grown); theme `trees`
+(`dominant` / `secondary` / `accents` / `far`: groves ~25 m across), `under` (ground_* undergrowth),
+`shore` (reeds round water), `landing_clear` (trees stand back where drives land); trees kept off the
+first 140 m of the layout's `plan.risk` line; a `tree` feature (one landmark tree: the swing oak, 9);
+`patches` (graveyard / pumpkin patch: 35% short like the corn, "Lost in the graves!", `main.LIE_PATCH`;
+the auto-target lays up short of webs, corn and patches too). Pond banks report on their own (3:1).
+Every layout is turned so the tee shot runs up +y (the tee box, tee pumpkins, hole 7's pillars assume
+it); hole 1 is the concept mirrored, so its moon and key light are mirrored (`theme.mirrored`).
 
 ## What's next (in Marc's order of interest)
 

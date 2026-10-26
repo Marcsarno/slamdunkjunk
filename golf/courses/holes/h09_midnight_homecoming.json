@@ -1,585 +1,840 @@
 {
-  "id": "h09_midnight_homecoming",
-  "name": "Midnight Homecoming",
-  "number": 9,
-  "par": 4,
-  "seed": 909,
-  "note": "The Walk Home: the finale curls right and back round a fenced pumpkin patch to the lit clubhouse. Play round the long way, or carry the patch to a landing pad on the left and leave a short pitch home. Course coords in meters: x right, y down-range, z up.",
-  "path": [
-    [
-      0,
-      0
-    ],
-    [
-      30,
-      60
-    ],
-    [
-      70,
-      120
-    ],
-    [
-      82,
-      185
-    ],
-    [
-      65,
-      245
-    ],
-    [
-      25,
-      285
-    ],
-    [
-      0,
-      300
-    ]
+ "id": "h09_midnight_homecoming",
+ "name": "Midnight Homecoming",
+ "number": 9,
+ "par": 4,
+ "seed": 909,
+ "note": "From a high tee the safe drive goes right round the patch, then a short iron back left to the green by the house. The brave drive flies the patch to a landing just short of the green.",
+ "path": [
+  [
+   0.0,
+   0.0
   ],
-  "fairway_start": 34,
-  "fairway_width": [
-    24,
-    28,
-    30,
-    30,
-    28,
-    26,
-    24
+  [
+   0.0,
+   79.1
   ],
-  "rough_width": 13,
-  "deep_rough_width": 14,
-  "tee": {
-    "center": [
-      0,
-      0
-    ],
-    "size": [
-      8,
-      10
-    ]
+  [
+   -0.5,
+   155.3
+  ],
+  [
+   -18.1,
+   208.8
+  ],
+  [
+   -57.9,
+   234.8
+  ],
+  [
+   -102.2,
+   228.4
+  ],
+  [
+   -131.2,
+   203.5
+  ]
+ ],
+ "fairway_start": 34,
+ "fairway_width": [
+  24,
+  32,
+  40,
+  38,
+  32,
+  28,
+  24
+ ],
+ "rough_width": 13,
+ "deep_rough_width": 14,
+ "tee": {
+  "center": [
+   0,
+   0
+  ],
+  "size": [
+   8,
+   10
+  ]
+ },
+ "green": {
+  "center": [
+   -133.38,
+   203.21
+  ],
+  "radius": [
+   13,
+   10
+  ],
+  "rotation": 0.7055,
+  "slope": [
+   -0.01,
+   -0.02
+  ]
+ },
+ "pin": [
+  -130.03,
+  201.88
+ ],
+ "bunkers_real": true,
+ "bunkers": [
+  {
+   "center": [
+    -140.28,
+    185.06
+   ],
+   "radius": [
+    9,
+    4
+   ],
+   "rotation": 1.5055,
+   "depth": 0.5,
+   "lobes": [
+    0.1,
+    2.4,
+    0.11,
+    0.9
+   ]
   },
-  "green": {
-    "center": [
-      0,
-      300
-    ],
-    "radius": [
-      14,
-      12
-    ],
-    "rotation": -0.3,
-    "slope": [
-      0.01,
-      0.022
-    ]
+  {
+   "center": [
+    -132.06,
+    222.37
+   ],
+   "radius": [
+    10,
+    4
+   ],
+   "rotation": 0.4055,
+   "depth": 0.5,
+   "lobes": [
+    0.14,
+    1.3,
+    0.07,
+    2.8
+   ]
   },
-  "pin": [
-    2,
-    303
-  ],
-  "bunkers": [
-    {
-      "center": [
-        -17,
-        300
-      ],
-      "radius": [
-        5,
-        3
-      ],
-      "rotation": 1.1,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        16,
-        313
-      ],
-      "radius": [
-        4.4,
-        2.4
-      ],
-      "rotation": -0.5,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        66,
-        196
-      ],
-      "radius": [
-        3,
-        7
-      ],
-      "rotation": 0.1,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        64,
-        84
-      ],
-      "radius": [
-        6,
-        3
-      ],
-      "rotation": 0.7,
-      "depth": 0.45
-    }
-  ],
-  "water": [],
-  "pads": [
-    {
-      "center": [
-        -10,
-        178
-      ],
-      "radius": [
-        17,
-        14
-      ],
-      "rotation": 0.0
-    }
-  ],
-  "zones": [
-    {
-      "center": [
-        16,
-        135
-      ],
-      "radius": [
-        27,
-        58
-      ],
-      "rotation": 0.1,
-      "surface": "deep_rough"
-    },
-    {
-      "center": [
-        -6,
-        100
-      ],
-      "radius": [
-        16,
-        82
-      ],
-      "rotation": 0.0,
-      "surface": "deep_rough"
-    },
-    {
-      "center": [
-        -6,
-        240
-      ],
-      "radius": [
-        14,
-        50
-      ],
-      "rotation": 0.0,
-      "surface": "rough"
-    }
-  ],
-  "fences": [
-    {
-      "points": [
-        [
-          -6,
-          82
-        ],
-        [
-          -11,
-          110
-        ],
-        [
-          -11,
-          150
-        ],
-        [
-          -4,
-          182
-        ],
-        [
-          14,
-          194
-        ],
-        [
-          34,
-          186
-        ],
-        [
-          43,
-          160
-        ],
-        [
-          44,
-          120
-        ],
-        [
-          38,
-          92
-        ],
-        [
-          24,
-          78
-        ]
-      ]
-    }
-  ],
-  "elevation": {
-    "tee": 12.0,
-    "green": 7.5,
-    "cross_tilt": 0.008,
-    "roll_height": 0.3,
-    "bank_height": 2.5,
-    "mounds": [
-      {
-        "center": [
-          120,
-          110
-        ],
-        "radius": 24,
-        "height": 2.4
-      },
-      {
-        "center": [
-          -70,
-          160
-        ],
-        "radius": 22,
-        "height": 2.2
-      },
-      {
-        "center": [
-          60,
-          330
-        ],
-        "radius": 22,
-        "height": 2.4
-      }
-    ],
-    "profile": [
-      [
-        0,
-        12.0
-      ],
-      [
-        80,
-        9.0
-      ],
-      [
-        180,
-        4.0
-      ],
-      [
-        260,
-        5.0
-      ],
-      [
-        360,
-        7.5
-      ]
-    ]
-  },
-  "wind": {
-    "min": 1,
-    "max": 3
-  },
-  "graveyards": [
-    {
-      "center": [
-        -60,
-        240
-      ],
-      "radius": 7,
-      "count": 8,
-      "fence": true
-    }
-  ],
-  "lantern_spacing": 11,
-  "trees_spacing": 8.5,
-  "pumpkin_clusters": [
-    {
-      "center": [
-        4.9,
-        3.4
-      ],
-      "carved": 2,
-      "plain": 1,
-      "radius": 1.1
-    },
-    {
-      "center": [
-        -5.2,
-        6.2
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 1.0
-    },
-    {
-      "center": [
-        0,
-        100
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        12,
-        96
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        26,
-        104
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        -2,
-        122
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        14,
-        120
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        30,
-        124
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        2,
-        142
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        18,
-        140
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        34,
-        146
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        -2,
-        162
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        12,
-        162
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        28,
-        166
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        10,
-        182
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        24,
-        182
-      ],
-      "carved": 2,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        36,
-        104
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 2.2
-    },
-    {
-      "center": [
-        8,
-        330
-      ],
-      "carved": 3,
-      "plain": 2
-    },
-    {
-      "center": [
-        -22,
-        318
-      ],
-      "carved": 2,
-      "plain": 1
-    }
-  ],
-  "plan": {
-    "safe": [
-      [
-        72,
-        160
-      ],
-      [
-        2,
-        303
-      ]
-    ],
-    "risk": [
-      [
-        -10,
-        178
-      ],
-      [
-        2,
-        303
-      ]
-    ]
-  },
-  "cart_path": {
-    "side": 1,
-    "offset": 6.0
-  },
-  "theme": {
-    "light_props_spacing": 13,
-    "light_props": [
-      "light_haunted_lamppost",
-      "light_pumpkin_path_lights",
-      "light_hanging_harvest",
-      "light_classic_jack",
-      "light_lantern_ghost",
-      "light_skeleton_groundskeeper",
-      "light_grave_candles",
-      "light_pumpkin_totem"
-    ],
-    "trees_near": [
-      "maple_orange",
-      "tree_copper_oak",
-      "tree_golden_aspen",
-      "tree_scarlet_maple",
-      "lantern_tree",
-      "tree_harvest_pear"
-    ],
-    "trees_far": [
-      "tree_moonlit_pine",
-      "pine_blue",
-      "tree_copper_oak",
-      "tree_golden_aspen"
-    ],
-    "backdrop": {
-      "hole": "09-midnight-homecoming",
-      "variant": "a",
-      "span": 95,
-      "yaw": 4,
-      "horizon_v": 0.8
-    },
-    "rings": [
-      {
-        "image": "horizon_pines",
-        "radius": 420,
-        "height": 44,
-        "base": -6,
-        "repeats": 9,
-        "haze": 0.45
-      }
-    ],
-    "sky_style": "night",
-    "sky_top": [
-      0.004,
-      0.006,
-      0.025
-    ],
-    "sky_horizon": [
-      0.04,
-      0.05,
-      0.13
-    ],
-    "fog": [
-      0.11,
-      0.08,
-      0.16
-    ],
-    "fog_density": 0.0032,
-    "backdrop_haze": 0.15,
-    "moon": "harvest",
-    "moon_azimuth": -10,
-    "moon_elevation": 14,
-    "moon_size": 0.045,
-    "light_azimuth": 200,
-    "light_elevation": 34,
-    "water_deep": [
-      0.03,
-      0.015,
-      0.04
-    ],
-    "water_glow": [
-      1.0,
-      0.6,
-      0.22
-    ],
-    "wisp_color": [
-      1.0,
-      0.7,
-      0.3
-    ],
-    "wisps": 80,
-    "ghosts": 3,
-    "lightning": 0,
-    "mist": 22,
-    "clouds": 0.45,
-    "leaf_amount": 0.35
+  {
+   "center": [
+    11.32,
+    192.71
+   ],
+   "radius": [
+    6,
+    16
+   ],
+   "rotation": 0.8055,
+   "depth": 0.5,
+   "lobes": [
+    0.09,
+    3.0,
+    0.1,
+    1.6
+   ]
   }
+ ],
+ "water": [],
+ "zones": [
+  {
+   "center": [
+    -66.91,
+    145.84
+   ],
+   "radius": [
+    30,
+    50
+   ],
+   "rotation": 0.4055,
+   "surface": "deep_rough"
+  }
+ ],
+ "pads": [
+  {
+   "center": [
+    -107.52,
+    183.41
+   ],
+   "radius": [
+    12,
+    9
+   ],
+   "rotation": 0.7055
+  }
+ ],
+ "elevation": {
+  "cross_tilt": 0.008,
+  "roll_height": 0.3,
+  "bank_height": 2.5,
+  "mounds": [
+   {
+    "center": [
+     61.8,
+     103.0
+    ],
+    "radius": 22,
+    "height": 2.2
+   },
+   {
+    "center": [
+     -98.1,
+     291.6
+    ],
+    "radius": 22,
+    "height": 2.2
+   }
+  ],
+  "profile": [
+   [
+    0,
+    12.0
+   ],
+   [
+    120,
+    8.0
+   ],
+   [
+    210,
+    5.0
+   ],
+   [
+    342,
+    7.5
+   ]
+  ]
+ },
+ "wind": {
+  "min": 1,
+  "max": 3
+ },
+ "graveyards": [
+  {
+   "center": [
+    -188.47,
+    149.26
+   ],
+   "radius": 7,
+   "count": 8,
+   "fence": true
+  }
+ ],
+ "lantern_spacing": 11,
+ "trees_spacing": 8.5,
+ "theme": {
+  "light_props_spacing": 13,
+  "light_props": [
+   "light_haunted_lamppost",
+   "light_pumpkin_path_lights",
+   "light_hanging_harvest",
+   "light_classic_jack",
+   "light_lantern_ghost",
+   "light_skeleton_groundskeeper",
+   "light_grave_candles",
+   "light_pumpkin_totem"
+  ],
+  "trees_near": [
+   "maple_orange",
+   "tree_copper_oak",
+   "tree_golden_aspen",
+   "tree_scarlet_maple",
+   "lantern_tree",
+   "tree_harvest_pear"
+  ],
+  "trees_far": [
+   "tree_moonlit_pine",
+   "pine_blue",
+   "tree_copper_oak",
+   "tree_golden_aspen"
+  ],
+  "backdrop": {
+   "hole": "09-midnight-homecoming",
+   "variant": "a",
+   "span": 95,
+   "yaw": 4,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.45
+   }
+  ],
+  "sky_style": "night",
+  "sky_top": [
+   0.004,
+   0.006,
+   0.025
+  ],
+  "sky_horizon": [
+   0.04,
+   0.05,
+   0.13
+  ],
+  "fog": [
+   0.11,
+   0.08,
+   0.16
+  ],
+  "fog_density": 0.0032,
+  "backdrop_haze": 0.15,
+  "moon": "harvest",
+  "moon_azimuth": -10,
+  "moon_elevation": 14,
+  "moon_size": 0.045,
+  "light_azimuth": 200,
+  "light_elevation": 34,
+  "water_deep": [
+   0.03,
+   0.015,
+   0.04
+  ],
+  "water_glow": [
+   1.0,
+   0.6,
+   0.22
+  ],
+  "wisp_color": [
+   1.0,
+   0.7,
+   0.3
+  ],
+  "wisps": 80,
+  "ghosts": 3,
+  "lightning": 0,
+  "mist": 22,
+  "clouds": 0.45,
+  "leaf_amount": 0.35,
+  "trees": {
+   "dominant": "tree_golden_aspen",
+   "secondary": "maple_orange",
+   "accents": [
+    "lantern_tree",
+    "birch",
+    "tree_copper_oak"
+   ],
+   "far": [
+    "maple_orange",
+    "tree_moonlit_pine"
+   ]
+  },
+  "under": [
+   "ground_heather",
+   "ground_brambles"
+  ],
+  "shore": [
+   "cattails"
+  ]
+ },
+ "pumpkin_clusters": [
+  {
+   "center": [
+    2.09,
+    5.58
+   ],
+   "carved": 2,
+   "plain": 1,
+   "radius": 1.1
+  },
+  {
+   "center": [
+    -7.8,
+    2.14
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 1.0
+  },
+  {
+   "center": [
+    -52.28,
+    110.12
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -59.36,
+    115.44
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -51.1,
+    118.96
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -42.84,
+    122.49
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -66.53,
+    120.69
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -58.27,
+    124.22
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -50.01,
+    127.75
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -73.69,
+    125.95
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -65.43,
+    129.48
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -57.17,
+    133.01
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -48.91,
+    136.53
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -80.86,
+    131.2
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -72.6,
+    134.73
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -64.34,
+    138.26
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -56.08,
+    141.79
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -47.74,
+    145.38
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -79.77,
+    139.99
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -71.51,
+    143.52
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -63.16,
+    147.1
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -54.9,
+    150.63
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -86.87,
+    145.16
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -78.67,
+    148.77
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -70.33,
+    152.36
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -62.07,
+    155.89
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -53.81,
+    159.42
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -85.75,
+    154.09
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -77.49,
+    157.61
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -69.23,
+    161.14
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -60.98,
+    164.67
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -84.66,
+    162.87
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -76.4,
+    166.4
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -68.14,
+    169.93
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -59.88,
+    173.46
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -83.57,
+    171.65
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -75.31,
+    175.18
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -66.96,
+    178.77
+   ],
+   "carved": 2,
+   "plain": 2,
+   "radius": 2.2
+  },
+  {
+   "center": [
+    -82.47,
+    180.44
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 2.2
+  }
+ ],
+ "cart_path": {
+  "side": 1,
+  "offset": 6.0
+ },
+ "plan": {
+  "safe": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    79.06
+   ],
+   [
+    -0.51,
+    155.33
+   ],
+   [
+    -18.09,
+    208.84
+   ],
+   [
+    -57.93,
+    234.77
+   ],
+   [
+    -102.2,
+    228.44
+   ],
+   [
+    -131.17,
+    203.52
+   ]
+  ],
+  "risk": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    -107.52,
+    183.41
+   ],
+   [
+    -133.38,
+    203.21
+   ]
+  ]
+ },
+ "fences": [
+  {
+   "points": [
+    [
+     -42.05,
+     156.49
+    ],
+    [
+     -49.9,
+     170.64
+    ],
+    [
+     -59.8,
+     181.78
+    ],
+    [
+     -70.58,
+     188.55
+    ],
+    [
+     -80.84,
+     190.2
+    ],
+    [
+     -89.49,
+     186.53
+    ],
+    [
+     -95.36,
+     177.97
+    ],
+    [
+     -97.85,
+     165.41
+    ],
+    [
+     -96.59,
+     150.59
+    ],
+    [
+     -91.78,
+     135.2
+    ],
+    [
+     -83.93,
+     121.05
+    ],
+    [
+     -74.02,
+     109.91
+    ],
+    [
+     -63.25,
+     103.13
+    ],
+    [
+     -52.99,
+     101.48
+    ],
+    [
+     -44.34,
+     105.16
+    ],
+    [
+     -38.47,
+     113.72
+    ],
+    [
+     -35.97,
+     126.28
+    ],
+    [
+     -37.23,
+     141.09
+    ],
+    [
+     -42.05,
+     156.49
+    ]
+   ]
+  }
+ ],
+ "features": [
+  {
+   "tree": "tree_homecoming_swing_oak",
+   "pos": [
+    -170.64,
+    207.82
+   ],
+   "height": 10.0
+  }
+ ],
+ "patches": [
+  {
+   "center": [
+    -66.91,
+    145.84
+   ],
+   "radius": [
+    24,
+    44
+   ],
+   "rotation": 0.4055,
+   "kind": "pumpkins"
+  }
+ ]
 }

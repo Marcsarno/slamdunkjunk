@@ -475,8 +475,9 @@ func _setup_shot() -> void:
 	hud.hide_gauge()
 	hud.hint.text = HINT if strokes == 0 else ""
 	if _lie < 0.9:
+		var patch := terrain.patch_at(ball.x, ball.y)
 		var where := "A spider web" if terrain.in_web(ball.x, ball.y) else ("The corn" if terrain.in_corn(ball.x, ball.y) \
-			else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)]))
+			else (String(PATCH_NAMES[patch]) if patch != "" else String(Terrain.SURFACE_LABELS[terrain.surface_at(ball.x, ball.y)])))
 		hud.hint.text = "%s: it'll fly %d%% shorter" % [where, roundi((1.0 - _lie) * 100.0)]
 	var sh := _slope_hint()
 	if sh != "":
@@ -589,7 +590,8 @@ func _safe_layup(t: Vector2) -> Vector2:
 		var e := Vector2(r.end.x, r.end.y)
 		var m := _spread(d)
 		var ok: bool = r.state != BallSim.State.WATER and r.state != BallSim.State.OOB \
-			and terrain.surface_at(e.x, e.y) != Terrain.Surface.SAND
+			and terrain.surface_at(e.x, e.y) != Terrain.Surface.SAND and not terrain.in_web(e.x, e.y) \
+			and not terrain.in_corn(e.x, e.y) and terrain.patch_at(e.x, e.y) == ""
 		for q in [e + dir * m * SPREAD_LONG, e + right * m * 0.8, e - right * m * 0.8]:
 			var sq := terrain.surface_at(q.x, q.y)
 			ok = ok and sq != Terrain.Surface.WATER and sq != Terrain.Surface.OOB
@@ -626,6 +628,9 @@ func _landing_to_stop_at(spot: Vector2) -> Vector2:
 const LIE := {Terrain.Surface.ROUGH: 0.92, Terrain.Surface.DEEP: 0.78, Terrain.Surface.SAND: 0.85}
 const LIE_WEB := 0.6
 const LIE_CORN := 0.65
+const LIE_PATCH := 0.65                      # among the headstones or the pumpkins: like the corn
+const PATCH_NAMES := {"graves": "The graves", "pumpkins": "The pumpkin patch"}
+const PATCH_LOST := {"graves": "Lost in the graves!", "pumpkins": "Lost in the pumpkins!"}
 var _lie := 1.0
 
 
@@ -636,6 +641,8 @@ func _lie_at(b: Vector3) -> float:
 		return LIE_WEB
 	if terrain.in_corn(b.x, b.y):
 		return LIE_CORN
+	if terrain.patch_at(b.x, b.y) != "":
+		return LIE_PATCH
 	var surf := terrain.surface_at(b.x, b.y)
 	var f: float = LIE.get(surf, 1.0)
 	if surf == Terrain.Surface.SAND and club.get("kind", "") == "wedge":
@@ -988,6 +995,8 @@ func _shot_done() -> void:
 				Sfx.play("land_sand", -6.0, 0.7)
 			elif terrain.in_corn(ball.x, ball.y):
 				hud.flash("Lost in the corn! · %s" % _dist_text(carried / YD, false))
+			elif terrain.patch_at(ball.x, ball.y) != "" and club.id != "putter":
+				hud.flash("%s · %s" % [PATCH_LOST[terrain.patch_at(ball.x, ball.y)], _dist_text(carried / YD, false)])
 			elif club.id == "putter":
 				hud.flash("%s to go" % _dist_text(_to_pin(), true))
 			else:

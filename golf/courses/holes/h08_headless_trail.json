@@ -1,456 +1,483 @@
 {
-  "id": "h08_headless_trail",
-  "name": "Headless Trail",
-  "number": 8,
-  "par": 4,
-  "seed": 808,
-  "note": "Headless Trail: up the valley and across a rocky ravine to a green under the crag. Lay up short of the ravine and fly it where it narrows, or drive the left pad by the old bridge and the Horseman's statue and go straight over. The ravine swallows anything that comes up short. Course coords in meters: x right, y down-range, z up.",
-  "path": [
-    [
-      0,
-      0
-    ],
-    [
-      6,
-      80
-    ],
-    [
-      14,
-      150
-    ],
-    [
-      12,
-      200
-    ],
-    [
-      4,
-      260
-    ],
-    [
-      -2,
-      318
-    ]
+ "id": "h08_headless_trail",
+ "name": "Headless Trail",
+ "number": 8,
+ "par": 4,
+ "seed": 808,
+ "note": "The long par 4. The ravine crosses beyond a drive's reach (~300 yd), so you lay up and carry it with a long iron to the biggest green; the left fairway is narrower, past the Horseman.",
+ "path": [
+  [
+   0.0,
+   0.0
   ],
-  "fairway_start": 36,
-  "fairway_width": [
-    24,
-    28,
-    30,
-    28,
-    26,
-    22
+  [
+   0.0,
+   90.3
   ],
-  "rough_width": 12,
-  "deep_rough_width": 14,
-  "tee": {
-    "center": [
-      0,
-      0
-    ],
-    "size": [
-      8,
-      10
-    ]
+  [
+   6.4,
+   176.3
+  ],
+  [
+   12.6,
+   242.1
+  ],
+  [
+   13.3,
+   302.4
+  ],
+  [
+   2.0,
+   383.7
+  ]
+ ],
+ "fairway_start": 36,
+ "fairway_width": [
+  24,
+  34,
+  42,
+  34,
+  32,
+  24
+ ],
+ "rough_width": 13,
+ "deep_rough_width": 14,
+ "tee": {
+  "center": [
+   0,
+   0
+  ],
+  "size": [
+   8,
+   10
+  ]
+ },
+ "green": {
+  "center": [
+   1.86,
+   385.68
+  ],
+  "radius": [
+   11,
+   15
+  ],
+  "rotation": -0.0113,
+  "slope": [
+   0.01,
+   0.02
+  ]
+ },
+ "pin": [
+  -0.49,
+  389.49
+ ],
+ "bunkers_real": true,
+ "bunkers": [
+  {
+   "center": [
+    -16.78,
+    392.05
+   ],
+   "radius": [
+    4,
+    10
+   ],
+   "rotation": 0.1887,
+   "depth": 0.5,
+   "lobes": [
+    0.12,
+    0.6,
+    0.09,
+    2.1
+   ]
   },
-  "green": {
-    "center": [
-      -2,
-      320
-    ],
-    "radius": [
-      13,
-      11
-    ],
-    "rotation": 0.1,
-    "slope": [
-      0.01,
-      0.02
-    ]
+  {
+   "center": [
+    20.5,
+    379.3
+   ],
+   "radius": [
+    4,
+    10
+   ],
+   "rotation": -0.1113,
+   "depth": 0.5,
+   "lobes": [
+    0.1,
+    2.4,
+    0.11,
+    0.9
+   ]
   },
-  "pin": [
-    0,
-    322
-  ],
-  "bunkers": [
-    {
-      "center": [
-        -22,
-        140
-      ],
-      "radius": [
-        3,
-        7
-      ],
-      "rotation": 0.1,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        30,
-        176
-      ],
-      "radius": [
-        3,
-        6
-      ],
-      "rotation": -0.3,
-      "depth": 0.45
-    },
-    {
-      "center": [
-        -18,
-        286
-      ],
-      "radius": [
-        3,
-        6
-      ],
-      "rotation": 0.2,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        14,
-        330
-      ],
-      "radius": [
-        4.6,
-        2.6
-      ],
-      "rotation": 0.4,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        -20,
-        326
-      ],
-      "radius": [
-        4.2,
-        2.4
-      ],
-      "rotation": -0.4,
-      "depth": 0.45
-    }
-  ],
-  "water": [
-    {
-      "center": [
-        -85.0,
-        251.0
-      ],
-      "radius": [
-        31.31,
-        5.0
-      ],
-      "rotation": -0.4145,
-      "level_offset": -4.2
-    },
-    {
-      "center": [
-        -35.0,
-        232.0
-      ],
-      "radius": [
-        30.25,
-        5.0
-      ],
-      "rotation": -0.3097,
-      "level_offset": -4.2
-    },
-    {
-      "center": [
-        15.0,
-        214.0
-      ],
-      "radius": [
-        30.93,
-        5.0
-      ],
-      "rotation": -0.3805,
-      "level_offset": -4.2
-    },
-    {
-      "center": [
-        65.0,
-        195.0
-      ],
-      "radius": [
-        30.57,
-        5.0
-      ],
-      "rotation": -0.3456,
-      "level_offset": -4.2
-    },
-    {
-      "center": [
-        115.0,
-        181.0
-      ],
-      "radius": [
-        29.5,
-        5.0
-      ],
-      "rotation": -0.1974,
-      "level_offset": -4.2
-    }
-  ],
-  "carry": [
-    204,
-    236
-  ],
-  "pads": [
-    {
-      "center": [
-        -34,
-        178
-      ],
-      "radius": [
-        14,
-        11
-      ],
-      "rotation": 0.2
-    }
-  ],
-  "zones": [
-    {
-      "center": [
-        -30,
-        175
-      ],
-      "radius": [
-        26,
-        44
-      ],
-      "rotation": 0.1,
-      "surface": "rough"
-    },
-    {
-      "center": [
-        -36,
-        262
-      ],
-      "radius": [
-        20,
-        14
-      ],
-      "rotation": 0.0,
-      "surface": "rough"
-    }
-  ],
-  "features": [
-    {
-      "image": "statue_horseman",
-      "pos": [
-        -36,
-        256
-      ],
-      "scale": 1.4,
-      "clear": 9
-    }
-  ],
-  "elevation": {
-    "tee": 9.0,
-    "green": 10.0,
-    "cross_tilt": 0.008,
-    "roll_height": 0.35,
-    "bank_height": 3.0,
-    "profile": [
-      [
-        0,
-        9.0
-      ],
-      [
-        150,
-        6.0
-      ],
-      [
-        200,
-        5.0
-      ],
-      [
-        240,
-        6.0
-      ],
-      [
-        325,
-        10.0
-      ]
-    ],
-    "mounds": [
-      {
-        "center": [
-          60,
-          100
-        ],
-        "radius": 24,
-        "height": 2.4
-      },
-      {
-        "center": [
-          -70,
-          120
-        ],
-        "radius": 22,
-        "height": 2.2
-      },
-      {
-        "center": [
-          40,
-          300
-        ],
-        "radius": 24,
-        "height": 3.0
-      }
-    ]
-  },
-  "wind": {
-    "min": 1,
-    "max": 6
-  },
-  "graveyards": [
-    {
-      "center": [
-        44,
-        260
-      ],
-      "radius": 6,
-      "count": 6,
-      "fence": false
-    }
-  ],
-  "plan": {
-    "safe": [
-      [
-        12,
-        168
-      ],
-      [
-        0,
-        322
-      ]
-    ],
-    "risk": [
-      [
-        -34,
-        178
-      ],
-      [
-        0,
-        322
-      ]
-    ]
-  },
-  "lantern_spacing": 17,
-  "trees_spacing": 7.0,
-  "pumpkin_clusters": [
-    {
-      "center": [
-        4.9,
-        3.4
-      ],
-      "carved": 2,
-      "plain": 1,
-      "radius": 1.1
-    },
-    {
-      "center": [
-        -5.2,
-        6.2
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 1.0
-    }
-  ],
-  "cart_path": {
-    "side": -1,
-    "offset": 6.0
-  },
-  "theme": {
-    "ravine": true,
-    "light_props_spacing": 22,
-    "light_props": [
-      "light_classic_jack",
-      "light_skull_lantern",
-      "light_haunted_lamppost",
-      "light_glowing_ghoul",
-      "light_lantern_ghost",
-      "light_pumpkin_totem"
-    ],
-    "trees_near": [
-      "tree_lightning_oak",
-      "tree_raven_perch",
-      "tree_windbent_fir",
-      "dead_tree",
-      "tree_silver_snag",
-      "tree_lightning_oak"
-    ],
-    "trees_far": [
-      "tree_windbent_fir",
-      "tree_moonlit_pine",
-      "tree_silver_snag",
-      "pine_blue"
-    ],
-    "backdrop": {
-      "hole": "08-headless-trail",
-      "variant": "a",
-      "span": 95,
-      "yaw": 6,
-      "horizon_v": 0.8
-    },
-    "rings": [
-      {
-        "image": "horizon_pines",
-        "radius": 420,
-        "height": 44,
-        "base": -6,
-        "repeats": 9,
-        "haze": 0.55
-      }
-    ],
-    "sky_style": "night",
-    "sky_top": [
-      0.004,
-      0.006,
-      0.025
-    ],
-    "sky_horizon": [
-      0.04,
-      0.05,
-      0.13
-    ],
-    "fog": [
-      0.08,
-      0.08,
-      0.15
-    ],
-    "fog_density": 0.0042,
-    "backdrop_haze": 0.18,
-    "moon": "white",
-    "moon_azimuth": 30,
-    "moon_elevation": 16,
-    "light_azimuth": 150,
-    "light_elevation": 34,
-    "water_deep": [
-      0.01,
-      0.02,
-      0.05
-    ],
-    "water_glow": [
-      0.35,
-      0.55,
-      1.0
-    ],
-    "wisp_color": [
-      1.0,
-      0.55,
-      0.2
-    ],
-    "ghosts": 4,
-    "lightning": 12,
-    "mist": 30,
-    "clouds": 0.95,
-    "leaf_amount": 0.4
+  {
+   "center": [
+    30.92,
+    205.55
+   ],
+   "radius": [
+    6,
+    15
+   ],
+   "rotation": 0.1887,
+   "depth": 0.5,
+   "lobes": [
+    0.14,
+    1.3,
+    0.07,
+    2.8
+   ]
   }
+ ],
+ "water": [
+  {
+   "center": [
+    -131.95,
+    298.49
+   ],
+   "radius": [
+    50.84,
+    5.0
+   ],
+   "rotation": -0.1925,
+   "level_offset": -4.2
+  },
+  {
+   "center": [
+    -55.38,
+    284.21
+   ],
+   "radius": [
+    35.05,
+    5.0
+   ],
+   "rotation": -0.1719,
+   "level_offset": -4.2
+  },
+  {
+   "center": [
+    5.89,
+    272.59
+   ],
+   "radius": [
+    35.32,
+    5.0
+   ],
+   "rotation": -0.2028,
+   "level_offset": -4.2
+  },
+  {
+   "center": [
+    87.7,
+    255.77
+   ],
+   "radius": [
+    56.2,
+    5.0
+   ],
+   "rotation": -0.2028,
+   "level_offset": -4.2
+  }
+ ],
+ "zones": [
+  {
+   "center": [
+    -35.19,
+    328.17
+   ],
+   "radius": [
+    100,
+    26
+   ],
+   "rotation": -0.1613,
+   "surface": "rough"
+  }
+ ],
+ "pads": [
+  {
+   "center": [
+    -23.24,
+    148.53
+   ],
+   "radius": [
+    49.08131845707603,
+    14.0
+   ],
+   "rotation": 2.04
+  },
+  {
+   "center": [
+    -48.08,
+    224.63
+   ],
+   "radius": [
+    44.05259518088089,
+    15.0
+   ],
+   "rotation": 1.712
+  },
+  {
+   "center": [
+    -32.01,
+    337.49
+   ],
+   "radius": [
+    45.66106403010388,
+    14.0
+   ],
+   "rotation": 1.0714
+  }
+ ],
+ "elevation": {
+  "cross_tilt": 0.008,
+  "roll_height": 0.35,
+  "bank_height": 3.0,
+  "profile": [
+   [
+    0,
+    9.0
+   ],
+   [
+    200,
+    6.7
+   ],
+   [
+    245,
+    6.1
+   ],
+   [
+    262,
+    5.2
+   ],
+   [
+    278,
+    3.5
+   ],
+   [
+    300,
+    6.0
+   ],
+   [
+    388,
+    10.0
+   ]
+  ],
+  "mounds": [
+   {
+    "center": [
+     63.7,
+     110.8
+    ],
+    "radius": 22,
+    "height": 2.2
+   }
+  ]
+ },
+ "wind": {
+  "min": 1,
+  "max": 6
+ },
+ "graveyards": [
+  {
+   "center": [
+    56.44,
+    336.32
+   ],
+   "radius": 6,
+   "count": 6,
+   "fence": false
+  }
+ ],
+ "lantern_spacing": 17,
+ "trees_spacing": 7.0,
+ "theme": {
+  "ravine": true,
+  "light_props_spacing": 22,
+  "light_props": [
+   "light_classic_jack",
+   "light_skull_lantern",
+   "light_haunted_lamppost",
+   "light_glowing_ghoul",
+   "light_lantern_ghost",
+   "light_pumpkin_totem"
+  ],
+  "trees_near": [
+   "tree_lightning_oak",
+   "tree_raven_perch",
+   "tree_windbent_fir",
+   "dead_tree",
+   "tree_silver_snag",
+   "tree_lightning_oak"
+  ],
+  "trees_far": [
+   "tree_windbent_fir",
+   "tree_moonlit_pine",
+   "tree_silver_snag",
+   "pine_blue"
+  ],
+  "backdrop": {
+   "hole": "08-headless-trail",
+   "variant": "a",
+   "span": 95,
+   "yaw": 6,
+   "horizon_v": 0.8
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 420,
+    "height": 44,
+    "base": -6,
+    "repeats": 9,
+    "haze": 0.55
+   }
+  ],
+  "sky_style": "night",
+  "sky_top": [
+   0.004,
+   0.006,
+   0.025
+  ],
+  "sky_horizon": [
+   0.04,
+   0.05,
+   0.13
+  ],
+  "fog": [
+   0.08,
+   0.08,
+   0.15
+  ],
+  "fog_density": 0.0042,
+  "backdrop_haze": 0.18,
+  "moon": "white",
+  "moon_azimuth": 30,
+  "moon_elevation": 16,
+  "light_azimuth": 150,
+  "light_elevation": 34,
+  "water_deep": [
+   0.01,
+   0.02,
+   0.05
+  ],
+  "water_glow": [
+   0.35,
+   0.55,
+   1.0
+  ],
+  "wisp_color": [
+   1.0,
+   0.55,
+   0.2
+  ],
+  "ghosts": 4,
+  "lightning": 12,
+  "mist": 30,
+  "clouds": 0.95,
+  "leaf_amount": 0.4,
+  "trees": {
+   "dominant": "tree_lightning_oak",
+   "secondary": "tree_windbent_fir",
+   "accents": [
+    "dead_tree",
+    "tree_raven_perch",
+    "tree_silver_snag"
+   ],
+   "far": [
+    "tree_windbent_fir",
+    "tree_moonlit_pine"
+   ]
+  },
+  "under": [
+   "ground_ferns",
+   "ground_brambles"
+  ],
+  "shore": [
+   "ground_ferns"
+  ]
+ },
+ "pumpkin_clusters": [
+  {
+   "center": [
+    4.58,
+    3.82
+   ],
+   "carved": 2,
+   "plain": 1,
+   "radius": 1.1
+  },
+  {
+   "center": [
+    -5.73,
+    5.72
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 1.0
+  }
+ ],
+ "cart_path": {
+  "side": -1,
+  "offset": 6.0
+ },
+ "plan": {
+  "safe": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    90.35
+   ],
+   [
+    6.42,
+    176.26
+   ],
+   [
+    12.62,
+    242.07
+   ],
+   [
+    13.28,
+    302.36
+   ],
+   [
+    2.04,
+    383.69
+   ]
+  ],
+  "risk": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    -40.73,
+    187.13
+   ],
+   [
+    -51.8,
+    266.46
+   ],
+   [
+    1.86,
+    385.68
+   ]
+  ]
+ },
+ "features": [
+  {
+   "image": "statue_horseman",
+   "pos": [
+    -93.9,
+    310.91
+   ],
+   "scale": 1.4,
+   "clear": 9
+  }
+ ],
+ "carry": [
+  258,
+  304
+ ]
 }

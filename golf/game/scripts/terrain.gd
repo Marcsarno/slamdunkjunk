@@ -85,6 +85,15 @@ func in_corn(x: float, y: float) -> bool:
 	return _in_any(meta.get("corn", []), x, y)
 
 
+## The graveyard or pumpkin patch the ball sits in ("graves", "pumpkins"), or "" (the layout's
+## "patches": open ground you carry, a bad lie if you land in it).
+func patch_at(x: float, y: float) -> String:
+	for w: Dictionary in meta.get("patches", []):
+		if _in_any([w], x, y):
+			return String(w.get("kind", "graves"))
+	return ""
+
+
 func _in_any(areas: Array, x: float, y: float) -> bool:
 	for w: Dictionary in areas:
 		var d := Vector2(x - float(w.center[0]), y - float(w.center[1]))

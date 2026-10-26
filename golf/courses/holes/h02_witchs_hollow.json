@@ -1,371 +1,383 @@
 {
-  "id": "h02_witchs_hollow",
-  "name": "Witch's Hollow",
-  "number": 2,
-  "par": 3,
-  "seed": 202,
-  "note": "The Witch's Pool: a par 3 bent round a purple pool. The fairway swings out right past the witch's cauldron and back in to a green the pool wraps on its left: lay up and pitch on, or fly the rough straight at the flag with the pool waiting left. Course coords in meters: x right, y down-range, z up.",
-  "path": [
-    [
-      0,
-      0
-    ],
-    [
-      20,
-      30
-    ],
-    [
-      40,
-      62
-    ],
-    [
-      36,
-      96
-    ],
-    [
-      10,
-      122
-    ]
+ "id": "h02_witchs_hollow",
+ "name": "Witch's Hollow",
+ "number": 2,
+ "par": 3,
+ "seed": 202,
+ "note": "Downhill into the hollow (plays about 8 yd shorter): carry the pool to a wide, shallow green; the apron right is the bail-out.",
+ "path": [
+  [
+   0.0,
+   0.0
   ],
-  "fairway_start": 26,
-  "fairway_width": [
-    18,
-    24,
-    26,
-    24,
-    20
+  [
+   0.0,
+   133.2
+  ]
+ ],
+ "fairway_start": 112,
+ "fairway_width": [
+  24,
+  24
+ ],
+ "rough_width": 13,
+ "deep_rough_width": 14,
+ "tee": {
+  "center": [
+   0,
+   0
   ],
-  "rough_width": 12,
-  "deep_rough_width": 14,
-  "tee": {
-    "center": [
-      0,
-      0
-    ],
-    "size": [
-      8,
-      9
-    ]
+  "size": [
+   8,
+   9
+  ]
+ },
+ "green": {
+  "center": [
+   -0.14,
+   134.21
+  ],
+  "radius": [
+   15,
+   9
+  ],
+  "rotation": -0.1145,
+  "slope": [
+   0.01,
+   0.02
+  ],
+  "raise": 1.2
+ },
+ "pin": [
+  2.97,
+  133.63
+ ],
+ "bunkers_real": true,
+ "bunkers": [
+  {
+   "center": [
+    21.48,
+    131.1
+   ],
+   "radius": [
+    10,
+    4
+   ],
+   "rotation": 1.3355,
+   "depth": 0.5,
+   "lobes": [
+    0.14,
+    1.3,
+    0.07,
+    2.8
+   ]
   },
-  "green": {
-    "center": [
-      2,
-      127
-    ],
-    "radius": [
-      12,
-      10
-    ],
-    "rotation": -0.4,
-    "slope": [
-      0.014,
-      -0.012
-    ]
-  },
-  "pin": [
-    -1,
-    129
-  ],
-  "bunkers": [
-    {
-      "center": [
-        16,
-        124
-      ],
-      "radius": [
-        2.2,
-        6.0
-      ],
-      "rotation": 0.25,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        54,
-        72
-      ],
-      "radius": [
-        2.6,
-        5.5
-      ],
-      "rotation": -0.2,
-      "depth": 0.5
-    },
-    {
-      "center": [
-        4,
-        94
-      ],
-      "radius": [
-        3.2,
-        2.2
-      ],
-      "rotation": 0.4,
-      "depth": 0.45
-    }
-  ],
-  "water": [
-    {
-      "center": [
-        -20,
-        122
-      ],
-      "radius": [
-        11,
-        24
-      ],
-      "rotation": -0.35,
-      "level_offset": -0.5,
-      "island": true
-    },
-    {
-      "center": [
-        -6,
-        148
-      ],
-      "radius": [
-        16,
-        8
-      ],
-      "rotation": -0.2,
-      "level_offset": -0.5,
-      "island": true
-    }
-  ],
-  "elevation": {
-    "tee": 11.0,
-    "green": 3.5,
-    "cross_tilt": 0.006,
-    "roll_height": 0.25,
-    "bank_height": 2.5,
-    "mounds": [
-      {
-        "center": [
-          -40,
-          40
-        ],
-        "radius": 20,
-        "height": 2.2
-      },
-      {
-        "center": [
-          58,
-          50
-        ],
-        "radius": 20,
-        "height": 2.4
-      },
-      {
-        "center": [
-          20,
-          168
-        ],
-        "radius": 24,
-        "height": 2.6
-      }
-    ],
-    "profile": [
-      [
-        -6,
-        11.2
-      ],
-      [
-        0,
-        11.0
-      ],
-      [
-        6,
-        10.8
-      ],
-      [
-        40,
-        9.5
-      ],
-      [
-        110,
-        4.6
-      ],
-      [
-        150,
-        3.5
-      ]
-    ]
-  },
-  "wind": {
-    "min": 2,
-    "max": 6
-  },
-  "graveyards": [
-    {
-      "center": [
-        -30,
-        70
-      ],
-      "radius": 5,
-      "count": 5,
-      "fence": false
-    }
-  ],
-  "lantern_spacing": 14,
-  "trees_spacing": 8.0,
-  "pumpkin_clusters": [
-    {
-      "center": [
-        4.8,
-        3.0
-      ],
-      "carved": 2,
-      "plain": 1,
-      "radius": 1.1
-    },
-    {
-      "center": [
-        -5.0,
-        5.5
-      ],
-      "carved": 1,
-      "plain": 2,
-      "radius": 1.0
-    },
-    {
-      "center": [
-        56,
-        104
-      ],
-      "carved": 2,
-      "plain": 2
-    }
-  ],
-  "theme": {
-    "light_props_spacing": 15,
-    "light_props": [
-      "light_witchs_cauldron",
-      "light_marsh_wisp",
-      "light_captured_spirit",
-      "light_glowing_ghoul",
-      "light_moon_mushrooms",
-      "light_hollow_heart_tree",
-      "light_skull_lantern"
-    ],
-    "trees_near": [
-      "tree_bent_willow",
-      "tree_hollow_sentinel",
-      "tree_twisted_cypress",
-      "tree_raven_perch",
-      "haunted_tree",
-      "tree_lightning_oak",
-      "tree_bent_willow"
-    ],
-    "trees_far": [
-      "tree_moonlit_pine",
-      "tree_windbent_fir",
-      "tree_ancient_yew",
-      "tree_twisted_cypress",
-      "tree_moonlit_pine"
-    ],
-    "backdrop": {
-      "hole": "02-witchs-hollow",
-      "variant": "a",
-      "span": 95,
-      "yaw": 0,
-      "horizon_v": 0.78
-    },
-    "rings": [
-      {
-        "image": "horizon_pines",
-        "radius": 380,
-        "height": 40,
-        "base": -8,
-        "repeats": 9,
-        "haze": 0.55
-      }
-    ],
-    "sky_style": "night",
-    "fog": [
-      0.06,
-      0.11,
-      0.11
-    ],
-    "fog_density": 0.0042,
-    "sky_horizon": [
-      0.04,
-      0.05,
-      0.13
-    ],
-    "backdrop_haze": 0.18,
-    "moon_scale": 0.7,
-    "light_azimuth": 190,
-    "light_elevation": 34,
-    "water_deep": [
-      0.035,
-      0.012,
-      0.06
-    ],
-    "water_glow": [
-      0.62,
-      0.2,
-      1.0
-    ],
-    "wisp_color": [
-      0.5,
-      1.0,
-      0.55
-    ],
-    "ghosts": 2,
-    "lightning": 35,
-    "mist": 30,
-    "mist_alpha": 0.38,
-    "leaf_amount": 0.25,
-    "sky_top": [
-      0.004,
-      0.006,
-      0.025
-    ]
-  },
-  "cart_path": {
-    "side": 1,
-    "offset": 6.0
-  },
-  "zones": [
-    {
-      "center": [
-        8,
-        64
-      ],
-      "radius": [
-        15,
-        38
-      ],
-      "rotation": 0.12,
-      "surface": "deep_rough"
-    }
-  ],
-  "features": [
-    {
-      "image": "light_witchs_cauldron",
-      "pos": [
-        62,
-        90
-      ],
-      "scale": 3.6
-    }
-  ],
-  "plan": {
-    "safe": [
-      [
-        40,
-        64
-      ],
-      [
-        -1,
-        129
-      ]
-    ],
-    "risk": [
-      [
-        -1,
-        129
-      ]
-    ]
+  {
+   "center": [
+    -17.74,
+    144.93
+   ],
+   "radius": [
+    11,
+    4
+   ],
+   "rotation": -0.1145,
+   "depth": 0.5,
+   "lobes": [
+    0.09,
+    3.0,
+    0.1,
+    1.6
+   ]
   }
+ ],
+ "water": [
+  {
+   "center": [
+    -4.23,
+    90.26
+   ],
+   "radius": [
+    26,
+    17
+   ],
+   "rotation": -0.1645,
+   "level_offset": -0.6,
+   "lobes": [
+    0.1,
+    2.4,
+    0.11,
+    0.9,
+    0.05,
+    1.7
+   ]
+  }
+ ],
+ "zones": [
+  {
+   "center": [
+    -4.23,
+    90.26
+   ],
+   "radius": [
+    34,
+    25
+   ],
+   "rotation": -0.1645,
+   "surface": "rough",
+   "lobes": [
+    0.1,
+    2.4,
+    0.11,
+    0.9,
+    0.05,
+    1.7
+   ]
+  },
+  {
+   "center": [
+    2.07,
+    58.82
+   ],
+   "radius": [
+    24,
+    46
+   ],
+   "rotation": 0.2355,
+   "surface": "deep_rough"
+  }
+ ],
+ "pads": [
+  {
+   "center": [
+    27.02,
+    112.68
+   ],
+   "radius": [
+    12,
+    9
+   ],
+   "rotation": 0.6355
+  }
+ ],
+ "elevation": {
+  "cross_tilt": 0.006,
+  "roll_height": 0.25,
+  "bank_height": 2.5,
+  "mounds": [],
+  "profile": [
+   [
+    0,
+    11.0
+   ],
+   [
+    40,
+    9.0
+   ],
+   [
+    85,
+    3.2
+   ],
+   [
+    118,
+    4.0
+   ],
+   [
+    133,
+    4.4
+   ]
+  ]
+ },
+ "wind": {
+  "min": 2,
+  "max": 6
+ },
+ "graveyards": [
+  {
+   "center": [
+    -45.04,
+    34.23
+   ],
+   "radius": 5,
+   "count": 5,
+   "fence": false
+  }
+ ],
+ "lantern_spacing": 14,
+ "trees_spacing": 8.0,
+ "theme": {
+  "light_props_spacing": 15,
+  "light_props": [
+   "light_witchs_cauldron",
+   "light_marsh_wisp",
+   "light_captured_spirit",
+   "light_glowing_ghoul",
+   "light_moon_mushrooms",
+   "light_hollow_heart_tree",
+   "light_skull_lantern"
+  ],
+  "trees_near": [
+   "tree_bent_willow",
+   "tree_hollow_sentinel",
+   "tree_twisted_cypress",
+   "tree_raven_perch",
+   "haunted_tree",
+   "tree_lightning_oak",
+   "tree_bent_willow"
+  ],
+  "trees_far": [
+   "tree_moonlit_pine",
+   "tree_windbent_fir",
+   "tree_ancient_yew",
+   "tree_twisted_cypress",
+   "tree_moonlit_pine"
+  ],
+  "backdrop": {
+   "hole": "02-witchs-hollow",
+   "variant": "a",
+   "span": 95,
+   "yaw": 0,
+   "horizon_v": 0.78
+  },
+  "rings": [
+   {
+    "image": "horizon_pines",
+    "radius": 380,
+    "height": 40,
+    "base": -8,
+    "repeats": 9,
+    "haze": 0.55
+   }
+  ],
+  "sky_style": "night",
+  "fog": [
+   0.06,
+   0.11,
+   0.11
+  ],
+  "fog_density": 0.0042,
+  "sky_horizon": [
+   0.04,
+   0.05,
+   0.13
+  ],
+  "backdrop_haze": 0.18,
+  "moon_scale": 0.7,
+  "light_azimuth": 190,
+  "light_elevation": 34,
+  "water_deep": [
+   0.035,
+   0.012,
+   0.06
+  ],
+  "water_glow": [
+   0.62,
+   0.2,
+   1.0
+  ],
+  "wisp_color": [
+   0.5,
+   1.0,
+   0.55
+  ],
+  "ghosts": 2,
+  "lightning": 35,
+  "mist": 30,
+  "mist_alpha": 0.38,
+  "leaf_amount": 0.25,
+  "sky_top": [
+   0.004,
+   0.006,
+   0.025
+  ],
+  "trees": {
+   "dominant": "tree_witchwood_purple",
+   "secondary": "tree_bent_willow",
+   "accents": [
+    "haunted_tree",
+    "tree_hollow_sentinel",
+    "tree_raven_perch"
+   ],
+   "far": [
+    "tree_bent_willow",
+    "tree_moonlit_pine"
+   ]
+  },
+  "under": [
+   "ground_heather",
+   "ground_ferns"
+  ],
+  "shore": [
+   "ground_marsh_reeds",
+   "cattails"
+  ]
+ },
+ "pumpkin_clusters": [
+  {
+   "center": [
+    4.4,
+    4.03
+   ],
+   "carved": 2,
+   "plain": 1,
+   "radius": 1.1
+  },
+  {
+   "center": [
+    -5.99,
+    5.44
+   ],
+   "carved": 1,
+   "plain": 2,
+   "radius": 1.0
+  },
+  {
+   "center": [
+    -44.86,
+    106.92
+   ],
+   "carved": 2,
+   "plain": 2
+  }
+ ],
+ "cart_path": {
+  "side": 1,
+  "offset": 6.0
+ },
+ "plan": {
+  "safe": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    27.02,
+    112.68
+   ],
+   [
+    6.49,
+    130.07
+   ]
+  ],
+  "risk": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    -0.14,
+    134.21
+   ]
+  ]
+ },
+ "features": [
+  {
+   "image": "light_witchs_cauldron",
+   "pos": [
+    -46.93,
+    92.51
+   ],
+   "scale": 3.6
+  }
+ ]
 }
