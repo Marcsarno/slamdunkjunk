@@ -27,7 +27,7 @@ STAINED = (0.95, 0.18, 0.32)     # a chapel's rose window: red-violet glass lit 
 # Surface kinds for the patterned landmark material (game/shaders/landmark.gdshader): the vertex colour's
 # alpha says what a face is made of, and the shader draws it there (stone blocks, slates, clapboards,
 # brick, wood planks) over textures every hole already loads. No image of its own to download.
-SURFACE = {"stone": 0.9, "slate": 0.8, "clap": 0.7, "brick": 0.6, "wood": 0.5, "plain": 0.4}
+SURFACE = {"stone": 0.9, "slate": 0.8, "clap": 0.7, "brick": 0.6, "wood": 0.5, "plain": 0.4, "leaf": 0.3}
 
 
 class Parts:
@@ -632,5 +632,6 @@ def house(col, name, pos, rot_z=0.0, scale=1.0):
 KIND_OF = {
     CHAPEL_STONE: "stone", QUOIN: "stone", CHAPEL_ROOF: "slate", SLATE_LINE: "slate", OAK: "wood",
     HOUSE_SIDING: "clap", CLAP_LINE: "clap", HOUSE_ROOF: "slate", BRICK: "brick", RED_DOOR: "wood",
-    SHUTTER: "wood", POT: "brick",
+    SHUTTER: "wood", POT: "brick", LEAVES: "leaf", (0.66, 0.24, 0.07): "leaf", (0.45, 0.1, 0.07): "leaf",
+    (0.85, 0.42, 0.08): "leaf",
 }

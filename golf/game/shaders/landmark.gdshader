@@ -1,7 +1,7 @@
 // The chapel's and the house's surfaces, drawn on the phone instead of shipped as pictures: the
 // vertex colour's alpha says what a face is made of (tools/landmarks.py SURFACE) and this draws it,
 // in the model's own metres so the pattern holds still: stone blocks with mortar, slates in staggered
-// courses, overlapping clapboards, brick, wood planks. The grain comes from the stone and wood textures
+// courses, overlapping clapboards, brick, wood planks, leaves (ivy, drifts, flowers). The grain comes from the stone and wood textures
 // every hole already loads. Each block, slate or board gets its own shade, and the walls darken toward
 // the ground.
 shader_type spatial;
@@ -45,13 +45,15 @@ void fragment() {
 	float shade = 1.0;
 	float grain = 1.0;
 	if (k > 0.85) {                                   // stone: blocks in courses, mortar between
-		float rh = 0.5, bl = 1.05;
+		float rh = 0.5;
 		float r = floor(v / rh);
+		float bl = 1.05 * (0.75 + 0.55 * hash(vec2(r, 8.3)));                    // each course its own block length
 		float off = (mod(r, 2.0) * 0.5 + hash(vec2(r, 3.1)) * 0.25) * bl;
 		float c = floor((u + off) / bl);
 		float fu = fract((u + off) / bl), fv = fract(v / rh);
 		float m = min(edge(fu, bl), edge(fv, rh));
 		shade = 0.86 + 0.24 * hash(vec2(c, r));
+		base *= mix(vec3(1.0), vec3(0.88, 1.0, 0.84), step(0.82, hash(vec2(c + 3.0, r))) * 0.8);   // moss on a few
 		shade *= mix(0.66, 1.0, smoothstep(0.02, 0.05, m));                    // mortar
 		shade *= 1.0 + 0.08 * smoothstep(0.75, 0.95, fv) - 0.1 * (1.0 - smoothstep(0.05, 0.2, fv));
 		grain = mix(1.0, dot(texture(tex_stone, vec2(u, v) * 0.3).rgb, vec3(0.333)) * 2.2, 0.6);
@@ -84,6 +86,26 @@ void fragment() {
 		shade *= mix(0.62, 1.0, smoothstep(0.008, 0.016, min(edge(fu, bl), edge(fv, rh))));
 	} else if (k > 0.45) {                            // wood planks
 		grain = dot(texture(tex_wood, vec2(u, v) * 0.5).rgb, vec3(0.333)) * 3.0;
+	} else if (k < 0.35) {                            // leaves: overlapping leaf shapes, gaps of shadow between
+		vec2 q = vec2(u, v) * 6.5;
+		vec2 cell = floor(q);
+		vec2 f = fract(q);
+		float best = 9.0;
+		float id = 0.0;
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++) {
+				vec2 g = vec2(float(i), float(j));
+				vec2 o = vec2(hash(cell + g), hash(cell + g + 5.3));
+				float d = length(g + o - f);
+				if (d < best) {
+					best = d;
+					id = hash(cell + g + 9.1);
+				}
+			}
+		}
+		shade = mix(0.3, 1.0, smoothstep(0.78, 0.42, best)) * (0.78 + 0.44 * id);
+		base = mix(base, base * vec3(1.35, 1.25, 0.55), step(0.6, id));          // some leaves turn orange
+		base *= 0.68;                                                              // in shadow under the moon
 	}
 	ALBEDO = base * boost * shade * grain;
 	ROUGHNESS = k > 0.75 && k < 0.85 ? 0.7 : 0.92;
